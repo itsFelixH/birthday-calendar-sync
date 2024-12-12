@@ -20,7 +20,7 @@ class BirthdayContact {
   }
 
   logToConsole() {
-    Logger.log(`🎂 ${this.name} hat Geburtstag am ${birthday.toDateString()}`);
+    Logger.log(`🎂 ${this.name} hat Geburtstag am ${birthday.getBirthdayDDMMM()}`);
   }
 
   getBirthdayDDMM() {
@@ -68,17 +68,11 @@ class BirthdayContact {
 // MAIN FUNCTIONS
 function updateBirthdaysAndSummaries() {
   var Contacts = getAllContacts();
+  if (contacts.length === 0) {
+    Logger.log("No contacts found. Aborting.");
+    return;
+  }
   createOrUpdateBirthdays(calendarId, Contacts);
-  createOrUpdateBirthdaySummaries(calendarId, Contacts);
-}
-
-function updateBirthdays() {
-  var Contacts = getAllContacts();
-  createOrUpdateBirthdays(calendarId, Contacts);
-}
-
-function updateBirthdaySummaries() {
-  var Contacts = getAllContacts();
   createOrUpdateBirthdaySummaries(calendarId, Contacts);
 }
 
@@ -97,11 +91,10 @@ function deleteEventsWithTitle(calendarId, titleString, startDate, endDate) {
   const matchingEvents = ExistingEvents.filter((event) => event.getTitle().includes(titleString));
 
   Logger.log(`Found ${matchingEvents.length} events! Deleting...`)
-  for (var event of matchingEvents) {
+  matchingEvents.forEach(event => {
     event.deleteEvent();
-    // show event name in log
     Logger.log(`'${event.getTitle()}' wurde gelöscht`);
-  }
+  })
 }
 
 
@@ -141,13 +134,13 @@ function getAllContacts() {
     Logger.log(error.message);
   }
 
-  Logger.log(`Got ${Contacts.length} Contacts with birthdays!`);
+  Logger.log(`Got ${Contacts.length} contacts with birthdays!`);
   return Contacts;
 }
 
 
 function createOrUpdateBirthdaySummaries(calendarId, Contacts, year = new Date().getFullYear()) {
-  const calendarService = CalendarApp;
+  const calendar = CalendarApp.getCalendarById(calendarId);
 
   Logger.log(`Creating/Updating birthday summary events for each month...`);
 
@@ -155,11 +148,11 @@ function createOrUpdateBirthdaySummaries(calendarId, Contacts, year = new Date()
     const startDate = new Date(year, month, 1);
     const endDate = new Date(year, month, 2);
 
-    var monthName = Utilities.formatDate(startDate, Session.getScriptTimeZone(), "MMMM");
+    const monthName = Utilities.formatDate(startDate, Session.getScriptTimeZone(), "MMMM");
     Logger.log(`Processing month ${monthName}`);
 
     const title = `🎉🎂 GEBURTSTAGE 🎂🎉`;
-    const Events = calendarService.getCalendarById(calendarId).getEvents(startDate, endDate);
+    const Events = calendar.getEvents(startDate, endDate);
     let event = Events.find(e => e.getTitle() === title);
 
     const MonthContacts = Contacts
@@ -173,7 +166,7 @@ function createOrUpdateBirthdaySummaries(calendarId, Contacts, year = new Date()
     if (!event) {
       event = calendar.createAllDayEvent(title, new Date(startDate), { description: description, reminders: { useDefaults: false }  });
       Logger.log(`${title} created for ${monthName}`);
-    } else { // Update event description if it exists
+    } else {
       event.setDescription(description);
       Logger.log(`${title} updated for ${monthName}`);
     }
