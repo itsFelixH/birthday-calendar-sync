@@ -4,7 +4,10 @@ var useLabel = false;
 var labelId = "2b335be8d2ec275";
 var addReminder = "popup";
 var reminderInMinutes = 60 * 12; // 12 hours earlier
+var createSummaries = true;
 var yearToUse = new Date().getFullYear() // Use current year for creating events
+var yearToUse = 2025
+
 var deleteString = "hat Geburtstag";
 var deleteStartDate = new Date("2023-01-01");
 var deleteEndDate = new Date("2025-12-31");
@@ -14,9 +17,10 @@ var monthNamesLong = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Jul
 
 
 class BirthdayContact {
-  constructor(name, birthday) {
+  constructor(name, birthday, labels = []) {
     this.name = name;
     this.birthday = new Date(birthday);
+    this.labels = labels;
   }
 
   logToConsole() {
@@ -42,7 +46,11 @@ class BirthdayContact {
   }
 
   getStringForSummary() {
-    return `${this.getBirthdayDDMMM()}: ${this.name}`;
+    var string = `${this.getBirthdayDDMMM()}: ${this.name}`;
+    if (this.hasAge()) {
+      string += ` wird ${this.getAge()}`
+    }
+    return string;
   }
 
   hasAge() {
@@ -67,13 +75,11 @@ class BirthdayContact {
 
 // MAIN FUNCTIONS
 function updateBirthdaysAndSummaries() {
-  var Contacts = getAllContacts();
-  if (contacts.length === 0) {
-    Logger.log("No contacts found. Aborting.");
-    return;
+  var contacts = getAllContacts();
+  createOrUpdateBirthdays(calendarId, contacts);
+  if (createSummaries) {
+    createOrUpdateBirthdaySummaries(calendarId, contacts);
   }
-  createOrUpdateBirthdays(calendarId, Contacts);
-  createOrUpdateBirthdaySummaries(calendarId, Contacts);
 }
 
 function deleteEvents() {
@@ -87,8 +93,8 @@ function deleteEventsWithTitle(calendarId, titleString, startDate, endDate) {
   const calendarService = CalendarApp;
 
   Logger.log(`Searching for events between ${startDate.toDateString()} and ${endDate.toDateString()} containing '${titleString}'...`);
-  const ExistingEvents = calendarService.getCalendarById(calendarId).getEvents(startDate, endDate);
-  const matchingEvents = ExistingEvents.filter((event) => event.getTitle().includes(titleString));
+  const existingEvents = calendarService.getCalendarById(calendarId).getEvents(startDate, endDate);
+  const matchingEvents = existingEvents.filter((event) => event.getTitle().includes(titleString));
 
   Logger.log(`Found ${matchingEvents.length} events! Deleting...`)
   matchingEvents.forEach(event => {
@@ -102,7 +108,7 @@ function getAllContacts() {
   const peopleService = People.People;
 
   Logger.log(`Getting all contact names and birthdays from Google Contacts...`);
-  let Contacts = [];
+  let contacts = [];
 
   let pageToken = null;
   const pageSize = 100;
@@ -124,7 +130,8 @@ function getAllContacts() {
         if ((!useLabel || hasLabel) && birthdayData) {
           const year = birthdayData.year || new Date().getFullYear();
           const birthday = new Date(year, birthdayData.month - 1, birthdayData.day);
-          Contacts.push(new BirthdayContact(name, birthday));
+          contacts.push(new BirthdayContact(name, birthday, person.memberships));
+          Logger.log(name + ': ' + person.memberships.join(', '));
         }
       });
 
@@ -134,15 +141,19 @@ function getAllContacts() {
     Logger.log(error.message);
   }
 
-  Logger.log(`Got ${Contacts.length} contacts with birthdays!`);
-  return Contacts;
+  Logger.log(`Got ${contacts.length} contacts with birthdays!`);
+  return contacts;
 }
 
 
-function createOrUpdateBirthdaySummaries(calendarId, Contacts, year = new Date().getFullYear()) {
+function createOrUpdateBirthdaySummaries(calendarId, contacts, year = new Date().getFullYear()) {
+  if (contacts.length === 0) {
+    Logger.log("No contacts found. Aborting.");
+    return;
+  }
   const calendar = CalendarApp.getCalendarById(calendarId);
 
-  Logger.log(`Creating/Updating birthday summary events for each month...`);
+  Logger.log(`Creating/Updating birthday summary events in ${year} for each month...`);
 
   for (var month = 0; month < 12; month++) {
     const startDate = new Date(year, month, 1);
@@ -152,15 +163,15 @@ function createOrUpdateBirthdaySummaries(calendarId, Contacts, year = new Date()
     Logger.log(`Processing month ${monthName}`);
 
     const title = `🎉🎂 GEBURTSTAGE 🎂🎉`;
-    const Events = calendar.getEvents(startDate, endDate);
-    let event = Events.find(e => e.getTitle() === title);
+    const events = calendar.getEvents(startDate, endDate);
+    let event = events.find(e => e.getTitle() === title);
 
-    const MonthContacts = Contacts
+    const monthContacts = contacts
       .filter(contact => contact.birthday.getMonth() === month)
       .sort((a, b) => a.birthday.getDate() - b.birthday.getDate());
 
     const description = `Geburtstage im ${monthNamesLong[month]}\n\n`
-      + MonthContacts.map(contact => contact.getStringForSummary()).join('\n');
+      + monthContacts.map(contact => contact.getStringForSummary()).join('\n');
 
     // Create or update event
     if (!event) {
@@ -176,18 +187,22 @@ function createOrUpdateBirthdaySummaries(calendarId, Contacts, year = new Date()
 }
 
 
-function createOrUpdateBirthdays(calendarId, Contacts, year = new Date().getFullYear()) {
+function createOrUpdateBirthdays(calendarId, contacts, year = new Date().getFullYear()) {
+  if (contacts.length === 0) {
+    Logger.log("No contacts found. Aborting.");
+    return;
+  }
   const calendar = CalendarApp.getCalendarById(calendarId);
 
-  Logger.log(`Creating/Updating birthday events for ${Contacts.length} contacts...`);
+  Logger.log(`Creating/Updating birthday events in ${year} for ${contacts.length} contacts...`);
   
-  Contacts.forEach(contact => {
+  contacts.forEach(contact => {
     const startDate = new Date(year, contact.birthday.getMonth(), contact.birthday.getDate());
     const endDate = new Date(year, contact.birthday.getMonth(), contact.birthday.getDate() + 1);
 
     const title = `🎂 ${contact.name} hat Geburtstag`;
-    const Events = calendar.getEvents(startDate, endDate);
-    let event = Events.find(e => e.getTitle() === title);
+    const events = calendar.getEvents(startDate, endDate);
+    let event = events.find(e => e.getTitle() === title);
 
     let description = contact.hasAge()
       ? `${contact.name} wird heute ${contact.getAge()}\n`
