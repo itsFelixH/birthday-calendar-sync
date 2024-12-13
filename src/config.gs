@@ -1,4 +1,4 @@
-// CONFIG
+// CONFIGURATION SETTINGS
 
 // The ID of the Google Calendar where birthdays will be added.
 // You can find this ID in your Google Calendar settings.

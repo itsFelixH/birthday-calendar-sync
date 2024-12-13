@@ -73,7 +73,10 @@
 
 // }
 
-// MAIN FUNCTIONS
+
+/**
+ * Main function to update birthdays and summaries.
+ */
 function updateBirthdaysAndSummaries() {
   var contacts = getAllContacts();
   createOrUpdateBirthdays(calendarId, contacts, yearToUse);
@@ -82,6 +85,10 @@ function updateBirthdaysAndSummaries() {
   }
 }
 
+
+/**
+ * Main function to delete birthday events.
+ */
 function deleteEvents() {
   deleteEventsWithTitle(calendarId, deleteString, deleteStartDate, deleteEndDate);
 }

@@ -1,4 +1,11 @@
 
+/**
+ * Deletes events from the calendar with a title containing the specified string.
+ * @param {string} calendarId - The ID of the calendar.
+ * @param {string} titleString - The string to search for in the event titles.
+ * @param {Date} startDate - The start date for the search.
+ * @param {Date} endDate - The end date for the search.
+ */
 function deleteEventsWithTitle(calendarId, titleString, startDate, endDate) {
   const calendarService = CalendarApp;
 
@@ -6,14 +13,18 @@ function deleteEventsWithTitle(calendarId, titleString, startDate, endDate) {
   const existingEvents = calendarService.getCalendarById(calendarId).getEvents(startDate, endDate);
   const matchingEvents = existingEvents.filter((event) => event.getTitle().includes(titleString));
 
-  Logger.log(`Found ${matchingEvents.length} events! Deleting...`)
+  Logger.log(`Found ${matchingEvents.length} events! Deleting...`);
   matchingEvents.forEach(event => {
     event.deleteEvent();
     Logger.log(`'${event.getTitle()}' wurde gelöscht`);
-  })
+  });
 }
 
 
+/**
+ * Fetches all contacts from Google Contacts.
+ * @returns {Array.<BirthdayContact>} - An array of BirthdayContact objects.
+ */
 function getAllContacts() {
   const peopleService = People.People;
 
@@ -56,6 +67,12 @@ function getAllContacts() {
 }
 
 
+/**
+ * Creates or updates monthly birthday summaries in the calendar.
+ * @param {string} calendarId - The ID of the calendar.
+ * @param {Array.<BirthdayContact>} contacts - An array of BirthdayContact objects.
+ * @param {number} [year=new Date().getFullYear()] - The year for which to create/update the summaries.
+ */
 function createOrUpdateBirthdaySummaries(calendarId, contacts, year = new Date().getFullYear()) {
   if (contacts.length === 0) {
     Logger.log("No contacts found. Aborting.");
@@ -97,6 +114,12 @@ function createOrUpdateBirthdaySummaries(calendarId, contacts, year = new Date()
 }
 
 
+/**
+ * Creates or updates individual birthday events in the calendar.
+ * @param {string} calendarId - The ID of the calendar.
+ * @param {Array.<BirthdayContact>} contacts - An array of BirthdayContact objects.
+ * @param {number} [year=new Date().getFullYear()] - The year for which to create/update the events.
+ */
 function createOrUpdateBirthdays(calendarId, contacts, year = new Date().getFullYear()) {
   if (contacts.length === 0) {
     Logger.log("No contacts found. Aborting.");
@@ -129,7 +152,7 @@ function createOrUpdateBirthdays(calendarId, contacts, year = new Date().getFull
       event.setDescription(description);
       Logger.log(`${title} updated for ${contact.name}`);
     }
-  })
+  });
 
   Logger.log(`All birthday events created/updated!`);
 }
