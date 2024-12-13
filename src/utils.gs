@@ -62,7 +62,7 @@ function getAllContacts() {
     do {
       const response = peopleService.Connections.list('people/me', {
         pageSize: pageSize,
-        personFields: 'names,birthdays,memberships',
+        personFields: 'names,birthdays,memberships,phoneNumbers,biographies',
         pageToken: pageToken
       });
 
@@ -71,15 +71,26 @@ function getAllContacts() {
         const name = person.names?.[0]?.displayName || 'Unnamed Contact';
         const birthdayData = person.birthdays?.[0]?.date;
         const memberships = person.memberships || [];
+        const phoneNumber = person.phoneNumbers?.[0]?.value || '';
+        const notes = (person.biographies || []).map(bio => bio.value).join('. ');
+        
         const labels = memberships.map(membership => labelMap[membership.contactGroupMembership?.contactGroupId] || 'No Label');
+        
+        const whatsappLink = generateWhatsAppLink(phoneNumber);
+        const instagramLink = generateInstagramLink(notes);
+        
         const hasLabel = labels.includes(labelMap[labelId]);
-
         if ((!useLabel || hasLabel) && birthdayData) {
           const year = birthdayData.year || new Date().getFullYear();
           const birthday = new Date(year, birthdayData.month - 1, birthdayData.day);
-          contacts.push(new BirthdayContact(name, birthday, labels));
-          Logger.log(name + ': ' + labels.join(', '));
+          const contact = new BirthdayContact(name, birthday);
+
+          contact.whatsappLink = whatsappLink;
+          contact.instagramLink = instagramLink;
+
+          contacts.push(contact);
         }
+
       });
 
       pageToken = response.nextPageToken;
@@ -181,4 +192,32 @@ function createOrUpdateBirthdays(calendarId, contacts, year = new Date().getFull
   });
 
   Logger.log(`All birthday events created/updated!`);
+}
+
+
+/**
+ * Generate a WhatsApp link using a phone number
+ * @param {string} phoneNumber - Phone number in international format
+ * @returns {string} - WhatsApp link
+ */
+function generateWhatsAppLink(phoneNumber) {
+  // Remove all non-numeric characters from the phone number
+  const cleanedPhoneNumber = phoneNumber.replace(/\D/g, '');
+  return `https://wa.me/${cleanedPhoneNumber}`;
+}
+
+
+/**
+ * Generate an Instagram link using the username from notes
+ * @param {string} notes - Notes containing the Instagram username
+ * @returns {string} - Instagram link
+ */
+function generateInstagramLink(notes) {
+  const instagramPrefix = "Instagram: ";
+  const instagramNote = notes.split('. ').find(note => note.startsWith(instagramPrefix));
+  if (instagramNote) {
+    const username = instagramNote.substring(instagramPrefix.length).trim();
+    return `https://www.instagram.com/${username}`;
+  }
+  return '';
 }
