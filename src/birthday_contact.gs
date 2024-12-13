@@ -1,18 +1,22 @@
 
 /**
- * BirthdayContact class to store contact information and format birthdays.
+ * Represents a contact with a birthday and additional information.
  */
 class BirthdayContact {
   /**
    * Creates an instance of BirthdayContact.
    * @param {string} name - The name of the contact.
-   * @param {Date|string} birthday - The birthday of the contact.
-   * @param {Array.<string>} [labels=[]] - The labels associated with the contact.
+   * @param {Date} birthday - The birthday of the contact.
+   * @param {Array<string>} labels - Labels/tags associated with the contact.
+   * @param {string} whatsappLink - The WhatsApp link for the contact.
+   * @param {string} instagramLink - The Instagram link for the contact.
    */
-  constructor(name, birthday, labels = []) {
+  constructor(name, birthday, labels = [], whatsappLink = '', instagramLink = '') {
     this.name = name;
     this.birthday = new Date(birthday);
     this.labels = labels;
+    this.whatsappLink = whatsappLink;
+    this.instagramLink = instagramLink;
   }
 
 
@@ -21,6 +25,15 @@ class BirthdayContact {
    */
   logToConsole() {
     Logger.log(`🎂 ${this.name} hat Geburtstag am ${this.getBirthdayDDMMM()}`);
+  }
+
+  logFullDetails() {
+    Logger.log(`Name: ${this.name}`);
+    Logger.log(`Birthday: ${this.getBirthdayDDMMYYYY()}`);
+    if (this.hasAge()) Logger.log(`Age: ${this.getAge()}`);
+    if (this.labels.length > 0) Logger.log(`Labels: ${this.labels.join(', ')}`);
+    if (this.whatsappLink) Logger.log(`WhatsApp: ${this.whatsappLink}`);
+    if (this.instagramLink) Logger.log(`Instagram: ${this.instagramLink}`);
   }
 
 
@@ -69,8 +82,8 @@ class BirthdayContact {
 
 
   /**
-   * Checks if the contact has a specified age.
-   * @returns {boolean} - True if the contact has a specified age, false otherwise.
+   * Checks if the contact has a specified birth year.
+   * @returns {boolean} True if the contact has a birth year, false otherwise.
    */
   hasAge() {
     return !(this.birthday.getFullYear() == new Date().getFullYear());
@@ -78,11 +91,10 @@ class BirthdayContact {
 
 
   /**
-   * Gets the age of the contact.
-   * @returns {number} - The age of the contact.
-   * @throws {Error} - If the birthday year is not specified.
+   * Gets the current age of the contact.
+   * @returns {number} Current age.
    */
-  getAge() {
+  getCurrentAge() {
     var today = new Date();
     if (this.birthday.getFullYear() == today.getFullYear()) {
       throw new Error("Oh noes...!");
@@ -94,6 +106,68 @@ class BirthdayContact {
       }
       return age;
     }
+  }
+
+
+  /**
+   * Gets the age the contact will turn this year.
+   * @returns {number} Age turning this year.
+   */
+  getTurningAgeThisYear() {
+    var today = new Date();
+    if (this.birthday.getFullYear() == today.getFullYear()) {
+      throw new Error("Oh noes...!");
+    } else {
+      return today.getFullYear() - this.birthday.getFullYear();
+    }
+  }
+
+
+  /**
+   * Checks if today is the contact's birthday.
+   * @returns {boolean} True if today is the contact's birthday, false otherwise.
+   */
+  hasBirthdayToday() {
+    const today = new Date();
+    return today.getDate() === this.birthday.getDate() && today.getMonth() === this.birthday.getMonth();
+  }
+
+
+  /**
+   * Checks if the contact's birthday is in the current month.
+   * @returns {boolean} True if the birthday is in the current month, false otherwise.
+   */
+  hasBirthdayThisMonth() {
+    const today = new Date();
+    return today.getMonth() === this.birthday.getMonth();
+  }
+
+
+  /**
+  * Gets the number of days until the next birthday.
+  * @returns {number} Days until the next birthday.
+  */
+  daysUntilBirthday() {
+    const today = new Date();
+    const nextBirthday = new Date(today.getFullYear(), this.birthday.getMonth(), this.birthday.getDate());
+
+    if (today > nextBirthday) {
+      nextBirthday.setFullYear(today.getFullYear() + 1);
+    }
+
+    const oneDay = 24 * 60 * 60 * 1000; // One day in milliseconds
+    return Math.round((nextBirthday - today) / oneDay);
+  }
+
+
+  /**
+   * Checks if the contact's birthday was in this year and has already passed.
+   * @returns {boolean} True if the birthday was this year and has already passed, false otherwise.
+   */
+  wasBirthdayThisYear() {
+    const today = new Date();
+    const birthdayThisYear = new Date(today.getFullYear(), this.birthday.getMonth(), this.birthday.getDate());
+    return today > birthdayThisYear;
   }
 
 }
