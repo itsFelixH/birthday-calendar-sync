@@ -1,5 +1,9 @@
 // CONFIGURATION SETTINGS
 
+// Language to use for the calendar events
+// Change this to the desired language ('en', 'de', 'es', 'fr')
+var language = "de";
+
 // The ID of the Google Calendar where birthdays will be added.
 // You can find this ID in your Google Calendar settings.
 var calendarId = "your-calendar-id@group.calendar.google.com";
@@ -41,8 +45,3 @@ var deleteStartDate = new Date("2023-01-01");
 // The end date until which to search for events to delete.
 // Only events on or before this date will be considered for deletion.
 var deleteEndDate = new Date("2025-12-31");
-
-
-// SETTINGS FOR DATE FORMATTING
-var monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-var monthNamesLong = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];

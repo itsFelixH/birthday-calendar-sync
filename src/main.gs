@@ -73,6 +73,15 @@
 
 // }
 
+// SETUP
+
+var translations = getTranslations(language);
+
+// Using the translated month names
+var monthNames = translations["monthNames"];
+var monthNamesLong = translations["monthNamesLong"];
+
+// MAIN
 
 /**
  * Main function to update birthdays and summaries.
