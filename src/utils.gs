@@ -22,11 +22,35 @@ function deleteEventsWithTitle(calendarId, titleString, startDate, endDate) {
 
 
 /**
+ * Fetch all contact group names and their IDs
+ * @returns {Object} Dictionary of label IDs and names
+ */
+function getLabelNames() {
+  const user = 'people/me';
+  const contactGroups = People.ContactGroups.list({
+    resourceName: user,
+    groupFields: 'clientData,name'
+  });
+
+  const labelMap = {};
+
+  if (contactGroups.contactGroups) {
+    contactGroups.contactGroups.forEach(contactGroup => {
+      labelMap[contactGroup.resourceName] = contactGroup.name;
+    });
+  }
+
+  return labelMap;
+}
+
+
+/**
  * Fetches all contacts from Google Contacts.
  * @returns {Array.<BirthdayContact>} - An array of BirthdayContact objects.
  */
 function getAllContacts() {
   const peopleService = People.People;
+  const labelMap = getLabelNames();
 
   Logger.log(`Getting all contact names and birthdays from Google Contacts...`);
   let contacts = [];
@@ -46,13 +70,15 @@ function getAllContacts() {
       connections.forEach(person => {
         const name = person.names?.[0]?.displayName || 'Unnamed Contact';
         const birthdayData = person.birthdays?.[0]?.date;
-        const hasLabel = person.memberships?.some(m => m.contactGroupMembership?.contactGroupId === labelId);
+        const memberships = person.memberships || [];
+        const labels = memberships.map(membership => labelMap[membership.contactGroupMembership?.contactGroupId] || 'No Label');
+        const hasLabel = labels.includes(labelMap[labelId]);
 
         if ((!useLabel || hasLabel) && birthdayData) {
           const year = birthdayData.year || new Date().getFullYear();
           const birthday = new Date(year, birthdayData.month - 1, birthdayData.day);
-          contacts.push(new BirthdayContact(name, birthday, person.memberships));
-          Logger.log(name + ': ' + person.memberships.join(', '));
+          contacts.push(new BirthdayContact(name, birthday, labels));
+          Logger.log(name + ': ' + labels.join(', '));
         }
       });
 
