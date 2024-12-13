@@ -76,9 +76,9 @@ class BirthdayContact {
 // MAIN FUNCTIONS
 function updateBirthdaysAndSummaries() {
   var contacts = getAllContacts();
-  createOrUpdateBirthdays(calendarId, contacts);
+  createOrUpdateBirthdays(calendarId, contacts, yearToUse);
   if (createSummaries) {
-    createOrUpdateBirthdaySummaries(calendarId, contacts);
+    createOrUpdateBirthdaySummaries(calendarId, contacts, yearToUse);
   }
 }
 
@@ -175,7 +175,7 @@ function createOrUpdateBirthdaySummaries(calendarId, contacts, year = new Date()
 
     // Create or update event
     if (!event) {
-      event = calendar.createAllDayEvent(title, new Date(startDate), { description: description, reminders: { useDefaults: false }  });
+      event = calendar.createAllDayEvent(title, new Date(startDate), { description: description, reminders: { useDefaults: false } });
       Logger.log(`${title} created for ${monthName}`);
     } else {
       event.setDescription(description);
@@ -195,7 +195,7 @@ function createOrUpdateBirthdays(calendarId, contacts, year = new Date().getFull
   const calendar = CalendarApp.getCalendarById(calendarId);
 
   Logger.log(`Creating/Updating birthday events in ${year} for ${contacts.length} contacts...`);
-  
+
   contacts.forEach(contact => {
     const startDate = new Date(year, contact.birthday.getMonth(), contact.birthday.getDate());
     const endDate = new Date(year, contact.birthday.getMonth(), contact.birthday.getDate() + 1);
