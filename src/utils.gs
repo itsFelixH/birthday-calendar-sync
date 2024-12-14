@@ -1,10 +1,10 @@
 
 /**
  * Deletes events from the calendar with a title containing the specified string.
- * @param {string} calendarId - The ID of the calendar.
- * @param {string} titleString - The string to search for in the event titles.
- * @param {Date} startDate - The start date for the search.
- * @param {Date} endDate - The end date for the search.
+ * @param {string} calendarId The ID of the calendar.
+ * @param {string} titleString The string to search for in the event titles.
+ * @param {Date} startDate The start date for the search.
+ * @param {Date} endDate The end date for the search.
  */
 function deleteEventsWithTitle(calendarId, titleString, startDate, endDate) {
   const calendarService = CalendarApp;
@@ -46,7 +46,7 @@ function getLabelNames() {
 
 /**
  * Fetches all contacts from Google Contacts.
- * @returns {Array.<BirthdayContact>} - An array of BirthdayContact objects.
+ * @returns {Array.<BirthdayContact>} An array of BirthdayContact objects.
  */
 function getAllContacts() {
   const peopleService = People.People;
@@ -106,9 +106,9 @@ function getAllContacts() {
 
 /**
  * Creates or updates monthly birthday summaries in the calendar.
- * @param {string} calendarId - The ID of the calendar.
- * @param {Array.<BirthdayContact>} contacts - An array of BirthdayContact objects.
- * @param {number} [year=new Date().getFullYear()] - The year for which to create/update the summaries.
+ * @param {string} calendarId The ID of the calendar.
+ * @param {Array.<BirthdayContact>} contacts An array of BirthdayContact objects.
+ * @param {number} [year=new Date().getFullYear()] The year for which to create/update the summaries.
  */
 function createOrUpdateBirthdaySummaries(calendarId, contacts, year = new Date().getFullYear()) {
   if (contacts.length === 0) {
@@ -153,9 +153,9 @@ function createOrUpdateBirthdaySummaries(calendarId, contacts, year = new Date()
 
 /**
  * Creates or updates individual birthday events in the calendar.
- * @param {string} calendarId - The ID of the calendar.
- * @param {Array.<BirthdayContact>} contacts - An array of BirthdayContact objects.
- * @param {number} [year=new Date().getFullYear()] - The year for which to create/update the events.
+ * @param {string} calendarId The ID of the calendar.
+ * @param {Array.<BirthdayContact>} contacts An array of BirthdayContact objects.
+ * @param {number} [year=new Date().getFullYear()] The year for which to create/update the events.
  */
 function createOrUpdateBirthdays(calendarId, contacts, year = new Date().getFullYear()) {
   if (contacts.length === 0) {
@@ -174,10 +174,10 @@ function createOrUpdateBirthdays(calendarId, contacts, year = new Date().getFull
     const events = calendar.getEvents(startDate, endDate);
     let event = events.find(e => e.getTitle() === title);
 
-    let description = contact.hasAge()
+    let description = contact.hasKnownBirthYear()
       ? `${contact.name} wird heute ${contact.getAge()}\n`
       : `${contact.name} hat heute Geburtstag\n`;
-    description += `Geburtstag: ${contact.getBirthdayDDMMYYYY()}`;
+    description += `Geburtstag: ${contact.getBirthdayShortFormatYYYY()}`;
 
     if (!event) {
       event = calendar.createAllDayEvent(title, startDate, {
@@ -197,8 +197,8 @@ function createOrUpdateBirthdays(calendarId, contacts, year = new Date().getFull
 
 /**
  * Generate a WhatsApp link using a phone number
- * @param {string} phoneNumber - Phone number in international format
- * @returns {string} - WhatsApp link
+ * @param {string} phoneNumber The phone number in international format.
+ * @returns {string} The WhatsApp link for the given phone number.
  */
 function generateWhatsAppLink(phoneNumber) {
   // Remove all non-numeric characters from the phone number
@@ -209,8 +209,8 @@ function generateWhatsAppLink(phoneNumber) {
 
 /**
  * Generate an Instagram link using the username from notes
- * @param {string} notes - Notes containing the Instagram username
- * @returns {string} - Instagram link
+ * @param {string} notes Notes containing the Instagram username
+ * @returns {string} The contact's Instagram link
  */
 function generateInstagramLink(notes) {
   const instagramPrefix = "Instagram: ";
