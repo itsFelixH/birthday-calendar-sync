@@ -116,7 +116,7 @@ class BirthdayContact {
     if (hasKnownBirthYear()) {
       const age = today.getFullYear() - birthDate.getFullYear();
       const monthDiff = today.getMonth() - birthDate.getMonth();
-      if (monthDiff  < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
         age--;
       }
       return age;
@@ -186,6 +186,29 @@ class BirthdayContact {
     const today = new Date();
     const birthdayThisYear = new Date(today.getFullYear(), this.birthday.getMonth(), this.birthday.getDate());
     return today > birthdayThisYear;
+  }
+
+
+  /**
+ * Calculates the contact's age in days.
+ * @returns {number} The age in days.
+ */
+  getAgeInDays() {
+    const today = new Date();
+    const ageInMilliseconds = today.getTime() - this.birthday.getTime();
+    return Math.floor(ageInMilliseconds / (1000 * 60 * 60 * 24));
+  }
+
+
+  /**
+   * Gets an array of social media links as key-value pairs.
+   * @returns {Object} An object containing social media platform names as keys and their respective links as values.
+   */
+  getSocialMediaLinks() {
+    return {
+      WhatsApp: this.whatsappLink,
+      Instagram: this.instagramLink,
+    };
   }
 
 }
