@@ -5,6 +5,7 @@
 class BirthdayContact {
   /**
    * Creates an instance of BirthdayContact.
+   *
    * @param {string} name - The name of the contact.
    * @param {Date} birthday - The birthday of the contact.
    * @param {Array<string>} labels - Labels/tags associated with the contact.
@@ -21,16 +22,24 @@ class BirthdayContact {
 
 
   /**
-   * Logs the contact's birthday to the console.
+   * Logs the contact's name and birthday in a formatted message to the console.
+   * 
+   * @returns {void}
    */
-  logToConsole() {
-    Logger.log(`🎂 ${this.name} hat Geburtstag am ${this.getBirthdayDDMMM()}`);
+  logBirthdaySummary() {
+    Logger.log(`🎂 ${this.name} hat Geburtstag am ${this.getBirthdayShortMonthFormat()}`);
   }
 
-  logFullDetails() {
+
+  /**
+ * Logs detailed information about the contact to the console, including name, birthday, age (if available), labels, WhatsApp link (if available), and Instagram link (if available).
+ * 
+ * @returns {void}
+ */
+  logContactDetails() {
     Logger.log(`Name: ${this.name}`);
-    Logger.log(`Birthday: ${this.getBirthdayDDMMYYYY()}`);
-    if (this.hasAge()) Logger.log(`Age: ${this.getAge()}`);
+    Logger.log(`Birthday: ${this.getBirthdayLongFormat()}`);
+    if (this.hasKnownBirthYear()) Logger.log(`Age: ${this.getAge()}`);
     if (this.labels.length > 0) Logger.log(`Labels: ${this.labels.join(', ')}`);
     if (this.whatsappLink) Logger.log(`WhatsApp: ${this.whatsappLink}`);
     if (this.instagramLink) Logger.log(`Instagram: ${this.instagramLink}`);
@@ -39,20 +48,22 @@ class BirthdayContact {
 
   /**
    * Gets the birthday formatted as "dd.MM.".
-   * @returns {string} - The formatted birthday.
+   * 
+   * @returns {string} The formatted birthday.
    */
-  getBirthdayDDMM() {
+  getBirthdayShortFormat() {
     return Utilities.formatDate(this.birthday, Session.getScriptTimeZone(), "dd.MM.");
   }
 
 
   /**
-   * Gets the birthday formatted as "dd.MM.yyyy", or "dd.MM." if the year is not specified.
-   * @returns {string} - The formatted birthday with or without the year.
+   * Gets the birthday formatted as "dd.MM.yyyy", or "dd.MM." if the year is not specified or matches the current year.
+   * 
+   * @returns {string} The formatted birthday with or without the year.
    */
-  getBirthdayDDMMYYYY() {
+  getBirthdayLongFormat() {
     if (this.birthday.getFullYear() == new Date().getFullYear()) {
-      return this.getBirthdayDDMM();
+      return this.getBirthdayShortFormat();
     } else {
       return Utilities.formatDate(this.birthday, Session.getScriptTimeZone(), "dd.MM.yyyy");
     }
@@ -61,20 +72,22 @@ class BirthdayContact {
 
   /**
    * Gets the birthday formatted as "dd. MMM".
-   * @returns {string} - The formatted birthday.
+   * 
+   * @returns {string} The formatted birthday.
    */
-  getBirthdayDDMMM() {
-    return `${('0' + this.birthday.getDate()).slice(-2)}. ${monthNames[this.birthday.getMonth()]}`;
+  getBirthdayLongMonthFormat() {
+    return `${('0' + this.birthday.getDate()).slice(-2)}. ${monthNamesLong[this.birthday.getMonth()]}`;
   }
 
 
   /**
-   * Gets the string for the birthday summary.
-   * @returns {string} - The birthday summary.
+   * Gets the string representation for the birthday summary.
+   * 
+   * @returns {string} The birthday summary string.
    */
-  getStringForSummary() {
-    var string = `${this.getBirthdayDDMMM()}: ${this.name}`;
-    if (this.hasAge()) {
+  getBirthdaySummaryString() {
+    var string = `${this.getBirthdayLongMonthFormat()}: ${this.name}`;
+    if (this.hasKnownBirthYear()) {
       string += ` wird ${this.getAge()}`;
     }
     return string;
@@ -82,29 +95,34 @@ class BirthdayContact {
 
 
   /**
-   * Checks if the contact has a specified birth year.
-   * @returns {boolean} True if the contact has a birth year, false otherwise.
+   * Checks if the contact has a birth year specified (i.e., not the current year).
+   * 
+   * @returns {boolean} True if the contact has a birth year specified, false otherwise.
    */
-  hasAge() {
+  hasKnownBirthYear() {
     return !(this.birthday.getFullYear() == new Date().getFullYear());
   }
 
 
   /**
-   * Gets the current age of the contact.
-   * @returns {number} Current age.
+   * Calculates the age of the contact in years.
+   *
+   * @returns {number} The age of the contact in years.
    */
-  getCurrentAge() {
+  calculateAge() {
     var today = new Date();
-    if (this.birthday.getFullYear() == today.getFullYear()) {
-      throw new Error("Oh noes...!");
-    } else {
-      var age = today.getFullYear() - this.birthday.getFullYear();
-      var m = today.getMonth() - this.birthday.getMonth();
-      if (m < 0 || (m === 0 && today.getDate() < this.birthday.getDate())) {
+    const birthDate = new Date(this.birthday);
+
+    if (hasKnownBirthYear()) {
+      const age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      if (monthDiff  < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
         age--;
       }
       return age;
+    } else {
+      Logger.log('Birth year is missing for contact:', this.name);
+      return 0;
     }
   }
 
@@ -113,7 +131,7 @@ class BirthdayContact {
    * Gets the age the contact will turn this year.
    * @returns {number} Age turning this year.
    */
-  getTurningAgeThisYear() {
+  getAgeThisYear() {
     var today = new Date();
     if (this.birthday.getFullYear() == today.getFullYear()) {
       throw new Error("Oh noes...!");
@@ -127,7 +145,7 @@ class BirthdayContact {
    * Checks if today is the contact's birthday.
    * @returns {boolean} True if today is the contact's birthday, false otherwise.
    */
-  hasBirthdayToday() {
+  isBirthdayToday() {
     const today = new Date();
     return today.getDate() === this.birthday.getDate() && today.getMonth() === this.birthday.getMonth();
   }
@@ -137,7 +155,7 @@ class BirthdayContact {
    * Checks if the contact's birthday is in the current month.
    * @returns {boolean} True if the birthday is in the current month, false otherwise.
    */
-  hasBirthdayThisMonth() {
+  isBirthdayThisMonth() {
     const today = new Date();
     return today.getMonth() === this.birthday.getMonth();
   }
@@ -147,7 +165,7 @@ class BirthdayContact {
   * Gets the number of days until the next birthday.
   * @returns {number} Days until the next birthday.
   */
-  daysUntilBirthday() {
+  daysToNextBirthday() {
     const today = new Date();
     const nextBirthday = new Date(today.getFullYear(), this.birthday.getMonth(), this.birthday.getDate());
 
@@ -171,3 +189,4 @@ class BirthdayContact {
   }
 
 }
+
