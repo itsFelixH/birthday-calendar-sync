@@ -8,12 +8,12 @@ var language = "de";
 // You can find this ID in your Google Calendar settings.
 var calendarId = "your-calendar-id@group.calendar.google.com";
 
-// Set this to true if you want to sync birthdays only for contacts with a specific label.
+// Set this to true if you want to sync birthdays only for contacts with a specific label(s).
 var useLabel = false;
 
-// The ID of the label to be used if useLabel is set to true.
-// You can find this ID in the URL of the specific label in your Google Contacts.
-var labelId = "your-label-id";
+// The name(s) of the label(s) to be used if useLabel is set to true.
+// Only contacts with one of these labels will be fetched.
+var labels = ["Label 1", "Label 2"];
 
 // The type of reminder to be added to the birthday events.
 // Possible values: "none", "email", "popup".

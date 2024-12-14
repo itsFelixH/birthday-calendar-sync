@@ -84,19 +84,19 @@ var monthNamesLong = translations["monthNamesLong"];
 // MAIN
 
 /**
- * Main function to update birthdays and summaries.
+ * Updates birthdays and summaries in the calendar.
  */
-function updateBirthdaysAndSummaries() {
-  var contacts = getAllContacts();
-  createOrUpdateBirthdays(calendarId, contacts, yearToUse);
+function updateBirthdaysAndSummariesInCalendar() {
+  var contacts = fetchContactsWithBirthdays();
+  createOrUpdateIndividualBirthdays(calendarId, contacts, yearToUse);
   if (createSummaries) {
-    createOrUpdateBirthdaySummaries(calendarId, contacts, yearToUse);
+    createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, yearToUse);
   }
 }
 
 
 /**
- * Main function to delete birthday events.
+ * Deletes all events from the specified calendar.
  */
 function deleteEvents() {
   deleteEventsWithTitle(calendarId, deleteString, deleteStartDate, deleteEndDate);
