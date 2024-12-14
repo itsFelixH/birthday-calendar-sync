@@ -1,14 +1,15 @@
 # Birthday Calendar Sync
 
-This project synchronizes birthdays from Google Contacts to a Google Calendar. It uses Google Apps Script and `clasp` to develop and manage the scripts locally.
+This project synchronizes birthdays from Google Contacts to a designated Google Calendar. It utilizes Google Apps Script and the `clasp` command-line interface for local development and deployment.
 
 ## Project Structure
 
-├── src │
-├── birthdayContactClass.gs │
-├── config.gs │
-├── main.gs │
-├── utils.gs
+project_root/
+├── src/
+│   ├── birthday_contact.gs
+│   ├── config.gs
+│   ├── main.gs
+│   ├── utils.gs
 ├── .clasp.json
 ├── appsscript.json
 └── README.md
@@ -20,34 +21,30 @@ This project synchronizes birthdays from Google Contacts to a Google Calendar. I
 
 ## Prerequisites
 
-- [Node.js](https://nodejs.org/)
-- [clasp](https://github.com/google/clasp): Google Apps Script Command Line Interface
-
-## Setup
-
-### 1. Install `clasp`
-
-Ensure you have Node.js installed. Then install `clasp` globally using npm:
+- [Node.js](https://nodejs.org/): Download and install Node.js from [Node.js Website](https://nodejs.org/)
+- [clasp](https://github.com/google/clasp): Install the clasp command-line interface globally using npm:
 
 ```bash
 npm install -g @google/clasp
 ```
 
-### 2. Login to clasp
+## Setup
 
-Authenticate clasp with your Google account:
+### 1. Authentication with clasp
+
+Ensure you have Node.js installed. Login to clasp using your Google account:
 
 ```bash
 clasp login
 ```
 
-### 3. Create a New Google Apps Script Project
+### 2. Create a Google Apps Script Project
 
 ```bash
 clasp create --type standalone --title "Birthday Calendar Sync"
 ```
 
-### 4. Clone the Project Repository
+### 3. Clone the Project Repository
 
 Clone your Git repository containing the project files to your local machine:
 
@@ -56,42 +53,53 @@ git clone https://github.com/itsFelixH/birthday-calendar-sync.git
 cd birthday-calendar-sync
 ```
 
-### 5. Link Your Project with Google Apps Script
+### 4. Link Your Project with Google Apps Script
 
 Make sure the `scriptId` in the `.clasp.json` file matches your Google Apps Script project. You can find the `scriptId` in the URL of your newly created Google Apps Script project.
 
-### 6. Configure the Project
+### 5. Configure the Project
 
-Open src/Config.gs and customize the configuration settings:
+Open `src/config.gs` and customize the configuration settings:
 
 ```js
+// Calendar ID for Birthday Events
 var calendarId = "your-calendar-id@group.calendar.google.com";
-var useLabel = false;
-var labelId = "your-label-id";
-var addReminder = "popup";
-var reminderInMinutes = 60 * 12; // 12 hours earlier
-var createSummaries = true;
-var yearToUse = new Date().getFullYear(); // Use current year for creating events
 
+// Optional Label Filter for Birthdays
+var useLabel = false;
+var labels = ["Label 1", "Label 2"];
+
+// Reminder Settings
+var addReminder = "popup"; // Reminder type (popup, email, sms)
+var reminderInMinutes = 60 * 12; // Reminder notification time (12 hours)
+
+// Birthday Summaries Creation
+var createSummaries = true;
+
+// Year for Events (defaults to current year)
+var yearToUse = new Date().getFullYear();
+
+// String to identify delete events (optional)
 var deleteString = "xxxxxxxxxxxxxxxxxxx";
+
+// Date range for deleting events (optional)
 var deleteStartDate = new Date("2023-01-01");
 var deleteEndDate = new Date("2025-12-31");
 ```
 
 ### 7. Push the Code to Google Apps Script
 
-Deploy your local code to Google Apps Script:
+Deploy your local code to your Google Apps Script project:
 
 ```bash
 clasp push
 ```
 
-This will upload all files in the src directory to your Google Apps Script project.
+This will upload all files to your Google Apps Script project.
 
 ## Usage
 
-Update Birthdays and Summaries:
+You can call these functions from the Script Editor in Google Apps Script:
 
-```js
-updateBirthdaysAndSummaries();
-```
+- `updateBirthdaysAndSummariesInCalendar()`: Updates birthdays and summaries in the calendar based on the configurations.
+- `deleteEvents()`: Deletes events from the calendar based on the specified criteria.
