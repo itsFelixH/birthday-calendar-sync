@@ -251,3 +251,16 @@ function extractInstagramLinkFromNotes(notes) {
   const instagramNote = notes.split('. ').find(note => note.startsWith(instagramPrefix));
   return instagramNote ? `https://www.instagram.com/${instagramNote.substring(instagramPrefix.length).trim()}` : '';
 }
+
+
+/**
+ * Updates the reminders for an existing event.
+ *
+ * @param {CalendarApp.CalendarEvent} event The event to update.
+ * @param {CalendarApp.Reminder[]} newReminders An array of new reminder objects.
+ */
+function updateEventReminders(event, newReminders) {
+  event.setReminders(newReminders);
+  event.saveEvent();
+  Logger.log(`Reminders for ${event.getTitle()} updated successfully.`);
+}
