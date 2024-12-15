@@ -28,19 +28,19 @@ var createSummaries = true;
 
 // The year for which birthday events and summaries will be created/updated.
 // By default, it uses the current year.
-var yearToUse = new Date().getFullYear();
+// var yearToUse = new Date().getFullYear();
 // Example: If you want to create for a specific future year, you can uncomment and set the year manually:
-// var yearToUse = 2025;
+var yearToUse = 2025;
 
 
 // SETTINGS FOR DELETING EVENTS
 
 // The string to search for in the event titles that should be deleted.
-var deleteString = 'hat Geburtstag';
+var deleteString = '🎉🎂 GEBURTSTAGE 🎂🎉';
 
 // The start date from which to search for events to delete.
 // Only events on or after this date will be considered for deletion.
-var deleteStartDate = new Date('2023-01-01');
+var deleteStartDate = new Date('2025-01-01');
 
 // The end date until which to search for events to delete.
 // Only events on or before this date will be considered for deletion.
