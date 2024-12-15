@@ -143,12 +143,22 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, year = new
       if (!event) {
         event = calendar.createAllDayEvent(title, new Date(startDate), {
           description: description,
-          reminders: { useDefaults: false }
+          reminders: {
+            useDefaults: false,
+            minutes: 60 * 24 * 4,
+            method: 'email',
+          }
         });
         Logger.log(`${title} created for ${monthName}`);
       } else {
-        event.setDescription(description);
-        Logger.log(`${title} updated for ${monthName}`);
+        // Check if the description needs to be updated
+        const currentDescription = event.getDescription();
+        if (currentDescription !== description) {
+          event.setDescription(description);
+          Logger.log(`${title} updated for ${contact.name}`);
+        } else {
+          Logger.log(`${title} already existed for ${monthName}`);
+        }
       }
     } catch (error) {
       Logger.log(`Error creating/updating summary event for ${monthName}: ${error.message}`);
@@ -192,12 +202,22 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, year = new Date
       if (!event) {
         event = calendar.createAllDayEvent(title, startDate, {
           description: description,
-          reminders: { useDefaults: false, minutes: reminderInMinutes, method: addReminder }
+          reminders: {
+            useDefaults: false,
+            minutes: reminderInMinutes,
+            method: addReminder,
+          },
         });
         Logger.log(`${title} created for ${contact.name}`);
       } else {
-        event.setDescription(description);
-        Logger.log(`${title} updated for ${contact.name}`);
+        // Check if the description needs to be updated
+        const currentDescription = event.getDescription();
+        if (currentDescription !== description) {
+          event.setDescription(description);
+          Logger.log(`${title} updated for ${contact.name}`);
+        } else {
+          Logger.log(`${title} already existed for ${contact.name}`);
+        }
       }
     } catch (error) {
       Logger.log(`Error creating/updating birthday event for ${contact.name}: ${error.message}`);
