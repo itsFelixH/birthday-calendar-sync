@@ -52,6 +52,7 @@ var translations = {
 /**
  * Gets the translation object for the specified language.
  * Defaults to English if the language is not supported.
+ *
  * @param {string} lang - The language code (e.g., 'en', 'de', 'es', 'fr').
  * @returns {Object} The translation object for the specified language.
  */
@@ -63,6 +64,7 @@ function getTranslations(lang) {
 /**
  * Gets the translation string for the specified key.
  * Defaults to English if the key is not available in the specified language.
+ *
  * @param {string} lang - The language code (e.g., 'en', 'de', 'es', 'fr').
  * @param {string} key - The translation key.
  * @returns {string} The translation string for the specified key.

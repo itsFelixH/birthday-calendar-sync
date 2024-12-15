@@ -75,11 +75,11 @@
 
 // SETUP
 
-var translations = getTranslations(language);
+var translationsToUse = translations['de'];
 
 // Using the translated month names
-var monthNames = translations["monthNames"];
-var monthNamesLong = translations["monthNamesLong"];
+var monthNames = translationsToUse["monthNames"];
+var monthNamesLong = translationsToUse["monthNamesLong"];
 
 // MAIN
 
