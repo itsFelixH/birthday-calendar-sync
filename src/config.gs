@@ -45,3 +45,9 @@ var deleteStartDate = new Date('2025-01-01');
 // The end date until which to search for events to delete.
 // Only events on or before this date will be considered for deletion.
 var deleteEndDate = new Date('2025-12-31');
+
+
+// VARIABLES
+
+var monthNames = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+var monthNamesLong = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
