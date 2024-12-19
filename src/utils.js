@@ -7,7 +7,18 @@
  * @param {Date} startDate The start date for the search.
  * @param {Date} endDate The end date for the search.
  */
-function deleteEventsByTitle(calendarId, titleString, startDate, endDate) {
+function deleteEventsByTitle(calendarId) {
+  // The string to search for in the event titles that should be deleted.
+  var titleString = '🎉🎂 GEBURTSTAGE 🎂🎉';
+
+  // The start date from which to search for events to delete.
+  // Only events on or after this date will be considered for deletion.
+  var startDate = new Date('2025-01-01');
+
+  // The end date until which to search for events to delete.
+  // Only events on or before this date will be considered for deletion.
+  var endDate = new Date('2025-12-31');
+
   const calendar = CalendarApp.getCalendarById(calendarId);
 
   Logger.log(`Searching for events between ${startDate.toDateString()} and ${endDate.toDateString()} containing '${titleString}'...`);
@@ -23,30 +34,6 @@ function deleteEventsByTitle(calendarId, titleString, startDate, endDate) {
 
 
 /**
- * Fetches all contact group names and their IDs.
- *
- * @returns {Object} Dictionary of label IDs and names.
- */
-function fetchContactGroupLabels() {
-  const user = 'people/me';
-  const contactGroups = People.ContactGroups.list({
-    resourceName: user,
-    groupFields: 'clientData,name'
-  });
-
-  const labelMap = {};
-
-  if (contactGroups.contactGroups) {
-    contactGroups.contactGroups.forEach(contactGroup => {
-      labelMap[contactGroup.resourceName] = contactGroup.name;
-    });
-  }
-
-  return labelMap;
-}
-
-
-/**
  * Fetches all contacts with birthdays from Google Contacts, optionally filtering by labels.
  *
  * @param {string[]} labelFilter An array of label names to filter contacts by.
@@ -54,9 +41,14 @@ function fetchContactGroupLabels() {
  */
 function fetchContactsWithBirthdays(labelFilter = []) {
   const peopleService = People.People;
-  const labelMap = fetchContactGroupLabels();
+  var labelManager = new LabelManager();
 
-  Logger.log(`Getting all contact names and birthdays from Google Contacts...`);
+  if (labelFilter == [] || labelFilter == ['']) {
+    Logger.log(`Fetching all contacts from Google Contacts...`);
+  } else {
+    Logger.log(`Fetching all contacts with any label(s) from [${labelFilter}] from Google Contacts...`);
+  }
+
   let contacts = [];
 
   let pageToken = null;
@@ -66,29 +58,34 @@ function fetchContactsWithBirthdays(labelFilter = []) {
     do {
       const response = peopleService.Connections.list('people/me', {
         pageSize: pageSize,
-        personFields: 'names,birthdays,memberships,phoneNumbers,biographies',
+        personFields: 'names,birthdays,memberships,emailAddresses,phoneNumbers,addresses,biographies',
         pageToken: pageToken
       });
 
       const connections = response.connections || [];
       connections.forEach(person => {
-        const name = person.names?.[0]?.displayName || 'Unnamed Contact';
         const birthdayData = person.birthdays?.[0]?.date;
         const memberships = person.memberships || [];
-        const phoneNumber = person.phoneNumbers?.[0]?.value || '';
-        const notes = (person.biographies || []).map(bio => bio.value).join('. ');
+        const labelIds = memberships.map(membership => membership.contactGroupMembership.contactGroupId);
+        const labelNames = labelManager.getLabelNamesByIds(labelIds);
+        const labelMatch = labelNames.length === 0 || labelNames.some(labelName => {
+          return labelFilter.includes(labelName);
+        });
 
-        const labels = memberships.map(membership => labelMap[membership.contactGroupMembership?.contactGroupId] || 'No Label');
-        const hasLabel = labels.some(label => labelFilter.includes(label));
-
-        if ((!useLabel || hasLabel) && birthdayData) {
+        if ((!useLabel || labelMatch) && birthdayData) {
           const year = birthdayData.year || new Date().getFullYear();
           const birthday = new Date(year, birthdayData.month - 1, birthdayData.day);
-          const contact = new BirthdayContact(name, birthday);
 
-          contact.whatsappLink = generateWhatsAppLink(phoneNumber);
-          contact.instagramLink = generateInstagramLink(notes);
+          const name = person.names?.[0]?.displayName || 'Unnamed Contact';
+          const email = person.emailAddresses?.[0]?.value;
+          const city = (person.addresses || []).map(address => address.city || '').join(', ');
+          const phoneNumber = person.phoneNumbers?.[0]?.value || '';
+          const notes = (person.biographies || []).map(bio => bio.value).join('. ');
 
+          var whatsappLink = generateWhatsAppLink(phoneNumber)
+          var instagramLink = extractInstagramLinkFromNotes(notes)
+
+          const contact = new BirthdayContact(name, birthday, labelNames, email, city, whatsappLink, instagramLink);
           contacts.push(contact);
         }
 
@@ -97,7 +94,7 @@ function fetchContactsWithBirthdays(labelFilter = []) {
       pageToken = response.nextPageToken;
     } while (pageToken);
   } catch (error) {
-    Logger.log('Error fetching contacts:', error.message);
+    Logger.log('Error fetching contacts:', error.toString());
   }
 
   Logger.log(`Got ${contacts.length} contacts with birthdays!`);
@@ -119,8 +116,8 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, year = new
   }
 
   const calendar = CalendarApp.getCalendarById(calendarId);
-  Logger.log(`Creating/Updating birthday summary events in ${year} for each month...`);
 
+  Logger.log(`Creating/Updating birthday summary events in ${year} for each month...`);
   for (var month = 0; month < 12; month++) {
     const startDate = new Date(year, month, 1);
     const endDate = new Date(year, month, 2);
@@ -137,7 +134,7 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, year = new
       .sort((a, b) => a.birthday.getDate() - b.birthday.getDate());
 
     const description = `Geburtstage im ${monthNamesLong[month]}\n\n` +
-      monthContacts.map(contact => contact.getStringForSummary()).join('\n');
+      monthContacts.map(contact => contact.getBirthdaySummaryEventString()).join('\n');
 
     try {
       if (!event) {
@@ -149,19 +146,19 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, year = new
             method: 'email',
           }
         });
-        Logger.log(`${title} created for ${monthName}`);
+        Logger.log(`Event '${title}' created for ${monthName}`);
       } else {
         // Check if the description needs to be updated
         const currentDescription = event.getDescription();
         if (currentDescription !== description) {
           event.setDescription(description);
-          Logger.log(`${title} updated for ${contact.name}`);
+          Logger.log(`Event '${title}' updated for ${monthName}`);
         } else {
-          Logger.log(`${title} already existed for ${monthName}`);
+          Logger.log(`Event '${title}' already existed for ${monthName}`);
         }
       }
     } catch (error) {
-      Logger.log(`Error creating/updating summary event for ${monthName}: ${error.message}`);
+      Logger.log(`Error creating/updating summary event for ${monthName}: ${error.toString()}`);
     }
   }
 
@@ -183,8 +180,8 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, year = new Date
   }
 
   const calendar = CalendarApp.getCalendarById(calendarId);
-  Logger.log(`Creating/Updating birthday events in ${year} for ${contacts.length} contacts...`);
 
+  Logger.log(`Creating/Updating birthday events in ${year} for ${contacts.length} contacts...`);
   contacts.forEach(contact => {
     const startDate = new Date(year, contact.birthday.getMonth(), contact.birthday.getDate());
     const endDate = new Date(year, contact.birthday.getMonth(), contact.birthday.getDate() + 1);
@@ -193,10 +190,7 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, year = new Date
     const events = calendar.getEvents(startDate, endDate);
     let event = events.find(e => e.getTitle() === title);
 
-    let description = contact.hasKnownBirthYear()
-      ? `${contact.name} wird heute ${contact.getAge()}\n`
-      : `${contact.name} hat heute Geburtstag\n`;
-    description += `Geburtstag: ${contact.getBirthdayLongFormat()}`;
+    const description = contact.getBirthdayEventString();
 
     try {
       if (!event) {
@@ -208,19 +202,19 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, year = new Date
             method: addReminder,
           },
         });
-        Logger.log(`${title} created for ${contact.name}`);
+        Logger.log(`Event '${title}' created for ${contact.name}`);
       } else {
         // Check if the description needs to be updated
         const currentDescription = event.getDescription();
         if (currentDescription !== description) {
           event.setDescription(description);
-          Logger.log(`${title} updated for ${contact.name}`);
+          Logger.log(`Event '${title}' updated for ${contact.name}`);
         } else {
-          Logger.log(`${title} already existed for ${contact.name}`);
+          Logger.log(`Event '${title}' already existed for ${contact.name}`);
         }
       }
     } catch (error) {
-      Logger.log(`Error creating/updating birthday event for ${contact.name}: ${error.message}`);
+      Logger.log(`Error creating/updating birthday event for ${contact.name}: ${error.toString()}`);
     }
   });
 
@@ -247,9 +241,22 @@ function generateWhatsAppLink(phoneNumber) {
  * @returns {string} The Instagram link, or an empty string if no Instagram link is found.
  */
 function extractInstagramLinkFromNotes(notes) {
-  const instagramPrefix = "Instagram: ";
-  const instagramNote = notes.split('. ').find(note => note.startsWith(instagramPrefix));
-  return instagramNote ? `https://www.instagram.com/${instagramNote.substring(instagramPrefix.length).trim()}` : '';
+  const instagramPrefixes = ["Instagram: ", "@"];
+  const baseUrl = "https://www.instagram.com/";
+
+  const instagramNote = notes.split('. ').find(note => {
+    return instagramPrefixes.some(prefix => note.startsWith(prefix));
+  });
+
+  if (instagramNote) {
+    const prefix = instagramPrefixes.find(prefix => instagramNote.startsWith(prefix));
+    let username = instagramNote.substring(prefix.length).trim();
+    if (username.startsWith('@')) {
+      username = username.substring(1);
+    }
+    return `${baseUrl}${username}`;
+  }
+  return '';
 }
 
 
