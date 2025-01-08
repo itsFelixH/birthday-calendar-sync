@@ -4,14 +4,14 @@ This project synchronizes birthdays from Google Contacts to a designated Google 
 
 ## Project Structure
 
-project_root/
-├── src/
-│   ├── birthday_contact.gs
-│   ├── config.gs
-│   ├── main.gs
-│   ├── utils.gs
-├── .clasp.json
-├── appsscript.json
+project_root/  
+├── src/  
+│   ├── birthday_contact.gs  
+│   ├── config.gs  
+│   ├── main.gs  
+│   ├── utils.gs  
+├── .clasp.json  
+├── appsscript.json  
 └── README.md
 
 - **`config.gs`**: Contains configurations and constants.
