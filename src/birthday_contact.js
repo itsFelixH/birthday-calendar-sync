@@ -92,13 +92,14 @@ class BirthdayContact {
       ? `${this.name} wird heute ${this.getAgeThisYear()}\nGeburtstag: ${this.getBirthdayLongFormat()}\n\n`
       : `${this.name} hat heute Geburtstag\n\n`;
 
-    if (this.city) string += `Stadt: ${this.city}\n`;
     if (this.whatsappLink) string += `WhatsApp: ${this.whatsappLink}\n`;
     if (this.instagramLink) string += `Instagram: ${this.instagramLink}\n`;
-    if (this.email) string += `Email: ${this.email}\n`;
+
+    //if (this.city) string += `Stadt: ${this.city}\n`;
+    //if (this.email) string += `Email: ${this.email}\n`;
 
     if (this.labels.length > 0) {
-      if (this.city || this.whatsappLink || this.instagramLink || this.email) string += `\n`;
+      if (this.whatsappLink || this.instagramLink) string += `\n`;
       string += `${this.labels}\n`
     }
     return string;
