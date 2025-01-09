@@ -138,6 +138,7 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, year = new
 
     try {
       if (!event) {
+        description += `\n\n(This event was created by a script. Created at: ${currentTimestamp})\n`;
         event = calendar.createAllDayEvent(title, new Date(startDate), {
           description: description,
           reminders: {
@@ -148,14 +149,9 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, year = new
         });
         Logger.log(`Event '${title}' created for ${monthName}`);
       } else {
-        // Check if the description needs to be updated
-        const currentDescription = event.getDescription();
-        if (currentDescription !== description) {
-          event.setDescription(description);
-          Logger.log(`Event '${title}' updated for ${monthName}`);
-        } else {
-          Logger.log(`Event '${title}' already existed for ${monthName}`);
-        }
+        description += `\n\n(This event was created by a script. Last updated at: ${currentTimestamp})\n`;
+        event.setDescription(description);
+        Logger.log(`Event '${title}' updated for ${monthName}`);
       }
     } catch (error) {
       Logger.log(`Error creating/updating summary event for ${monthName}: ${error.toString()}`);
@@ -190,10 +186,12 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, year = new Date
     const events = calendar.getEvents(startDate, endDate);
     let event = events.find(e => e.getTitle() === title);
 
-    const description = contact.getBirthdayEventString();
+    const currentTimestamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "dd.MM.yyyy HH:mm")
+    let description = contact.getBirthdayEventString();
 
     try {
       if (!event) {
+        description += `\n\n(This event was created by a script. Created at: ${currentTimestamp})\n`;
         event = calendar.createAllDayEvent(title, startDate, {
           description: description,
           reminders: {
@@ -204,14 +202,9 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, year = new Date
         });
         Logger.log(`Event '${title}' created for ${contact.name}`);
       } else {
-        // Check if the description needs to be updated
-        const currentDescription = event.getDescription();
-        if (currentDescription !== description) {
-          event.setDescription(description);
-          Logger.log(`Event '${title}' updated for ${contact.name}`);
-        } else {
-          Logger.log(`Event '${title}' already existed for ${contact.name}`);
-        }
+        description += `\n\n(This event was created by a script. Last updated at: ${currentTimestamp})\n`;
+        event.setDescription(description);
+        Logger.log(`Event '${title}' updated for ${contact.name}`);
       }
     } catch (error) {
       Logger.log(`Error creating/updating birthday event for ${contact.name}: ${error.toString()}`);
