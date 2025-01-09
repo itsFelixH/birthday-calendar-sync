@@ -97,6 +97,22 @@ function fetchContactsWithBirthdays(labelFilter = []) {
     Logger.log('Error fetching contacts:', error.toString());
   }
 
+  // Sort contacts based on their birthday
+  contacts.sort((a, b) => {
+    const monthA = a.birthday.getMonth();
+    const dayA = a.birthday.getDate();
+    const monthB = b.birthday.getMonth();
+    const dayB = b.birthday.getDate();
+  
+    if (monthA < monthB) {
+      return -1; 
+    } else if (monthA > monthB) {
+      return 1;
+    } else { // months are the same
+      return dayA - dayB; 
+    }
+  });
+
   Logger.log(`Got ${contacts.length} contacts with birthdays!`);
   return contacts;
 }
