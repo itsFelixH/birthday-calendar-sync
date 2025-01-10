@@ -46,7 +46,7 @@ function fetchContactsWithBirthdays(labelFilter = []) {
   if (labelFilter == [] || labelFilter == ['']) {
     Logger.log(`Fetching all contacts from Google Contacts...`);
   } else {
-    Logger.log(`Fetching all contacts with any label(s) from [${labelFilter}] from Google Contacts...`);
+    Logger.log(`Fetching all contacts with any label(s) from '${labelFilter}' from Google Contacts...`);
   }
 
   let contacts = [];
@@ -123,7 +123,7 @@ function fetchContactsWithBirthdays(labelFilter = []) {
  *
  * @param {string} calendarId The ID of the calendar.
  * @param {BirthdayContact[]} contacts An array of BirthdayContact objects.
- * @param {number} [year=new Date().getFullYear()] The year for which to create/update the summaries.
+ * @param {number} [year=new Date().getFullYear()] The year for which to create / update the summaries.
  */
 function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, year = new Date().getFullYear()) {
   if (contacts.length === 0) {
@@ -154,7 +154,6 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, year = new
 
     try {
       if (!event) {
-        description += `\n\n(This event was created by a script. Created at: ${currentTimestamp})\n`;
         event = calendar.createAllDayEvent(title, new Date(startDate), {
           description: description,
           reminders: {
@@ -163,18 +162,22 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, year = new
             method: 'email',
           }
         });
-        Logger.log(`Event '${title}' created for ${monthName}`);
+        Logger.log(`Event '${title}' for ${monthName} created`);
       } else {
-        description += `\n\n(This event was created by a script. Last updated at: ${currentTimestamp})\n`;
-        event.setDescription(description);
-        Logger.log(`Event '${title}' updated for ${monthName}`);
+        if (event.getDescription() != description) {
+          event.setDescription(description);
+          Logger.log(`Event '${title}' for ${monthName} updated`);
+        }
+        else {
+          Logger.log(`Event '${title}' for ${monthName} already existed`);
+        }
       }
     } catch (error) {
-      Logger.log(`Error creating/updating summary event for ${monthName}: ${error.toString()}`);
+      Logger.log(`Error creating/updating summary event for ${monthName}:`, error.toString());
     }
   }
 
-  Logger.log(`All summary events created/updated!`);
+  Logger.log(`All summary events created or updated!`);
 }
 
 
@@ -201,13 +204,10 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, year = new Date
     const title = `🎂 ${contact.name} hat Geburtstag`;
     const events = calendar.getEvents(startDate, endDate);
     let event = events.find(e => e.getTitle() === title);
-
-    const currentTimestamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "dd.MM.yyyy HH:mm")
-    let description = contact.getBirthdayEventString();
+    const description = contact.getBirthdayEventString();
 
     try {
       if (!event) {
-        description += `\n\n(This event was created by a script. Created at: ${currentTimestamp})\n`;
         event = calendar.createAllDayEvent(title, startDate, {
           description: description,
           reminders: {
@@ -216,18 +216,22 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, year = new Date
             method: addReminder,
           },
         });
-        Logger.log(`Event '${title}' created for ${contact.name}`);
+        Logger.log(`Event '${title}' for ${contact.name} created`);
       } else {
-        description += `\n\n(This event was created by a script. Last updated at: ${currentTimestamp})\n`;
-        event.setDescription(description);
-        Logger.log(`Event '${title}' updated for ${contact.name}`);
+        if (event.getDescription() != description) {
+          event.setDescription(description);
+          Logger.log(`Event '${title}' for ${contact.name} updated`);
+        }
+        else {
+          Logger.log(`Event '${title}' for ${contact.name} already existed`);
+        }
       }
     } catch (error) {
-      Logger.log(`Error creating/updating birthday event for ${contact.name}: ${error.toString()}`);
+      Logger.log(`Error creating/updating birthday event for ${contact.name}`, error.toString());
     }
   });
 
-  Logger.log(`All birthday events created/updated!`);
+  Logger.log(`All birthday events created or updated!`);
 }
 
 
