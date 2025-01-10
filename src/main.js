@@ -61,5 +61,18 @@ function testEmail() {
   var subject = "Test Email";
   var body = "This is a test email sent from a Google Apps Script.";
   
-  GmailApp.sendEmail(recipient, subject, body);
+  var message = {
+    to: recipient,
+    subject: subject,
+    body: body
+  };
+  
+  Gmail.Users.Messages.send({
+    raw: Utilities.base64EncodeWebSafe(
+      "From: you@example.com\r\n" +
+      "To: " + message.to + "\r\n" +
+      "Subject: " + message.subject + "\r\n\r\n" +
+      message.body
+    )
+  }, 'me');
 }

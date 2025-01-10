@@ -11,6 +11,11 @@
         "userSymbol": "People",
         "version": "v1",
         "serviceId": "peopleapi"
+      },
+      {
+        "userSymbol": "Gmail",
+        "version": "v1",
+        "serviceId": "gmail"
       }
     ]
   },
