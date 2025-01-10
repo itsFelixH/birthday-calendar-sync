@@ -30,7 +30,7 @@ class LabelManager {
 
       return labels;
     } catch (error) {
-      Logger.log("Error fetching contact labels: " + error.toString());
+      Logger.log("Error fetching contact labels:", error.toString());
       return [];
     }
   }
@@ -114,7 +114,7 @@ class LabelManager {
 
       return { id: newLabel.resourceName, name: newLabel.name };
     } catch (error) {
-      Logger.log("Error adding contact label: " + error.toString());
+      Logger.log('Error adding contact label: ', error.toString());
       return null;
     }
   }
@@ -125,7 +125,7 @@ class LabelManager {
    */
   logAllLabels() {
     var labelNames = this.labels.map(label => label.name);
-    Logger.log("Contact Labels: " + labelNames.join(", "));
+    Logger.log('Contact Labels: ' + labelNames.join(', '));
   }
 }
 

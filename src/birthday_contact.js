@@ -95,9 +95,6 @@ class BirthdayContact {
     if (this.whatsappLink) string += `WhatsApp: ${this.whatsappLink}\n`;
     if (this.instagramLink) string += `Instagram: ${this.instagramLink}\n`;
 
-    //if (this.city) string += `Stadt: ${this.city}\n`;
-    //if (this.email) string += `Email: ${this.email}\n`;
-
     if (this.labels.length > 0) {
       if (this.whatsappLink || this.instagramLink) string += `\n`;
       string += `${this.labels}\n`
@@ -147,7 +144,7 @@ class BirthdayContact {
       }
       return age;
     } else {
-      Logger.log('Birth year is missing for contact:', this.name);
+      Logger.log(`Birth year is missing for '${this.name}'`);
       return 0;
     }
   }
@@ -165,7 +162,7 @@ class BirthdayContact {
     if (this.hasKnownBirthYear()) {
       return today.getFullYear() - birthDate.getFullYear();
     } else {
-      Logger.log('Birth year is missing for contact:', this.name);
+      Logger.log(`Birth year is missing for '${this.name}'`);
       return 0;
     }
   }
@@ -432,7 +429,7 @@ function getContactsBySocialMediaLink(contacts, socialMedia) {
  */
 function logContactsNames(contacts) {
   if (contacts.length === 0) {
-    Logger.log('No contacts to display.');
+    Logger.log('No contacts to display');
     return;
   }
 
@@ -449,7 +446,7 @@ function logContactsNames(contacts) {
  */
 function logContactsSummaryList(contacts) {
   if (contacts.length === 0) {
-    Logger.log('No contacts to display.');
+    Logger.log('No contacts to display');
     return;
   }
 
@@ -468,7 +465,7 @@ function logContactsSummaryList(contacts) {
  */
 function logDetailedContactsList(contacts) {
   if (contacts.length === 0) {
-    Logger.log('No contacts to display.');
+    Logger.log('No contacts to display');
     return;
   }
 
@@ -489,11 +486,11 @@ function logContactsByLabel(contacts, label) {
   const filteredContacts = contacts.filter(contact => contact.labels.includes(label));
 
   if (filteredContacts.length === 0) {
-    Logger.log(`No contacts found with label: ${label}`);
+    Logger.log(`No contacts found with label '${label}'`);
     return;
   }
 
-  Logger.log(`Contacts with label: ${label}`);
+  Logger.log(`Contacts with label '${label}':`);
   filteredContacts.forEach(contact => {
     contact.logContactDetails();
     Logger.log('------------------------');
