@@ -56,5 +56,10 @@ function testLabels() {
   Logger.log("Label Name: " + (labelName ? labelName : "Label ID not found"));
 }
 
-
-
+function testEmail() {
+  var recipient = Session.getActiveUser().getEmail();
+  var subject = "Test Email";
+  var body = "This is a test email sent from a Google Apps Script.";
+  
+  GmailApp.sendEmail(recipient, subject, body);
+}
