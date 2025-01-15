@@ -10,7 +10,6 @@ var monthNamesLong = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Jul
  */
 function updateBirthdaysAndSummariesInCalendar() {
   var contacts = fetchContactsWithBirthdays();
-  logContactsNames(contacts);
 
   if (createIndividualBirthdayEvents) {
     createOrUpdateIndividualBirthdays(calendarId, contacts, yearToUse);
@@ -19,6 +18,17 @@ function updateBirthdaysAndSummariesInCalendar() {
   if (createBirthdaySummaryEvents) {
     createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, yearToUse);
   }
+}
+
+function sendSummaryMail() {
+  var contacts = fetchContactsWithBirthdays();
+
+  var nextMonthDate = getNextMonth()
+  var body = createMonthlyBirthdaySummaryMail(calendarId, contacts, nextMonthDate.getMonth(), nextMonthDate.getFullYear())
+
+  const monthName = Utilities.formatDate(nextMonthDate, Session.getScriptTimeZone(), "MMMM");
+  var subject = `🎉🎂 ${monthNamesLong[nextMonthDate.getMonth()]} Geburtstage 🎂🎉`;
+  sendMail(subject, body);
 }
 
 function testFetch() {
@@ -57,22 +67,8 @@ function testLabels() {
 }
 
 function testEmail() {
-  var recipient = Session.getActiveUser().getEmail();
   var subject = "Test Email";
   var body = "This is a test email sent from a Google Apps Script.";
   
-  var message = {
-    to: recipient,
-    subject: subject,
-    body: body
-  };
-  
-  Gmail.Users.Messages.send({
-    raw: Utilities.base64EncodeWebSafe(
-      "From: you@example.com\r\n" +
-      "To: " + message.to + "\r\n" +
-      "Subject: " + message.subject + "\r\n\r\n" +
-      message.body
-    )
-  }, 'me');
+  sendMail(subject, body);
 }

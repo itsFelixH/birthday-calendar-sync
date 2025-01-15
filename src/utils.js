@@ -180,6 +180,30 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, year = new
   Logger.log(`All summary events created or updated!`);
 }
 
+function createMonthlyBirthdaySummaryMail(calendarId, contacts, month, year) {
+  if (contacts.length === 0) {
+    Logger.log("No contacts found. Aborting.");
+    return;
+  }
+
+  const calendar = CalendarApp.getCalendarById(calendarId);
+
+  const startDate = new Date(year, month, 1);
+  const endDate = new Date(year, month, 2);
+
+  const monthName = Utilities.formatDate(startDate, Session.getScriptTimeZone(), "MMMM");
+  Logger.log(`Creating summary mail for ${monthName} ${year}...`);
+
+  const monthContacts = contacts
+    .filter(contact => contact.birthday.getMonth() === month)
+    .sort((a, b) => a.birthday.getDate() - b.birthday.getDate());
+
+  const mailBody = `Geburtstage im ${monthNamesLong[month]}\n\n` +
+    monthContacts.map(contact => contact.getBirthdaySummaryEventString()).join('\n');
+
+  Logger.log(`Summary mail body created!`);
+}
+
 
 /**
  * Creates or updates individual birthday events in the calendar.
@@ -283,4 +307,35 @@ function updateEventReminders(event, newReminders) {
   event.setReminders(newReminders);
   event.saveEvent();
   Logger.log(`Reminders for ${event.getTitle()} updated successfully.`);
+}
+
+
+function sendMail(subject, body) {
+  var recipient = Session.getActiveUser().getEmail();
+  
+  var message = {
+    to: recipient,
+    subject: subject,
+    body: body
+  };
+  
+  Gmail.Users.Messages.send({
+    raw: Utilities.base64EncodeWebSafe(
+      "From: birthdaysync@example.com\r\n" +
+      "To: " + message.to + "\r\n" +
+      "Subject: " + message.subject + "\r\n\r\n" +
+      message.body
+    )
+  }, 'me');
+}
+
+
+function getNextMonth() {
+  const today = new Date();
+  let currentMonth = today.getMonth();
+  let nextMonth = (currentMonth + 1) % 12; 
+
+  const nextMonthDate = new Date(today.getFullYear(), nextMonth, 1);
+
+  return nextMonthDate;
 }
