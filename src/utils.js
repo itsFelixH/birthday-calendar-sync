@@ -200,7 +200,7 @@ function createMonthlyBirthdaySummaryMail(calendarId, contacts, month, year) {
 
   Logger.log(`Summary mail body created!`);
 
-  const subject = `${monthNamesLong[nextMonthDate.getMonth()]} Geburtstage`;
+  const subject = `${monthNamesLong[month]} Geburtstage`;
   sendMail(subject, mailBody);
 }
 
