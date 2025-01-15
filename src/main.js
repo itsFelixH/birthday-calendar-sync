@@ -24,11 +24,7 @@ function sendSummaryMail() {
   var contacts = fetchContactsWithBirthdays();
 
   var nextMonthDate = getNextMonth()
-  var body = createMonthlyBirthdaySummaryMail(calendarId, contacts, nextMonthDate.getMonth(), nextMonthDate.getFullYear())
-
-  const monthName = Utilities.formatDate(nextMonthDate, Session.getScriptTimeZone(), "MMMM");
-  var subject = `🎉🎂 ${monthNamesLong[nextMonthDate.getMonth()]} Geburtstage 🎂🎉`;
-  sendMail(subject, body);
+  createMonthlyBirthdaySummaryMail(calendarId, contacts, nextMonthDate.getMonth(), nextMonthDate.getFullYear())
 }
 
 function testFetch() {

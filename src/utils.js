@@ -43,7 +43,7 @@ function fetchContactsWithBirthdays(labelFilter = []) {
   const peopleService = People.People;
   var labelManager = new LabelManager();
 
-  if (labelFilter == [] || labelFilter == ['']) {
+  if (labelFilter == [] || labelFilter == [''] || labelFilter == '' || labelFilter.length < 1) {
     Logger.log(`Fetching all contacts from Google Contacts...`);
   } else {
     Logger.log(`Fetching all contacts with any label(s) from '${labelFilter}' from Google Contacts...`);
@@ -186,10 +186,7 @@ function createMonthlyBirthdaySummaryMail(calendarId, contacts, month, year) {
     return;
   }
 
-  const calendar = CalendarApp.getCalendarById(calendarId);
-
   const startDate = new Date(year, month, 1);
-  const endDate = new Date(year, month, 2);
 
   const monthName = Utilities.formatDate(startDate, Session.getScriptTimeZone(), "MMMM");
   Logger.log(`Creating summary mail for ${monthName} ${year}...`);
@@ -202,6 +199,9 @@ function createMonthlyBirthdaySummaryMail(calendarId, contacts, month, year) {
     monthContacts.map(contact => contact.getBirthdaySummaryEventString()).join('\n');
 
   Logger.log(`Summary mail body created!`);
+
+  const subject = `${monthNamesLong[nextMonthDate.getMonth()]} Geburtstage`;
+  sendMail(subject, mailBody);
 }
 
 
