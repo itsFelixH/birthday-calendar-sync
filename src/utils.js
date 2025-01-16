@@ -329,7 +329,7 @@ function updateEventReminders(event, newReminders) {
  */
 function sendMail(subject, body) {
   const recipient = Session.getActiveUser().getEmail();
-  const sender = ScriptApp.getActiveScript().getName(); 
+  const sender = DriveApp.getFileById(ScriptApp.getScriptId()).getName();
   const message = {
     to: recipient,
     subject: subject,
