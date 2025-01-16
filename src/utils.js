@@ -207,7 +207,7 @@ function createMonthlyBirthdaySummaryMail(calendarId, contacts, month, year) {
   mailBody += monthContacts.map(contact => contact.getBirthdaySummaryMailString()).join('\n');
   mailBody += `\n\n---\n\n`;
   mailBody += 'Diese E-Mail wurde automatisch von einem Google Apps Script generiert.\n'
-  mailBody += 'Script-Name: ' + ScriptApp.getActiveScript().getName() + '\n'
+  mailBody += 'Script-Name: Birthday Calendar Sync\n'
   mailBody += 'Script-URL: ' + ScriptApp.getService().getUrl();
 
   const subject = `🎉🎂 GEBURTSTAGS REMINDER 🎂🎉`;
