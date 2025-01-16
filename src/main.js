@@ -63,10 +63,17 @@ function testLabels() {
 }
 
 function testEmail() {
-  var subject = "Test Email";
-  var body = "This is a test email sent from a Google Apps Script.";
-  
-  sendMail(subject, body);
+  const toEmail = Session.getActiveUser().getEmail();
+  const fromEmail = Session.getActiveUser().getEmail();
+
+  var subject = "🎉 Test Email";
+  var textBody = "This is a test email sent from a Google Apps Script 😁";
+  const senderName = DriveApp.getFileById(ScriptApp.getScriptId()).getName();
+
+  // Build the email body with formatted birthdates
+  let htmlBody = `<b>🎂 Geburtstage im Januar!!!</b><br>`;
+
+  sendMail(toEmail, fromEmail, senderName, subject, textBody, htmlBody);
 }
 
 function testScriptName() {
