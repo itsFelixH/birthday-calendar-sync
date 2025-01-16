@@ -346,3 +346,30 @@ function getNextMonth() {
 
   return new Date(today.getFullYear(), nextMonth, 1);
 }
+
+function sendMail(toEmail, fromEmail, name, subject, textBody, htmlBody) {
+  const boundary = "boundaryboundary";
+  const mailData = [
+    `MIME-Version: 1.0`,
+    `To: ${toEmail}`,
+    `From: "${name}" <${fromEmail}>`,
+    `Subject: =?UTF-8?B?${Utilities.base64Encode(subject, Utilities.Charset.UTF_8)}?=`,
+    `Content-Type: multipart/alternative; boundary=${boundary}`,
+    ``,
+    `--${boundary}`,
+    `Content-Type: text/plain; charset=UTF-8`,
+    ``,
+    textBody,
+    ``,
+    `--${boundary}`,
+    `Content-Type: text/html; charset=UTF-8`,
+    `Content-Transfer-Encoding: base64`,
+    ``,
+    Utilities.base64Encode(htmlBody, Utilities.Charset.UTF_8),
+    ``,
+    `--${boundary}--`,
+  ].join("\r\n");
+
+  rawMessage = Utilities.base64EncodeWebSafe(mailData);
+  Gmail.Users.Messages.send({raw: rawMessage}, "me");
+}
