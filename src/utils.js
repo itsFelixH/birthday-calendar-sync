@@ -210,7 +210,7 @@ function createMonthlyBirthdaySummaryMail(contacts, month, year) {
   const numBirthdays = monthContacts.length;
   const recipientName = getCurrentUserFirstName();
 
-  const subject = '🎂 Geburtstags Reminder';
+  const subject = '🎂 Geburtstags Reminder 🎂';
   const senderName = DriveApp.getFileById(ScriptApp.getScriptId()).getName();
   const toEmail = Session.getActiveUser().getEmail();
   const fromEmail = Session.getActiveUser().getEmail();
@@ -220,11 +220,11 @@ function createMonthlyBirthdaySummaryMail(contacts, month, year) {
     <div style="font-family: Arial, sans-serif; line-height: 1.6;">
       <h3>🎉 Geburtstage im ${monthNamesLong[month]} 🎉</h3>
       <p>Hallo${recipientName ? ` ${recipientName},` : ','}</p>
-      <p>hier sind alle Geburtstage deiner Kontakte für den Monat ${monthNamesLong[month]} ${year}. Vergiss nicht, ihnen zu gratulieren!</p>
+      <p>Mach dich bereit zum Feiern! Hier sind die Geburtstage deiner Kontakte im ${monthNamesLong[month]} ${year}. Vergiss nicht, ihnen zu gratulieren!</p>
       <p>Insgesamt gibt es ${numBirthdays} Geburtstag${numBirthdays > 1 ? 'e' : ''} in diesem Monat:</p>
       <ul style="list-style-type: none; padding: 0;">
         ${monthContacts.map(contact => `<li>${contact.getBirthdaySummaryMailString()}</li>`).join('')}
-      </ul>
+      </ul><br>
       <hr style="border:0; height:1px; background:#ccc;">
       <p style="text-align: center; margin-top: 2em;">
         <a href="https://calendar.google.com/calendar/r" style="color: #007BFF;">Google Kalender anzeigen</a><br>
@@ -391,7 +391,7 @@ function getSelf() {
   try {
     const people = People.People.getBatchGet({
       resourceNames: ['people/me'],
-      personFields: 'names,emailAddresses'
+      personFields: 'names'
     });
     console.log('Myself: %s', JSON.stringify(people, null, 2));
   } catch (err) {
@@ -407,7 +407,7 @@ function getCurrentUserFirstName() {
   try {
     const peopleResponse = People.People.getBatchGet({
       resourceNames: ['people/me'],
-      personFields: 'names,emailAddresses'
+      personFields: 'names'
     });
 
     // Check if response exists and extract the first name
