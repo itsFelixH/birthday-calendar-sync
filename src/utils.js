@@ -207,12 +207,17 @@ function createMonthlyBirthdaySummaryMail(contacts, month, year) {
     return;
   }
 
+  const numBirthdays = monthContacts.length;
+
   // Build the email body with formatted birthdates
   let mailBody = `
-    <b>🎉 Geburtstage im ${monthNamesLong[month]} 🎉</b><br><br>
-    ${monthContacts.map(contact => `🎂 ${contact.getBirthdaySummaryMailString()}`).join('<br>')}<br><br>
+    <h1>🎉 Geburtstage im ${monthNamesLong[month]} 🎉</h1>
+    <p>Hallo,</p>
+    <p>hier sind alle Geburtstage deiner Kontakte für den Monat ${monthNamesLong[month]} ${year}. Vergiss nicht, ihnen zu gratulieren!</p>
+    <p>Insgesamt gibt es ${numBirthdays} Geburtstag${numBirthdays > 1 ? 'e' : ''} in diesem Monat.</p><br>
+    <p>${monthContacts.map(contact => contact.getBirthdaySummaryMailString()).join('<br>')}<br><br>
     ---<br>
-    Diese E-Mail wurde automatisch von einem Google Apps Script generiert.<br>
+    Diese E-Mail wurde automatisch von einem Google Apps Script generiert.</p><br>
   `;
 
   const subject = '🎉🎂 GEBURTSTAGS REMINDER 🎂🎉';
