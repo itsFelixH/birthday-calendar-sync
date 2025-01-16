@@ -79,7 +79,5 @@ function testScriptName() {
 }
 
 function testFirstName() {
-  getSelf()
-
   Logger.log(getCurrentUserFirstName())
 }

@@ -219,7 +219,7 @@ function createMonthlyBirthdaySummaryMail(contacts, month, year) {
   let mailBody = `
     <div style="font-family: Arial, sans-serif; line-height: 1.6;">
       <h3>🎉 Geburtstage im ${monthNamesLong[month]} 🎉</h3>
-      <p>Hallo${recipientName ? ` ${recipientName}` : ''},</p>
+      <p>Hallo${recipientName ? ` ${recipientName},` : ','}</p>
       <p>hier sind alle Geburtstage deiner Kontakte für den Monat ${monthNamesLong[month]} ${year}. Vergiss nicht, ihnen zu gratulieren!</p>
       <p>Insgesamt gibt es ${numBirthdays} Geburtstag${numBirthdays > 1 ? 'e' : ''} in diesem Monat:</p>
       <ul style="list-style-type: none; padding: 0;">
@@ -418,14 +418,11 @@ function getCurrentUserFirstName() {
         return firstName;
       } else {
         Logger.log("User names not available.");
-        return null;
       }
     } else {
       Logger.log("No valid response received.");
-      return null;
     }
   } catch (err) {
     Logger.log('Failed to get own profile with an error: ' + err.message);
-    return null;
   }
 }
