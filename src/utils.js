@@ -203,11 +203,11 @@ function createMonthlyBirthdaySummaryMail(calendarId, contacts, month, year) {
                                 .sort((a, b) => a.birthday.getDate() - b.birthday.getDate());
 
   // Build the email body with formatted birthdates
-  let mailBody = `Geburtstage im ${monthNamesLong[month]}\n\n`
-  mailBody += monthContacts.map(contact => contact.getBirthdaySummaryMailString()).join('\n');
-  mailBody += `\n\n---\n\n`;
-  mailBody += 'Diese E-Mail wurde automatisch von einem Google Apps Script generiert.\n'
-  mailBody += 'Script-Name: Birthday Calendar Sync\n'
+  let mailBody = `<b>Geburtstage im ${monthNamesLong[month]}</b><br><br>`
+  mailBody += monthContacts.map(contact => contact.getBirthdaySummaryMailString()).join('<br>');
+  mailBody += `<br><br>---<br><br>`;
+  mailBody += 'Diese E-Mail wurde automatisch von einem Google Apps Script generiert.<br>'
+  mailBody += 'Script-Name: Birthday Calendar Sync<br>'
 
   const subject = `🎉🎂 GEBURTSTAGS REMINDER 🎂🎉`;
 
