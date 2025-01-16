@@ -208,22 +208,31 @@ function createMonthlyBirthdaySummaryMail(contacts, month, year) {
   }
 
   const numBirthdays = monthContacts.length;
+  const recipientName = Session.getActiveUser().getUsername();
 
-  // Build the email body with formatted birthdates
-  let mailBody = `
-    <h1>🎉 Geburtstage im ${monthNamesLong[month]} 🎉</h1>
-    <p>Hallo,</p>
-    <p>hier sind alle Geburtstage deiner Kontakte für den Monat ${monthNamesLong[month]} ${year}. Vergiss nicht, ihnen zu gratulieren!</p>
-    <p>Insgesamt gibt es ${numBirthdays} Geburtstag${numBirthdays > 1 ? 'e' : ''} in diesem Monat.</p><br>
-    <p>${monthContacts.map(contact => contact.getBirthdaySummaryMailString()).join('<br>')}<br><br>
-    ---<br>
-    Diese E-Mail wurde automatisch von einem Google Apps Script generiert.</p><br>
-  `;
-
-  const subject = '🎉🎂 GEBURTSTAGS REMINDER 🎂🎉';
+  const subject = '🎂 Geburtstags Reminder';
   const senderName = DriveApp.getFileById(ScriptApp.getScriptId()).getName();
   const toEmail = Session.getActiveUser().getEmail();
   const fromEmail = Session.getActiveUser().getEmail();
+
+  // Build the email body with formatted birthdates
+  let mailBody = `
+    <div style="font-family: Arial, sans-serif;">
+      <h2>🎉 Geburtstage im ${monthNamesLong[month]} 🎉</h2>
+      <p>Hallo ${recipientName},</p>
+      <p>hier sind alle Geburtstage deiner Kontakte für den Monat ${monthNamesLong[month]} ${year}. Vergiss nicht, ihnen zu gratulieren!</p>
+      <hr style="border:0; height:1px; background:#ccc;">
+      <p>Insgesamt gibt es ${numBirthdays} Geburtstag${numBirthdays > 1 ? 'e' : ''} in diesem Monat.</p>
+      <ul>
+        ${monthContacts.map(contact => `<li>${contact.getBirthdaySummaryMailString()}</li>`).join('')}
+      </ul>
+      <hr style="border:0; height:1px; background:#ccc;">
+      <p style="font-size: small;>Diese E-Mail wurde automatisch von einem Google Apps Script generiert.<br>
+        Skript: ${senderName}<br>
+        Github: <a href="https://github.com/itsFelixH/birthday-calendar-sync">https://github.com/itsFelixH/birthday-calendar-sync</a>
+      </p>
+    </div>
+  `;
 
   sendMail(toEmail, fromEmail, senderName, subject, '', mailBody)
   Logger.log(`Email sent successfully!`);

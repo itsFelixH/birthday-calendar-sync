@@ -123,7 +123,7 @@ class BirthdayContact {
    * @returns {string} The birthday summary string.
    */
   getBirthdaySummaryMailString() {
-    let string = `🎂 ${this.getBirthdayLongMonthFormat()}: ${this.name}`;
+    let string = `🎂 <b>${this.getBirthdayLongMonthFormat()}</b>: ${this.name}`;
     if (this.hasKnownBirthYear()) {
       string += ` (wird ${this.getAgeThisYear()})`;
     }
