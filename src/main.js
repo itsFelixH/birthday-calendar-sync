@@ -68,3 +68,9 @@ function testEmail() {
   
   sendMail(subject, body);
 }
+
+function testScriptName() {
+  var id = ScriptApp.getScriptId();
+  var name = DriveApp.getFileById(id).getName();
+  Logger.log(name);
+}
