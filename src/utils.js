@@ -218,14 +218,12 @@ function createMonthlyBirthdaySummaryMail(calendarId, contacts, month, year) {
   `;
 
   const subject = `🎉🎂 GEBURTSTAGS REMINDER 🎂🎉`;
-  const sender = DriveApp.getFileById(ScriptApp.getScriptId()).getName();
-  const recipient = Session.getActiveUser().getEmail();
+  const senderName = DriveApp.getFileById(ScriptApp.getScriptId()).getName();
+  const recipientEmail = Session.getActiveUser().getEmail();
 
-  GmailApp.sendEmail({
-    to: recipient,
-    subject: subject,
+  GmailApp.sendEmail(recipientEmail, subject, '', {
     htmlBody: mailBody,
-    from: sender
+    name: senderName
   });
   Logger.log(`Email sent successfully!`);
 }
