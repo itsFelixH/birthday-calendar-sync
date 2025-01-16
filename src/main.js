@@ -77,3 +77,11 @@ function testScriptName() {
   var name = DriveApp.getFileById(id).getName();
   Logger.log(name);
 }
+
+function testFirstName() {
+  const userEmail = Session.getActiveUser().getEmail();
+  Logger.log(userEmail);
+  const userContact = ContactsApp.getContact(userEmail);
+  Logger.log(userContact);
+  Logger.log(userContact.getGivenName());
+}

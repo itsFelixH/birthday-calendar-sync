@@ -227,12 +227,8 @@ function createMonthlyBirthdaySummaryMail(contacts, month, year) {
       </ul>
       <hr style="border:0; height:1px; background:#ccc;">
       <p style="text-align: center; margin-top: 2em;">
-        <a href="https://calendar.google.com/calendar/r" style="color: #007BFF;">Kalender anzeigen</a>
-      </p>
-      <p style="font-size: small;">
-        Diese E-Mail wurde automatisch von einem Google Apps Script generiert.<br>
-        Skript: ${senderName}<br>
-        Github: <a href="https://github.com/itsFelixH/birthday-calendar-sync">https://github.com/itsFelixH/birthday-calendar-sync</a>
+        <a href="https://calendar.google.com/calendar/r" style="color: #007BFF;">Google Kalender anzeigen</a>
+        <a href="https://github.com/itsFelixH/birthday-calendar-sync" style="color: #007BFF;">Git-Repo</a>
       </p>
     </div>
   `;
