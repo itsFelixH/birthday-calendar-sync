@@ -202,23 +202,32 @@ function createMonthlyBirthdaySummaryMail(calendarId, contacts, month, year) {
   const monthContacts = contacts.filter(contact => contact.birthday.getMonth() === month)
                                 .sort((a, b) => a.birthday.getDate() - b.birthday.getDate());
 
+  // Check if there are any birthdays in the specified month
+  if (monthContacts.length === 0) {
+    Logger.log('No birthdays found for this month.');
+    return;
+  }
+
   // Build the email body with formatted birthdates
-  let mailBody = `<b>Geburtstage im ${monthNamesLong[month]}</b><br><br>`
-  mailBody += monthContacts.map(contact => contact.getBirthdaySummaryMailString()).join('<br>');
-  mailBody += `<br><br>---<br><br>`;
-  mailBody += 'Diese E-Mail wurde automatisch von einem Google Apps Script generiert.<br>'
-  mailBody += 'Script-Name: Birthday Calendar Sync<br>'
+  let mailBody = `
+    <b>Geburtstage im ${monthName}</b><br><br>
+    ${monthContacts.map(contact => contact.getBirthdaySummaryMailString()).join('<br>')}<br>
+    <br>---<br>
+    Diese E-Mail wurde automatisch von einem Google Apps Script generiert.<br>
+    Script-Name: Birthday Calendar Sync<br>
+  `;
 
   const subject = `🎉🎂 GEBURTSTAGS REMINDER 🎂🎉`;
   const sender = DriveApp.getFileById(ScriptApp.getScriptId()).getName();
+  const recipient = Session.getActiveUser().getEmail();
 
   GmailApp.sendEmail({
-    to: Session.getActiveUser().getEmail(),
+    to: recipient,
     subject: subject,
     htmlBody: mailBody,
-    from: sender + " <" + Session.getActiveUser().getEmail() + ">"
+    from: sender
   });
-  Logger.log(`Email sent!`);
+  Logger.log(`Email sent successfully!`);
 }
 
 
