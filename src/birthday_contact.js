@@ -123,9 +123,9 @@ class BirthdayContact {
    * @returns {string} The birthday summary string.
    */
   getBirthdaySummaryMailString() {
-    let string = `🎂 <b>${this.getBirthdayLongMonthFormat()}</b>: ${this.name}`;
+    let string = `<b>${this.birthday.getDate().slice(-2)}. ${monthNamesLong[this.birthday.getMonth()]}</b>: 🎂 ${this.name}`;
     if (this.hasKnownBirthYear()) {
-      string += ` (wird ${this.getAgeThisYear()})`;
+      string += ` (wird ${this.getAgeThisYear()} Jahre)`;
     }
     return string;
   }

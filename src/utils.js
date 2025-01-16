@@ -208,7 +208,7 @@ function createMonthlyBirthdaySummaryMail(contacts, month, year) {
   }
 
   const numBirthdays = monthContacts.length;
-  const recipientName = Session.getActiveUser().getUsername();
+  const recipientName = getCurrentUserFirstName();
 
   const subject = '🎂 Geburtstags Reminder';
   const senderName = DriveApp.getFileById(ScriptApp.getScriptId()).getName();
@@ -217,17 +217,20 @@ function createMonthlyBirthdaySummaryMail(contacts, month, year) {
 
   // Build the email body with formatted birthdates
   let mailBody = `
-    <div style="font-family: Arial, sans-serif;">
-      <h2>🎉 Geburtstage im ${monthNamesLong[month]} 🎉</h2>
-      <p>Hallo ${recipientName},</p>
+    <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+      <h3>🎉 Geburtstage im ${monthNamesLong[month]} 🎉</h3>
+      <p>Hallo${recipientName ? ` ${recipientName}` : ''},</p>
       <p>hier sind alle Geburtstage deiner Kontakte für den Monat ${monthNamesLong[month]} ${year}. Vergiss nicht, ihnen zu gratulieren!</p>
-      <hr style="border:0; height:1px; background:#ccc;">
-      <p>Insgesamt gibt es ${numBirthdays} Geburtstag${numBirthdays > 1 ? 'e' : ''} in diesem Monat.</p>
-      <ul>
+      <p>Insgesamt gibt es ${numBirthdays} Geburtstag${numBirthdays > 1 ? 'e' : ''} in diesem Monat:</p>
+      <ul style="list-style-type: none; padding: 0;">
         ${monthContacts.map(contact => `<li>${contact.getBirthdaySummaryMailString()}</li>`).join('')}
       </ul>
       <hr style="border:0; height:1px; background:#ccc;">
-      <p style="font-size: small;>Diese E-Mail wurde automatisch von einem Google Apps Script generiert.<br>
+      <p style="text-align: center; margin-top: 2em;">
+        <a href="https://calendar.google.com/calendar/r" style="color: #007BFF;">Kalender anzeigen</a>
+      </p>
+      <p style="font-size: small;">
+        Diese E-Mail wurde automatisch von einem Google Apps Script generiert.<br>
         Skript: ${senderName}<br>
         Github: <a href="https://github.com/itsFelixH/birthday-calendar-sync">https://github.com/itsFelixH/birthday-calendar-sync</a>
       </p>
@@ -382,4 +385,19 @@ function sendMail(toEmail, fromEmail, senderName, subject, textBody, htmlBody) {
 
   rawMessage = Utilities.base64EncodeWebSafe(mailData);
   Gmail.Users.Messages.send({raw: rawMessage}, "me");
+}
+
+function getCurrentUserFirstName() {
+  try {
+    const userEmail = Session.getActiveUser().getEmail();
+    const userContact = ContactsApp.getContact(userEmail);
+
+    if (userContact) {
+      return userContact.getGivenName();
+    }
+    return null;
+  } catch (e) {
+    Logger.log("Error getting user's first name: " + e);
+    return null;
+  }
 }
