@@ -209,9 +209,9 @@ function createMonthlyBirthdaySummaryMail(contacts, month, year) {
 
   // Build the email body with formatted birthdates
   let mailBody = `
-    <b>Geburtstage im ${monthName}</b><br><br>
-    ${monthContacts.map(contact => contact.getBirthdaySummaryMailString()).join('<br>')}<br>
-    <br>---<br>
+    <b>🎉 Geburtstage im ${monthName} 🎉</b><br><br>
+    ${monthContacts.map(contact => `🎂 ${contact.getBirthdaySummaryMailString()}`).join('<br>')}<br><br>
+    ---<br>
     Diese E-Mail wurde automatisch von einem Google Apps Script generiert.<br>
     Script-Name: Birthday Calendar Sync<br>
   `;
@@ -220,9 +220,12 @@ function createMonthlyBirthdaySummaryMail(contacts, month, year) {
   const senderName = DriveApp.getFileById(ScriptApp.getScriptId()).getName();
   const recipientEmail = Session.getActiveUser().getEmail();
 
-  GmailApp.sendEmail(recipientEmail, subject, '', {
+  GmailApp.sendEmail({
+    to: recipientEmail,
+    subject: subject,
     htmlBody: mailBody,
-    name: senderName
+    name: senderName,
+    noReply: true
   });
   Logger.log(`Email sent successfully!`);
 }
