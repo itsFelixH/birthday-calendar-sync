@@ -325,26 +325,20 @@ function updateEventReminders(event, newReminders) {
  * Sends an email using the Gmail API.
  *
  * @param {string} subject - The subject of the email.
- * @param {string} body - The body of the email.
+ * @param {string} htmlBody - The HTML content of the email body.
  */
-function sendMail(subject, body) {
+function sendMail(subject, htmlBody) {
   const recipient = Session.getActiveUser().getEmail();
   const sender = DriveApp.getFileById(ScriptApp.getScriptId()).getName();
+
   const message = {
     to: recipient,
     subject: subject,
-    body: body,
-    from: sender + " <" + Session.getActiveUser().getEmail() + ">"
+    htmlBody: htmlBody, 
+    from: sender + " <" + Session.getActiveUser().getEmail() + ">" 
   };
 
-  const rawMessage = Utilities.base64EncodeWebSafe(
-    `From: ${message.from}\r\n` +
-    `To: ${message.to}\r\n` +
-    `Subject: ${message.subject}\r\n\r\n` +
-    message.body
-  );
-
-  Gmail.Users.Messages.send({ raw: rawMessage }, 'me');
+  GmailApp.sendEmail(message);
 }
 
 /**
