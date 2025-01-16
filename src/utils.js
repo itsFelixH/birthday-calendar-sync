@@ -383,17 +383,49 @@ function sendMail(toEmail, fromEmail, senderName, subject, textBody, htmlBody) {
   Gmail.Users.Messages.send({raw: rawMessage}, "me");
 }
 
+
+/**
+ * Gets the own user's profile.
+ */
+function getSelf() {
+  try {
+    const people = People.People.getBatchGet({
+      resourceNames: ['people/me'],
+      personFields: 'names,emailAddresses'
+    });
+    console.log('Myself: %s', JSON.stringify(people, null, 2));
+  } catch (err) {
+    console.log('Failed to get own profile with an error %s', err.message);
+  }
+}
+
+
+/**
+ * Gets the current user's first name.
+ */
 function getCurrentUserFirstName() {
   try {
-    const userEmail = Session.getActiveUser().getEmail();
-    const userContact = ContactsApp.getContact(userEmail);
+    const peopleResponse = People.People.getBatchGet({
+      resourceNames: ['people/me'],
+      personFields: 'names,emailAddresses'
+    });
 
-    if (userContact) {
-      return userContact.getGivenName();
+    // Check if response exists and extract the first name
+    if (peopleResponse && peopleResponse.responses && peopleResponse.responses.length > 0) {
+      const person = peopleResponse.responses[0].person;
+      if (person && person.names && person.names.length > 0) {
+        const firstName = person.names[0].givenName;
+        return firstName;
+      } else {
+        Logger.log("User names not available.");
+        return null;
+      }
+    } else {
+      Logger.log("No valid response received.");
+      return null;
     }
-    return null;
-  } catch (e) {
-    Logger.log("Error getting user's first name: " + e);
+  } catch (err) {
+    Logger.log('Failed to get own profile with an error: ' + err.message);
     return null;
   }
 }

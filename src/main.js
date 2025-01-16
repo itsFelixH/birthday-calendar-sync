@@ -79,12 +79,7 @@ function testScriptName() {
 }
 
 function testFirstName() {
-  const peopleService = People.People;
-  const response = peopleService.get('people/me', {
-    personFields: 'names'
-  });
-  if (response.names && response.names.length > 0) {
-    const firstName = response.names[0].givenName;
-    Logger.log("User First Name: " + firstName);
-  }
+  getSelf()
+
+  Logger.log(getCurrentUserFirstName())
 }
