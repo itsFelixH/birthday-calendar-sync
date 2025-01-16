@@ -118,6 +118,20 @@ class BirthdayContact {
 
 
   /**
+   * Gets the string for the birthday summary mail.
+   * 
+   * @returns {string} The birthday summary string.
+   */
+  getBirthdaySummaryMailString() {
+    let string = `🎂🎉 ${this.getBirthdayLongMonthFormat()}: ${this.name}`;
+    if (this.hasKnownBirthYear()) {
+      string += ` (${this.getAgeThisYear()} Jahre)`;
+    }
+    return string;
+  }
+
+
+  /**
    * Checks if the contact has a birth year specified (i.e., not the current year).
    * 
    * @returns {boolean} True if the contact has a birth year specified, false otherwise.
