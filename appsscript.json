@@ -20,8 +20,5 @@
     ]
   },
   "exceptionLogging": "STACKDRIVER",
-  "oauthScopes": [
-    "https://www.googleapis.com/auth/userinfo.profile"
-  ],
   "runtimeVersion": "V8"
 }
