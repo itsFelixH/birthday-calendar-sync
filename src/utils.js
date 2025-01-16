@@ -183,12 +183,11 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, year = new
 /**
  * Creates and sends a monthly birthday summary email.
  *
- * @param {string} calendarId - The ID of the calendar to search for birthdays.
- * @param {object[]} contacts - An array of contact objects, each with a "birthday" property (Date object).
- * @param {number} month - The numeric month (0-indexed) for the summary.
- * @param {number} year - The year for the summary.
+ * @param {BirthdayContact[]} contacts An array of BirthdayContact objects.
+ * @param {number} month The numeric month (0-indexed) for the summary.
+ * @param {number} year The year for the summary.
  */
-function createMonthlyBirthdaySummaryMail(calendarId, contacts, month, year) {
+function createMonthlyBirthdaySummaryMail(contacts, month, year) {
   if (contacts.length === 0) {
     Logger.log("No contacts found. Aborting.");
     return;
@@ -217,7 +216,7 @@ function createMonthlyBirthdaySummaryMail(calendarId, contacts, month, year) {
     Script-Name: Birthday Calendar Sync<br>
   `;
 
-  const subject = `🎉🎂 GEBURTSTAGS REMINDER 🎂🎉`;
+  const subject = '🎉🎂 GEBURTSTAGS REMINDER 🎂🎉';
   const senderName = DriveApp.getFileById(ScriptApp.getScriptId()).getName();
   const recipientEmail = Session.getActiveUser().getEmail();
 

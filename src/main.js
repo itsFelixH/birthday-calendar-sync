@@ -24,7 +24,7 @@ function sendSummaryMail() {
   var contacts = fetchContactsWithBirthdays();
 
   var nextMonthDate = getNextMonth()
-  createMonthlyBirthdaySummaryMail(calendarId, contacts, nextMonthDate.getMonth(), nextMonthDate.getFullYear())
+  createMonthlyBirthdaySummaryMail(contacts, nextMonthDate.getMonth(), nextMonthDate.getFullYear())
 }
 
 function testFetch() {
