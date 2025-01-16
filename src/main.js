@@ -79,9 +79,12 @@ function testScriptName() {
 }
 
 function testFirstName() {
-  const userEmail = Session.getActiveUser().getEmail();
-  Logger.log(userEmail);
-  const userContact = ContactsApp.getContact(userEmail);
-  Logger.log(userContact);
-  Logger.log(userContact.getGivenName());
+  const peopleService = People.People;
+  const response = peopleService.get('people/me', {
+    personFields: 'names'
+  });
+  if (response.names && response.names.length > 0) {
+    const firstName = response.names[0].givenName;
+    Logger.log("User First Name: " + firstName);
+  }
 }
