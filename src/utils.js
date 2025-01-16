@@ -180,6 +180,14 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, year = new
   Logger.log(`All summary events created or updated!`);
 }
 
+/**
+ * Creates and sends a monthly birthday summary email.
+ *
+ * @param {string} calendarId - The ID of the calendar to search for birthdays.
+ * @param {object[]} contacts - An array of contact objects, each with a "birthday" property (Date object).
+ * @param {number} month - The numeric month (0-indexed) for the summary.
+ * @param {number} year - The year for the summary.
+ */
 function createMonthlyBirthdaySummaryMail(calendarId, contacts, month, year) {
   if (contacts.length === 0) {
     Logger.log("No contacts found. Aborting.");
@@ -187,21 +195,25 @@ function createMonthlyBirthdaySummaryMail(calendarId, contacts, month, year) {
   }
 
   const startDate = new Date(year, month, 1);
-
   const monthName = Utilities.formatDate(startDate, Session.getScriptTimeZone(), "MMMM");
   Logger.log(`Creating summary mail for ${monthName} ${year}...`);
 
-  const monthContacts = contacts
-    .filter(contact => contact.birthday.getMonth() === month)
-    .sort((a, b) => a.birthday.getDate() - b.birthday.getDate());
+  // Filter contacts with birthdays in the specified month
+  const monthContacts = contacts.filter(contact => contact.birthday.getMonth() === month)
+                                .sort((a, b) => a.birthday.getDate() - b.birthday.getDate());
 
-  const mailBody = `Geburtstage im ${monthNamesLong[month]}\n\n` +
-    monthContacts.map(contact => contact.getBirthdaySummaryEventString()).join('\n');
+  // Build the email body with formatted birthdates
+  let mailBody = `Geburtstage im ${monthNameLong[month]}\n\n`
+  mailBody += monthContacts.map(contact => contact.getBirthdaySummaryMailString()).join('\n');
+  mailBody += `\n\n---\n\n`;
+  mailBody += 'Diese E-Mail wurde automatisch von einem Google Apps Script generiert.\n'
+  mailBody += 'Script-Name: ' + ScriptApp.getActiveScript().getName() + '\n'
+  mailBody += 'Script-URL: ' + ScriptApp.getActiveScriptUrl();
 
-  Logger.log(`Summary mail body created!`);
+  const subject = `🎉🎂 GEBURTSTAGS REMINDER 🎂🎉`;
 
-  const subject = `${monthNamesLong[month]} Geburtstage`;
   sendMail(subject, mailBody);
+  Logger.log(`Email sent!`);
 }
 
 
@@ -310,32 +322,41 @@ function updateEventReminders(event, newReminders) {
 }
 
 
+/**
+ * Sends an email using the Gmail API.
+ *
+ * @param {string} subject - The subject of the email.
+ * @param {string} body - The body of the email.
+ */
 function sendMail(subject, body) {
-  var recipient = Session.getActiveUser().getEmail();
-  
-  var message = {
+  const recipient = Session.getActiveUser().getEmail();
+  const sender = ScriptApp.getActiveScript().getName(); 
+  const message = {
     to: recipient,
     subject: subject,
-    body: body
+    body: body,
+    from: sender + " <" + Session.getActiveUser().getEmail() + ">"
   };
-  
-  Gmail.Users.Messages.send({
-    raw: Utilities.base64EncodeWebSafe(
-      "From: birthdaysync@example.com\r\n" +
-      "To: " + message.to + "\r\n" +
-      "Subject: " + message.subject + "\r\n\r\n" +
-      message.body
-    )
-  }, 'me');
+
+  const rawMessage = Utilities.base64EncodeWebSafe(
+    `From: ${message.from}\r\n` +
+    `To: ${message.to}\r\n` +
+    `Subject: ${message.subject}\r\n\r\n` +
+    message.body
+  );
+
+  Gmail.Users.Messages.send({ raw: rawMessage }, 'me');
 }
 
-
+/**
+ * Calculates the date for the beginning of the next month.
+ *
+ * @returns {Date} - The date object representing the beginning of the next month.
+ */
 function getNextMonth() {
   const today = new Date();
-  let currentMonth = today.getMonth();
-  let nextMonth = (currentMonth + 1) % 12; 
+  const currentMonth = today.getMonth();
+  const nextMonth = (currentMonth + 1) % 12;
 
-  const nextMonthDate = new Date(today.getFullYear(), nextMonth, 1);
-
-  return nextMonthDate;
+  return new Date(today.getFullYear(), nextMonth, 1);
 }
