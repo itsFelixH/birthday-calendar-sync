@@ -347,12 +347,12 @@ function getNextMonth() {
   return new Date(today.getFullYear(), nextMonth, 1);
 }
 
-function sendMail(toEmail, fromEmail, name, subject, textBody, htmlBody) {
+function sendMail(toEmail, fromEmail, senderName, subject, textBody, htmlBody) {
   const boundary = "boundaryboundary";
   const mailData = [
     `MIME-Version: 1.0`,
     `To: ${toEmail}`,
-    `From: "${name}" <${fromEmail}>`,
+    `From: "${senderName}" <${fromEmail}>`,
     `Subject: =?UTF-8?B?${Utilities.base64Encode(subject, Utilities.Charset.UTF_8)}?=`,
     `Content-Type: multipart/alternative; boundary=${boundary}`,
     ``,

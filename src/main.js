@@ -66,14 +66,10 @@ function testEmail() {
   const toEmail = Session.getActiveUser().getEmail();
   const fromEmail = Session.getActiveUser().getEmail();
 
-  var subject = "🎉 Test Email";
-  var textBody = "This is a test email sent from a Google Apps Script 😁";
-  const senderName = DriveApp.getFileById(ScriptApp.getScriptId()).getName();
+  var subject = '🎉 Test Email';
+  let htmlBody = `This is a test email sent from a Google Apps Script 😁<br>`;
 
-  // Build the email body with formatted birthdates
-  let htmlBody = `<b>🎂 Geburtstage im Januar!!!</b><br>`;
-
-  sendMail(toEmail, fromEmail, senderName, subject, textBody, htmlBody);
+  sendMail(toEmail, fromEmail, 'Test', subject, '', htmlBody);
 }
 
 function testScriptName() {
