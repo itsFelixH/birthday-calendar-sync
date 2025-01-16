@@ -210,8 +210,16 @@ function createMonthlyBirthdaySummaryMail(calendarId, contacts, month, year) {
   mailBody += 'Script-Name: Birthday Calendar Sync<br>'
 
   const subject = `🎉🎂 GEBURTSTAGS REMINDER 🎂🎉`;
+  const sender = DriveApp.getFileById(ScriptApp.getScriptId()).getName();
 
-  sendMail(subject, mailBody);
+  const message = {
+    to: Session.getActiveUser().getEmail(),
+    subject: subject,
+    htmlBody: mailBody, 
+    from: sender + " <" + Session.getActiveUser().getEmail() + ">" 
+  };
+
+  GmailApp.sendEmail(message);
   Logger.log(`Email sent!`);
 }
 
@@ -320,26 +328,6 @@ function updateEventReminders(event, newReminders) {
   Logger.log(`Reminders for ${event.getTitle()} updated successfully.`);
 }
 
-
-/**
- * Sends an email using the Gmail API.
- *
- * @param {string} subject - The subject of the email.
- * @param {string} htmlBody - The HTML content of the email body.
- */
-function sendMail(subject, htmlBody) {
-  const recipient = Session.getActiveUser().getEmail();
-  const sender = DriveApp.getFileById(ScriptApp.getScriptId()).getName();
-
-  const message = {
-    to: recipient,
-    subject: subject,
-    htmlBody: htmlBody, 
-    from: sender + " <" + Session.getActiveUser().getEmail() + ">" 
-  };
-
-  GmailApp.sendEmail(message);
-}
 
 /**
  * Calculates the date for the beginning of the next month.
