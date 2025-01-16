@@ -220,13 +220,11 @@ function createMonthlyBirthdaySummaryMail(contacts, month, year) {
   const senderName = DriveApp.getFileById(ScriptApp.getScriptId()).getName();
   const recipientEmail = Session.getActiveUser().getEmail();
 
-  GmailApp.sendEmail({
-    to: recipientEmail,
-    subject: subject,
+  GmailApp.sendEmail(recipientEmail, subject, '', {
     htmlBody: mailBody,
-    name: senderName,
-    noReply: true
+    name: senderName
   });
+
   Logger.log(`Email sent successfully!`);
 }
 
