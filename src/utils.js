@@ -252,7 +252,8 @@ function createDailyBirthdayMail(contacts, date=new Date(), previewDays=5) {
   const startDate = new Date(date);
   startDate.setDate(date.getDate() + 1);
   const endDate = new Date(date);
-  endDate.setDate(date.getDate() + previewDays);
+  const millisecondsPerDay = 24 * 60 * 60 * 1000; 
+  endDate.setTime(date.getTime() + (previewDays * millisecondsPerDay)); 
   const day = date.getDate();
   const month = date.getMonth();
 
