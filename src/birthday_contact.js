@@ -137,7 +137,7 @@ class BirthdayContact {
    * @returns {string} The birthday string.
    */
   getMainBirthdayMailString() {
-    let string = `<h4>🎂 ${this.name}</h4>`;
+    let string = `<b>🎂 ${this.name}</b>`;
     string += '<ul style="list-style-type: none; padding: 0;">'
     if (this.hasKnownBirthYear()) {
       string += `<li>wird ${this.getAgeThisYear()} Jahre</li>`;
@@ -160,7 +160,7 @@ class BirthdayContact {
    * @returns {string} The birthday string.
    */
   getNextBirthdayMailString() {
-    let string = `🎂 ${this.name}: ${('0' + this.birthday.getDate()).slice(-2)}. ${monthNamesLong[this.birthday.getMonth()]}`;
+    let string = `${('0' + this.birthday.getDate()).slice(-2)}. ${monthNamesLong[this.birthday.getMonth()]}: 🎂 ${this.name}`;
     return string;
   }
 
@@ -439,8 +439,13 @@ function getContactsByBirthdayDate(contacts, date) {
  */
 function getContactsByBirthdayBetweenDates(contacts, startDate, endDate) {
   return contacts.filter(contact => {
-    const contactBirthday = new Date(contact.birthday.getFullYear(), contact.birthday.getMonth(), contact.birthday.getDate());
-    return contactBirthday >= startDate && contactBirthday <= endDate;
+    const contactBirthdayMonth = contact.birthday.getMonth();
+    const contactBirthdayDay = contact.birthday.getDate();
+
+    return contactBirthdayMonth >= startDate.getMonth() &&
+      contactBirthdayMonth <= endDate.getMonth() &&
+      contactBirthdayDay >= startDate.getDate() &&
+      contactBirthdayDay <= endDate.getDate();
   }).sort((a, b) => a.birthday.getDate() - b.birthday.getDate());
 }
 
