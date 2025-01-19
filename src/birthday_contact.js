@@ -132,6 +132,27 @@ class BirthdayContact {
 
 
   /**
+   * Gets the string for the birthday summary mail.
+   * 
+   * @returns {string} The birthday summary string.
+   */
+  getBirthdayMailString() {
+    let string = `🎂 ${this.name}`;
+    if (this.hasKnownBirthYear()) {
+      string += ` (wird ${this.getAgeThisYear()} Jahre)<br>`;
+    }
+
+    if (this.phoneNumber) string += `    💬 <a href="${this.getWhatsAppLink()}">${this.phoneNumber}</a><br>`;
+    if (this.instagramName) string += `    📷 <a href="${this.getInstagramLink()}">${this.instagramName}</a><br>`;
+    if (this.labels.length > 0) {
+      string += `    ${this.labels}<br>`
+    }
+
+    return string;
+  }
+
+
+  /**
    * Checks if the contact has a birth year specified (i.e., not the current year).
    * 
    * @returns {boolean} True if the contact has a birth year specified, false otherwise.
@@ -376,7 +397,38 @@ function getUpcomingBirthdays(contacts, days) {
     }
     const diffDays = Math.round((nextBirthday - today) / (1000 * 60 * 60 * 24));
     return diffDays <= days;
-  });
+  }).sort((a, b) => a.birthday.getDate() - b.birthday.getDate());
+}
+
+
+/**
+ * Retrieves all contacts with birthdays on the specified date.
+ *
+ * @param {BirthdayContact[]} contacts An array of BirthdayContact objects.
+ * @param {Date} date The date to filter birthdays for.
+ * @return {BirthdayContact[]} An array of contacts with birthdays on the specified date.
+ */
+function getContactsByBirthdayDate(contacts, date) {
+  return contacts.filter(contact => 
+    contact.birthday.getMonth() === date.getMonth() && 
+    contact.birthday.getDate() === date.getDate()
+  ).sort((a, b) => a.birthday.getDate() - b.birthday.getDate()); 
+}
+
+
+/**
+ * Retrieves all contacts with birthdays between two dates (inclusive).
+ *
+ * @param {BirthdayContact[]} contacts An array of BirthdayContact objects.
+ * @param {Date} startDate The start date (inclusive).
+ * @param {Date} endDate The end date (inclusive).
+ * @return {BirthdayContact[]} An array of contacts with birthdays between the specified dates.
+ */
+function getContactsByBirthdayBetweenDates(contacts, startDate, endDate) {
+  return contacts.filter(contact => {
+    const contactBirthday = new Date(contact.birthday.getFullYear(), contact.birthday.getMonth(), contact.birthday.getDate()); 
+    return contactBirthday >= startDate && contactBirthday <= endDate;
+  }).sort((a, b) => a.birthday.getDate() - b.birthday.getDate());
 }
 
 
