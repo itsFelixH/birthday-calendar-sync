@@ -9,17 +9,17 @@ class BirthdayContact {
    * @param {string} name - The name of the contact.
    * @param {Date} birthday - The birthday of the contact.
    * @param {Array<string>} labels - Labels/tags associated with the contact.
-   * @param {string} whatsappLink - The WhatsApp link for the contact.
-   * @param {string} instagramLink - The Instagram link for the contact.
+   * @param {string} phoneNumber - The phone number the contact.
+   * @param {string} instagramName - The Instagram username for the contact.
    */
-  constructor(name, birthday, labels = [], email = '', city = '', whatsappLink = '', instagramLink = '') {
+  constructor(name, birthday, labels = [], email = '', city = '', phoneNumber = '', instagramName = '') {
     this.name = name;
     this.birthday = new Date(birthday);
     this.labels = Array.isArray(labels) ? labels : [];
     this.email = email || '';
     this.city = city || '';
-    this.whatsappLink = whatsappLink || '';
-    this.instagramLink = instagramLink || '';
+    this.phoneNumber = phoneNumber;
+    this.instagramName = instagramName;
   }
 
 
@@ -92,11 +92,11 @@ class BirthdayContact {
       ? `${this.name} wird heute ${this.getAgeThisYear()}\nGeburtstag: ${this.getBirthdayLongFormat()}\n\n`
       : `${this.name} hat heute Geburtstag\n\n`;
 
-    if (this.whatsappLink) string += `WhatsApp: ${this.whatsappLink}\n`;
-    if (this.instagramLink) string += `Instagram: ${this.instagramLink}\n`;
+    if (this.phoneNumber) string += `WhatsApp: ${this.getWhatsAppLink()}\n`;
+    if (this.instagramName) string += `Instagram: ${this.getInstagramLink()}\n`;
 
     if (this.labels.length > 0) {
-      if (this.whatsappLink || this.instagramLink) string += `\n`;
+      if (this.phoneNumber || this.instagramName) string += `\n`;
       string += `${this.labels}\n`
     }
     return string;
@@ -247,15 +247,30 @@ class BirthdayContact {
 
 
   /**
-   * Gets an array of social media links as key-value pairs.
+   * Generates a WhatsApp link using a phone number.
    *
-   * @returns {Object} An object containing social media platform names as keys and their respective links as values.
+   * @returns {string} The WhatsApp link for the given phone number, or an empty string if the phone number is invalid.
    */
-  getSocialMediaLinks() {
-    return {
-      WhatsApp: this.whatsappLink,
-      Instagram: this.instagramLink,
-    };
+  getWhatsAppLink() {
+    if (this.phoneNumber) {
+      const cleanedPhoneNumber = this.phoneNumber.replace(/\D/g, '');
+      return cleanedPhoneNumber ? `https://wa.me/${cleanedPhoneNumber}` : '';
+    }
+    return ''
+  }
+
+
+  /**
+   * Extracts an Instagram link from the given notes.
+   *
+   * @returns {string} The Instagram link, or an empty string if no Instagram link is found.
+   */
+  getInstagramLink() {
+    const baseUrl = "https://www.instagram.com/";
+    if (this.instagramName) {
+      return `${baseUrl}${username.substring(1)}`;
+    }
+    return '';
   }
 
 
@@ -277,12 +292,13 @@ class BirthdayContact {
   logContactDetails() {
     Logger.log(`Name: ${this.name}`);
     Logger.log(`Birthday: ${this.getBirthdayLongFormat()}`);
-    if (this.hasKnownBirthYear()) Logger.log(`Age: ${this.calculateAge()}`);
-    if (this.labels.length > 0) Logger.log(`Labels: ${this.labels.join(', ')}`);
+    if (this.phoneNumber) Logger.log(`Telefon: ${this.phoneNumber}`);
     if (this.email) Logger.log(`Emails: ${this.email}`);
     if (this.city) Logger.log(`City: ${this.city}`);
-    if (this.whatsappLink) Logger.log(`WhatsApp: ${this.whatsappLink}`);
-    if (this.instagramLink) Logger.log(`Instagram: ${this.instagramLink}`);
+    if (this.hasKnownBirthYear()) Logger.log(`Age: ${this.calculateAge()}`);
+    if (this.phoneNumber) Logger.log(`WhatsApp: ${this.getWhatsAppLink()}`);
+    if (this.instagramName ) Logger.log(`Instagram: ${this.getInstagramLink()}`);
+    if (this.labels.length > 0) Logger.log(`Labels: ${this.labels.join(', ')}`);
   }
 
 
@@ -413,25 +429,6 @@ function getContactsByAgeRange(contacts, minAge, maxAge) {
  */
 function getContactsByBirthday(contacts, day, month) {
   return contacts.filter(contact => contact.birthday.getDate() === day && contact.birthday.getMonth() === month);
-}
-
-
-/**
- * Retrieves contacts that have a specified social media link.
- *
- * @param {BirthdayContact[]} contacts - An array of BirthdayContact objects to filter.
- * @param {string} socialMedia - The social media platform to filter by ('WhatsApp' or 'Instagram').
- * @returns {BirthdayContact[]} An array of BirthdayContact objects that have the specified social media link.
- */
-function getContactsBySocialMediaLink(contacts, socialMedia) {
-  return contacts.filter(contact => {
-    if (socialMedia === 'WhatsApp') {
-      return contact.whatsappLink !== '';
-    } else if (socialMedia === 'Instagram') {
-      return contact.instagramLink !== '';
-    }
-    return false;
-  });
 }
 
 

@@ -81,11 +81,9 @@ function fetchContactsWithBirthdays(labelFilter = []) {
           const city = (person.addresses || []).map(address => address.city || '').join(', ');
           const phoneNumber = person.phoneNumbers?.[0]?.value || '';
           const notes = (person.biographies || []).map(bio => bio.value).join('. ');
+          const instagramName = extractInstagramNameFromNotes(notes)
 
-          var whatsappLink = generateWhatsAppLink(phoneNumber)
-          var instagramLink = extractInstagramLinkFromNotes(notes)
-
-          const contact = new BirthdayContact(name, birthday, labelNames, email, city, whatsappLink, instagramLink);
+          const contact = new BirthdayContact(name, birthday, labelNames, email, city, phoneNumber, instagramName);
           contacts.push(contact);
         }
 
@@ -291,28 +289,14 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, year = new Date
   Logger.log(`All birthday events created or updated!`);
 }
 
-
 /**
- * Generates a WhatsApp link using a phone number.
- *
- * @param {string} phoneNumber The phone number in international format.
- * @returns {string} The WhatsApp link for the given phone number, or an empty string if the phone number is invalid.
- */
-function generateWhatsAppLink(phoneNumber) {
-  const cleanedPhoneNumber = phoneNumber.replace(/\D/g, '');
-  return cleanedPhoneNumber ? `https://wa.me/${cleanedPhoneNumber}` : '';
-}
-
-
-/**
- * Extracts an Instagram link from the given notes.
+ * Extracts an Instagram username from the given notes.
  *
  * @param {string} notes The notes containing the Instagram username.
  * @returns {string} The Instagram link, or an empty string if no Instagram link is found.
  */
-function extractInstagramLinkFromNotes(notes) {
+function extractInstagramNameFromNotes(notes) {
   const instagramPrefixes = ["Instagram: ", "@"];
-  const baseUrl = "https://www.instagram.com/";
 
   const instagramNote = notes.split('. ').find(note => {
     return instagramPrefixes.some(prefix => note.startsWith(prefix));
@@ -321,14 +305,13 @@ function extractInstagramLinkFromNotes(notes) {
   if (instagramNote) {
     const prefix = instagramPrefixes.find(prefix => instagramNote.startsWith(prefix));
     let username = instagramNote.substring(prefix.length).trim();
-    if (username.startsWith('@')) {
-      username = username.substring(1);
+    if (!username.startsWith('@')) {
+      username = '@' + username;
     }
-    return `${baseUrl}${username}`;
+    return username;
   }
   return '';
 }
-
 
 /**
  * Updates the reminders for an existing event.
