@@ -101,13 +101,13 @@ function fetchContactsWithBirthdays(labelFilter = []) {
     const dayA = a.birthday.getDate();
     const monthB = b.birthday.getMonth();
     const dayB = b.birthday.getDate();
-  
+
     if (monthA < monthB) {
-      return -1; 
+      return -1;
     } else if (monthA > monthB) {
       return 1;
     } else { // months are the same
-      return dayA - dayB; 
+      return dayA - dayB;
     }
   });
 
@@ -197,7 +197,7 @@ function createMonthlyBirthdaySummaryMail(contacts, month, year) {
 
   // Filter contacts with birthdays in the specified month
   const monthContacts = contacts.filter(contact => contact.birthday.getMonth() === month)
-                                .sort((a, b) => a.birthday.getDate() - b.birthday.getDate());
+    .sort((a, b) => a.birthday.getDate() - b.birthday.getDate());
 
   // Check if there are any birthdays in the specified month
   if (monthContacts.length === 0) {
@@ -235,6 +235,71 @@ function createMonthlyBirthdaySummaryMail(contacts, month, year) {
   Logger.log(`Email sent successfully!`);
 }
 
+
+/**
+ * Sends birthday emails for the specified number of days.
+ *
+ * @param {BirthdayContact[]} contacts An array of BirthdayContact objects.
+ * @param {date} date The date to look for birthdays. Defaults to today.
+ * @param {number} previewDays The number of days for which to send emails. Defaults to 5.
+ */
+function createBirthdayTodayMail(contacts, date=new Date(), previewDays=5) {
+  if (contacts.length === 0) {
+    Logger.log("No contacts found. Aborting.");
+    return;
+  }
+
+  const startDate = date + timedelta(days = 1)
+  const endDate = date + timedelta(days = previewDays)
+  const day = date.getDate();
+  const month = date.getMonth();
+
+  Logger.log(`Creating daily mail`);
+
+  // Filter contacts with birthdays in the specified time
+  const todaysContacts = getContactsByBirthday(contacts, day, month)
+  const nextDaysContacts = getContactsByBirthdayBetweenDates(contacts, startDate, endDate)
+
+  // Check if there are any birthdays in the specified timespan
+  if (todaysContacts.length === 0) {
+    Logger.log('No birthdays found for today.');
+    return;
+  }
+
+  const recipientName = getCurrentUserFirstName();
+
+  const subject = '🎂 Heutige Geburtstage 🎂';
+  const senderName = DriveApp.getFileById(ScriptApp.getScriptId()).getName();
+  const toEmail = Session.getActiveUser().getEmail();
+  const fromEmail = Session.getActiveUser().getEmail();
+
+  // Build the email body with formatted birthdates
+  let mailBody = `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+      <h3>🎉 Geburtstage am ${day}. ${monthNamesLong[month]} 🎉</h3>
+      <p>Hallo${recipientName ? ` ${recipientName},` : ','}</p>
+      <p>Hier sind die heutigen Geburtstage deiner Kontakte:</p>
+      <p>
+        ${todaysContacts.map(contact => contact.getBirthdayMailString()).join('<br>')}
+      </p>
+      ${nextDaysContacts.length > 0 
+        ? `<p>In den nächsten Tagen haben ${nextDaysContacts.length} deiner Kontakte Geburtstag:</p>
+            <ul style="list-style-type: none; padding: 0;">
+              ${nextDaysContacts.map(contact => `<li>${contact.getBirthdaySummaryMailString()}</li>`).join('')}
+            </ul>`
+        : ''}
+      <br><br>
+      <hr style="border:0; height:1px; background:#ccc;">
+      <p style="text-align: center; margin-top: 2em;">
+        <a href="https://calendar.google.com/calendar/r" style="color: #007BFF;">Google Kalender anzeigen</a><br>
+        <a href="https://github.com/itsFelixH/birthday-calendar-sync" style="color: #007BFF;">Git-Repo</a>
+      </p>
+    </div>
+  `;
+
+  sendMail(toEmail, fromEmail, senderName, subject, '', mailBody)
+  Logger.log(`Email sent successfully!`);
+}
 
 /**
  * Creates or updates individual birthday events in the calendar.
@@ -363,7 +428,7 @@ function sendMail(toEmail, fromEmail, senderName, subject, textBody, htmlBody) {
   ].join("\r\n");
 
   rawMessage = Utilities.base64EncodeWebSafe(mailData);
-  Gmail.Users.Messages.send({raw: rawMessage}, "me");
+  Gmail.Users.Messages.send({ raw: rawMessage }, "me");
 }
 
 
