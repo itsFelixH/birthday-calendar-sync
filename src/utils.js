@@ -281,11 +281,9 @@ function createDailyBirthdayMail(contacts, date=new Date(), previewDays=5) {
       <h3>🎉 Geburtstage am ${day}. ${monthNamesLong[month]} 🎉</h3>
       <p>Hallo${recipientName ? ` ${recipientName},` : ','}</p>
       <p>Hier sind die heutigen Geburtstage deiner Kontakte:</p>
-      <p>
-        ${todaysContacts.map(contact => contact.getBirthdayMailString()).join('<br>')}
-      </p>
+      ${todaysContacts.map(contact => contact.getBirthdayMailString()).join('<br>')}
       ${nextDaysContacts.length > 0 
-        ? `<p>In den nächsten Tagen haben ${nextDaysContacts.length} deiner Kontakte Geburtstag:</p>
+        ? `<p>In den nächsten Tagen ${nextDaysContacts.length > 1 ? `haben ${nextDaysContacts.length}` : `hat einer`} deiner Kontakte Geburtstag:</p>
             <ul style="list-style-type: none; padding: 0;">
               ${nextDaysContacts.map(contact => `<li>${contact.getBirthdaySummaryMailString()}</li>`).join('')}
             </ul>`
