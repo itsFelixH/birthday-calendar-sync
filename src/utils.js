@@ -243,7 +243,7 @@ function createMonthlyBirthdaySummaryMail(contacts, month, year) {
  * @param {date} date The date to look for birthdays. Defaults to today.
  * @param {number} previewDays The number of days for which to send emails. Defaults to 5.
  */
-function createBirthdayTodayMail(contacts, date=new Date(), previewDays=5) {
+function createDailyBirthdayMail(contacts, date=new Date(), previewDays=5) {
   if (contacts.length === 0) {
     Logger.log("No contacts found. Aborting.");
     return;

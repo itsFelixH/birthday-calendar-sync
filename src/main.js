@@ -27,6 +27,16 @@ function sendSummaryMail() {
   createMonthlyBirthdaySummaryMail(contacts, nextMonthDate.getMonth(), nextMonthDate.getFullYear())
 }
 
+function sendDailyMail() {
+  var contacts = fetchContactsWithBirthdays();
+
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+
+  createDailyBirthdayMail(contacts, tomorrow, 15)
+}
+
 function testFetch() {
   var contacts = fetchContactsWithBirthdays();
   logContactsNames(contacts);
