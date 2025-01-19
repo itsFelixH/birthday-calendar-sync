@@ -132,22 +132,35 @@ class BirthdayContact {
 
 
   /**
-   * Gets the string for the birthday summary mail.
+   * Gets the main string for the daily birthday mail.
    * 
-   * @returns {string} The birthday summary string.
+   * @returns {string} The birthday string.
    */
-  getBirthdayMailString() {
-    let string = `🎂 ${this.name}`;
+  getMainBirthdayMailString() {
+    let string = `<h4>🎂 ${this.name}</h4>`;
+    string += '<ul style="list-style-type: none; padding: 0;">'
     if (this.hasKnownBirthYear()) {
-      string += ` (wird ${this.getAgeThisYear()} Jahre)<br>`;
+      string += `<li>wird ${this.getAgeThisYear()} Jahre</li>`;
     }
 
-    if (this.phoneNumber) string += `    💬 <a href="${this.getWhatsAppLink()}">${this.phoneNumber}</a><br>`;
-    if (this.instagramName) string += `    📷 <a href="${this.getInstagramLink()}">${this.instagramName}</a><br>`;
+    if (this.phoneNumber) string += `<li>💬 <a href="${this.getWhatsAppLink()}">${this.phoneNumber}</a></li>`;
+    if (this.instagramName) string += `<li>📷 <a href="${this.getInstagramLink()}">${this.instagramName}</a></li>`;
     if (this.labels.length > 0) {
-      string += `    ${this.labels}<br>`
+      string += `<li>${this.labels}</li>`
     }
+    string += '</ul>'
 
+    return string;
+  }
+
+
+  /**
+   * Gets the next string for the daily birthday mail.
+   * 
+   * @returns {string} The birthday string.
+   */
+  getNextBirthdayMailString() {
+    let string = `🎂 ${this.name}: ${('0' + this.birthday.getDate()).slice(-2)}. ${monthNamesLong[this.birthday.getMonth()]}`;
     return string;
   }
 
@@ -289,7 +302,7 @@ class BirthdayContact {
   getInstagramLink() {
     const baseUrl = "https://www.instagram.com/";
     if (this.instagramName) {
-      return `${baseUrl}${this.instagramName.substring(1)}`;
+      return `${baseUrl}${this.instagramName.substring(1)}/`;
     }
     return '';
   }
@@ -318,7 +331,7 @@ class BirthdayContact {
     if (this.city) Logger.log(`City: ${this.city}`);
     if (this.hasKnownBirthYear()) Logger.log(`Age: ${this.calculateAge()}`);
     if (this.phoneNumber) Logger.log(`WhatsApp: ${this.getWhatsAppLink()}`);
-    if (this.instagramName ) Logger.log(`Instagram: ${this.getInstagramLink()}`);
+    if (this.instagramName) Logger.log(`Instagram: ${this.getInstagramLink()}`);
     if (this.labels.length > 0) Logger.log(`Labels: ${this.labels.join(', ')}`);
   }
 
@@ -409,10 +422,10 @@ function getUpcomingBirthdays(contacts, days) {
  * @return {BirthdayContact[]} An array of contacts with birthdays on the specified date.
  */
 function getContactsByBirthdayDate(contacts, date) {
-  return contacts.filter(contact => 
-    contact.birthday.getMonth() === date.getMonth() && 
+  return contacts.filter(contact =>
+    contact.birthday.getMonth() === date.getMonth() &&
     contact.birthday.getDate() === date.getDate()
-  ).sort((a, b) => a.birthday.getDate() - b.birthday.getDate()); 
+  ).sort((a, b) => a.birthday.getDate() - b.birthday.getDate());
 }
 
 
@@ -426,7 +439,7 @@ function getContactsByBirthdayDate(contacts, date) {
  */
 function getContactsByBirthdayBetweenDates(contacts, startDate, endDate) {
   return contacts.filter(contact => {
-    const contactBirthday = new Date(contact.birthday.getFullYear(), contact.birthday.getMonth(), contact.birthday.getDate()); 
+    const contactBirthday = new Date(contact.birthday.getFullYear(), contact.birthday.getMonth(), contact.birthday.getDate());
     return contactBirthday >= startDate && contactBirthday <= endDate;
   }).sort((a, b) => a.birthday.getDate() - b.birthday.getDate());
 }
