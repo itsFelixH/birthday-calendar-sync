@@ -268,6 +268,9 @@ function createDailyBirthdayMail(contacts, date=new Date(), previewDays=5) {
     return;
   }
 
+  Logger.log(todaysContacts);
+  Logger.log(nextDaysContacts);
+
   const recipientName = getCurrentUserFirstName();
 
   const subject = '🎂 Heutige Geburtstage 🎂';
@@ -282,13 +285,13 @@ function createDailyBirthdayMail(contacts, date=new Date(), previewDays=5) {
       <p>Hallo${recipientName ? ` ${recipientName},` : ','}</p>
       <p>Hier sind die heutigen Geburtstage deiner Kontakte:</p>
       ${todaysContacts.map(contact => contact.getMainBirthdayMailString()).join('<br>')}
+      <br><br>
       ${nextDaysContacts.length > 0 
         ? `<p>In den nächsten Tagen ${nextDaysContacts.length > 1 ? `haben ${nextDaysContacts.length}` : `hat einer`} deiner Kontakte Geburtstag:</p>
             <ul style="list-style-type: none; padding: 0;">
               ${nextDaysContacts.map(contact => `<li>${contact.getNextBirthdayMailString()}</li>`).join('')}
-            </ul>`
+            </ul><br><br>`
         : ''}
-      <br><br>
       <hr style="border:0; height:1px; background:#ccc;">
       <p style="text-align: center; margin-top: 2em;">
         <a href="https://calendar.google.com/calendar/r" style="color: #007BFF;">Google Kalender anzeigen</a><br>
