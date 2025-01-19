@@ -289,7 +289,7 @@ class BirthdayContact {
   getInstagramLink() {
     const baseUrl = "https://www.instagram.com/";
     if (this.instagramName) {
-      return `${baseUrl}${username.substring(1)}`;
+      return `${baseUrl}${this.instagramName.substring(1)}`;
     }
     return '';
   }
