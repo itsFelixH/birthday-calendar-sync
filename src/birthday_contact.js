@@ -261,6 +261,29 @@ class BirthdayContact {
     return Math.round((nextBirthday - today) / oneDay);
   }
 
+  /**
+   * Calculates the next birthday within a date range.
+   *
+   * @returns {date} The next birthday.
+   */
+  getNextBirthdayInRange(startDate, endDate) {
+    const currentYear = startDate.getFullYear();
+    const bdayMonth = this.birthday.getMonth();
+    const bdayDate = this.birthday.getDate();
+
+    // Create candidate dates for current and next year
+    const candidates = [
+      new Date(currentYear, bdayMonth, bdayDate),
+      new Date(currentYear + 1, bdayMonth, bdayDate)
+    ];
+
+    // Find first date that falls within the range
+    const validDate = candidates.find(date => 
+      date >= startDate && date <= endDate
+    );
+
+    return validDate || null;
+  }
 
   /**
    * Checks if the contact's birthday was in this year and has already passed.
