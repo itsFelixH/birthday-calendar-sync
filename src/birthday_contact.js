@@ -9,10 +9,16 @@ class BirthdayContact {
    * @param {string} name - The name of the contact.
    * @param {Date} birthday - The birthday of the contact.
    * @param {Array<string>} labels - Labels/tags associated with the contact.
+   * @param {string} email - The email address of the contact.
+   * @param {string} city - The city of the contact.
    * @param {string} phoneNumber - The phone number the contact.
    * @param {string} instagramName - The Instagram username for the contact.
    */
   constructor(name, birthday, labels = [], email = '', city = '', phoneNumber = '', instagramName = '') {
+    if (!name || !birthday) {
+      throw new Error('Name and birthday are required.');
+    }
+    
     this.name = name;
     this.birthday = new Date(birthday);
     this.labels = Array.isArray(labels) ? labels : [];
