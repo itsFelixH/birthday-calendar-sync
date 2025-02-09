@@ -17,7 +17,7 @@ var useLabel = false;
 
 // The type of reminder to be added to the birthday events.
 // Possible values: 'none', 'email', 'popup'.
-var addReminder = 'popup';
+var reminderMethod = 'popup';
 
 // The number of minutes before the event when the reminder should popup or send an email.
 // For example, 60 * 12 means the reminder will be sent 12 hours before the event.
@@ -29,9 +29,11 @@ var createIndividualBirthdayEvents = true;
 // = one event on the 1st of each month containg all birthdays this month. 
 var createBirthdaySummaryEvents = true;
 
+// The amount of months ahead for which birthday events and summaries will be created/updated.
+// By default, it creates events for the next year (=12 months).
+var monthsAhead = 12;
+
 // The year for which birthday events and summaries will be created/updated.
 // By default, it uses the current year.
-// var yearToUse = new Date().getFullYear();
-// Example: If you want to create for a specific future year, you can uncomment and set the year manually:
 var yearToUse = 2025;
 
