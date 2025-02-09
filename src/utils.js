@@ -32,6 +32,30 @@ function deleteEventsByTitle(calendarId) {
   });
 }
 
+/**
+ * Logs the configuration from config.js.
+ */
+function logConfiguration() {
+  logInfo("Configuration from config.js:");
+
+  // Log each configuration variable.
+  Logger.log("calendarId: " + calendarId);
+  Logger.log("useLabel: " + useLabel);
+
+  // Example of handling variables that might not be defined:
+  if (typeof labelFilter !== 'undefined') {
+    Logger.log("labelFilter: " + labelFilter.join(", ")); // Assuming it's an array
+  } else {
+    Logger.log("labelFilter: Not defined in config.js");
+  }
+
+  Logger.log("reminderMethod: " + reminderMethod);
+  Logger.log("reminderInMinutes: " + reminderInMinutes);
+  Logger.log("createIndividualBirthdayEvents: " + createIndividualBirthdayEvents);
+  Logger.log("createBirthdaySummaryEvents: " + createBirthdaySummaryEvents);
+  Logger.log("monthsAhead: " + monthsAhead);
+}
+
 
 /**
  * Fetches all contacts with birthdays from Google Contacts, optionally filtering by labels.
@@ -243,7 +267,7 @@ function createMonthlyBirthdaySummaryMail(contacts, month, year) {
  * @param {date} date The date to look for birthdays. Defaults to today.
  * @param {number} previewDays The number of days for which to send emails. Defaults to 5.
  */
-function createDailyBirthdayMail(contacts, date=new Date(), previewDays=5) {
+function createDailyBirthdayMail(contacts, date = new Date(), previewDays = 5) {
   if (contacts.length === 0) {
     Logger.log("No contacts found. Aborting.");
     return;
@@ -252,8 +276,8 @@ function createDailyBirthdayMail(contacts, date=new Date(), previewDays=5) {
   const startDate = new Date(date);
   startDate.setDate(date.getDate() + 1);
   const endDate = new Date(date);
-  const millisecondsPerDay = 24 * 60 * 60 * 1000; 
-  endDate.setTime(date.getTime() + (previewDays * millisecondsPerDay)); 
+  const millisecondsPerDay = 24 * 60 * 60 * 1000;
+  endDate.setTime(date.getTime() + (previewDays * millisecondsPerDay));
   const day = date.getDate();
   const month = date.getMonth();
 
@@ -287,12 +311,12 @@ function createDailyBirthdayMail(contacts, date=new Date(), previewDays=5) {
       <p>Hier sind die heutigen Geburtstage deiner Kontakte:</p>
       ${todaysContacts.map(contact => contact.getMainBirthdayMailString()).join('<br>')}
       <br><br>
-      ${nextDaysContacts.length > 0 
-        ? `<p>In den nächsten Tagen ${nextDaysContacts.length > 1 ? `haben ${nextDaysContacts.length}` : `hat einer`} deiner Kontakte Geburtstag:</p>
+      ${nextDaysContacts.length > 0
+      ? `<p>In den nächsten Tagen ${nextDaysContacts.length > 1 ? `haben ${nextDaysContacts.length}` : `hat einer`} deiner Kontakte Geburtstag:</p>
             <ul style="list-style-type: none; padding: 0;">
               ${nextDaysContacts.map(contact => `<li>${contact.getNextBirthdayMailString()}</li>`).join('')}
             </ul><br><br>`
-        : ''}
+      : ''}
       <hr style="border:0; height:1px; background:#ccc;">
       <p style="text-align: center; margin-top: 2em;">
         <a href="https://calendar.google.com/calendar/r" style="color: #007BFF;">Google Kalender anzeigen</a><br>
@@ -306,56 +330,129 @@ function createDailyBirthdayMail(contacts, date=new Date(), previewDays=5) {
 }
 
 /**
- * Creates or updates individual birthday events in the calendar.
+ * Creates or updates individual birthday events in the calendar for an upcoming time span.
  *
- * @param {string} calendarId The ID of the calendar.
- * @param {BirthdayContact[]} contacts An array of BirthdayContact objects.
- * @param {number} year The year for which to create/update the events.
+ * @param {string} calendarId The ID of the calendar
+ * @param {BirthdayContact[]} contacts An array of BirthdayContact objects
+ * @param {number} [monthsAhead=12] Number of months to look ahead for birthdays
+ * @param {number} [reminderMinutes=1440] Minutes before event for reminder (default: 1 day)
+ * @param {string} [reminderMethod='popup'] Reminder method (popup/email)
  */
-function createOrUpdateIndividualBirthdays(calendarId, contacts, year = new Date().getFullYear()) {
+function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 12, reminderMinutes = 1440, reminderMethod = 'popup') {
   if (contacts.length === 0) {
-    Logger.log("No contacts found. Aborting.");
+    Logger.log("No contacts found. Aborting");
     return;
   }
 
   const calendar = CalendarApp.getCalendarById(calendarId);
+  if (!calendar) throw new Error("Calendar not found");
 
-  Logger.log(`Creating/Updating birthday events in ${year} for ${contacts.length} contacts...`);
-  contacts.forEach(contact => {
-    const startDate = new Date(year, contact.birthday.getMonth(), contact.birthday.getDate());
-    const endDate = new Date(year, contact.birthday.getMonth(), contact.birthday.getDate() + 1);
+  const today = new Date();
+  const startDate = new Date(today);
+  const endDate = new Date(today);
+  endDate.setMonth(endDate.getMonth() + monthsAhead);
 
-    const title = `🎂 ${contact.name} hat Geburtstag`;
-    const events = calendar.getEvents(startDate, endDate);
-    let event = events.find(e => e.getTitle() === title);
-    const description = contact.getBirthdayEventString();
+  const stats = {
+    processed: 0,
+    created: 0,
+    updated: 0,
+    skipped: 0,
+    errors: 0
+  };
 
+  Logger.log(`Creating/Updating birthday events between for the next ${monthsAhead} months`);
+
+  contacts.forEach((contact, index) => {
     try {
-      if (!event) {
-        event = calendar.createAllDayEvent(title, startDate, {
+      stats.processed++;
+      const nextBirthday = contact.getNextBirthdayInRange(startDate, endDate);
+    
+      if (!nextBirthday) {
+        stats.skipped++;
+        Logger.log(`Skipped: ${contact.name} - No birthday in range`);
+        return;
+      }
+
+      const eventDate = new Date(nextBirthday);
+      eventDate.setHours(0, 0, 0, 0);
+      const eventEnd = new Date(eventDate);
+      eventEnd.setDate(eventEnd.getDate() + 1);
+
+      const title = `🎂 ${contact.name} hat Geburtstag`;
+      const existingEvents = calendar.getEvents(eventDate, eventEnd);
+      const existingEvent = existingEvents.find(e => e.getTitle() === title);
+
+      const description = contact.getBirthdayEventString();
+
+      if (!existingEvent) {
+        calendar.createAllDayEvent(title, eventDate, {
           description: description,
           reminders: {
             useDefaults: false,
             minutes: reminderInMinutes,
-            method: addReminder,
+            method: reminderMethod,
           },
         });
-        Logger.log(`Event '${title}' for ${contact.name} created`);
+        stats.created++;
+        Logger.log(`Created: '${title}' for ${contact.name}`);
       } else {
-        if (event.getDescription() != description) {
-          event.setDescription(description);
-          Logger.log(`Event '${title}' for ${contact.name} updated`);
+        let needsUpdate = false;
+        if (existingEvent.getDescription() !== description) {
+          existingEvent.setDescription(description);
+          needsUpdate = true;
+        }
+        if (reminderMethod === 'popup' || reminderMethod === 'email') {
+          const currentPopup = existingEvent.getPopupReminders();
+          const currentEmail = existingEvent.getEmailReminders();
+
+          const isPopupCorrect = reminderMethod === 'popup' &&
+            currentPopup[0] === reminderMinutes &&
+            currentEmail.length === 0;
+
+          const isEmailCorrect = reminderMethod === 'email' &&
+            currentEmail[0] === reminderMinutes &&
+            currentPopup.length === 0;
+
+          if (!isPopupCorrect && !isEmailCorrect) {
+            existingEvent.setPopupReminders([]);
+            existingEvent.setEmailReminders([]);
+
+            if (reminderMethod === 'popup') {
+              existingEvent.setPopupReminders([reminderMinutes]);
+            } else {
+              existingEvent.setEmailReminders([reminderMinutes]);
+            }
+            needsUpdate = true;
+          }
+        }
+
+        if (needsUpdate) {
+          stats.updated++;
+          Logger.log(`Updated: '${title}' for ${contact.name}`);
         }
         else {
-          Logger.log(`Event '${title}' for ${contact.name} already existed`);
+          stats.skipped++;
+          Logger.log(`Already existed: '${title}' for ${contact.name}`);
         }
       }
+
+      // Add delay every 20 operations to avoid rate limits
+      if (index % 20 === 0) Utilities.sleep(500);
+
     } catch (error) {
-      Logger.log(`Error creating/updating birthday event for ${contact.name}`, error.toString());
+      stats.errors++;
+      Logger.log(`Failed to process ${contact.name}: ${error.message}`);
     }
   });
 
-  Logger.log(`All birthday events created or updated!`);
+  Logger.log([
+    `Operation complete.`,
+    `Processed: ${stats.processed}`,
+    `Created: ${stats.created}`,
+    `Updated: ${stats.updated}`,
+    `Skipped: ${stats.skipped}`,
+    `Errors: ${stats.errors}`
+  ].join('\n'));
 }
 
 /**
