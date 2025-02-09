@@ -39,10 +39,14 @@ function logConfiguration() {
   logInfo("Configuration from config.js:");
 
   // Log each configuration variable.
-  Logger.log("calendarId: " + calendarId);
+  let calendar = CalendarApp.getCalendarById(calendarId);
+  if (calendar) {
+    logDebug("Calendar Name: " + calendar.getName());
+  } else {
+    logWarning("Calendar with ID " + calendarId + " not found.");
+  }
   Logger.log("useLabel: " + useLabel);
 
-  // Example of handling variables that might not be defined:
   if (typeof labelFilter !== 'undefined') {
     Logger.log("labelFilter: " + labelFilter.join(", ")); // Assuming it's an array
   } else {
@@ -366,7 +370,7 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
     try {
       stats.processed++;
       const nextBirthday = contact.getNextBirthdayInRange(startDate, endDate);
-    
+
       if (!nextBirthday) {
         stats.skipped++;
         Logger.log(`Skipped: ${contact.name} - No birthday in range`);
