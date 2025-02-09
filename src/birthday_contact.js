@@ -6,13 +6,13 @@ class BirthdayContact {
   /**
    * Creates an instance of BirthdayContact.
    *
-   * @param {string} name - The name of the contact.
-   * @param {Date} birthday - The birthday of the contact.
-   * @param {Array<string>} labels - Labels/tags associated with the contact.
-   * @param {string} email - The email address of the contact.
-   * @param {string} city - The city of the contact.
-   * @param {string} phoneNumber - The phone number the contact.
-   * @param {string} instagramName - The Instagram username for the contact.
+   * @param {string} name The name of the contact.
+   * @param {Date} birthday The birthday of the contact.
+   * @param {Array<string>} labels Labels/tags associated with the contact.
+   * @param {string} email The email address of the contact.
+   * @param {string} city The city of the contact.
+   * @param {string} phoneNumber The phone number the contact.
+   * @param {string} instagramName The Instagram username for the contact.
    */
   constructor(name, birthday, labels = [], email = '', city = '', phoneNumber = '', instagramName = '') {
     if (!name || !birthday) {
@@ -263,8 +263,10 @@ class BirthdayContact {
 
   /**
    * Calculates the next birthday within a date range.
+   * @param {Date} startDate The start date of the date range.
+   * @param {Date} endDate The end date of the date range.
    *
-   * @returns {date} The next birthday.
+   * @returns {Date} The next birthday that falls within the range.
    */
   getNextBirthdayInRange(startDate, endDate) {
     const currentYear = startDate.getFullYear();
@@ -348,7 +350,7 @@ class BirthdayContact {
 
 
   /**
-   * Logs detailed information about the contact to the console, including name, birthday, age (if available), labels, WhatsApp link (if available), and Instagram link (if available).
+   * Logs detailed information about the contact to the console, including name, birthday, age, labels, WhatsApp link , and Instagram link.
    * 
    * @returns {void}
    */
@@ -390,8 +392,8 @@ class BirthdayContact {
 /**
  * Retrieves a contact by their name.
  *
- * @param {BirthdayContact[]} contacts - An array of BirthdayContact objects to search through.
- * @param {string} name - The name of the contact to search for.
+ * @param {BirthdayContact[]} contacts An array of BirthdayContact objects to search through.
+ * @param {string} name The name of the contact to search for.
  * @returns {BirthdayContact|null} The BirthdayContact object if found, or null if not found.
  */
 function getContactByName(contacts, name) {
@@ -403,7 +405,7 @@ function getContactByName(contacts, name) {
 /**
  * Retrieves all contacts with birthdays this month.
  *
- * @param {BirthdayContact[]} contacts - An array of BirthdayContact objects to filter.
+ * @param {BirthdayContact[]} contacts An array of BirthdayContact objects to filter.
  * @returns {BirthdayContact[]} An array of BirthdayContact objects with birthdays this month.
  */
 function getContactsWithBirthdaysThisMonth(contacts) {
@@ -414,8 +416,8 @@ function getContactsWithBirthdaysThisMonth(contacts) {
 /**
  * Retrieves all contacts with at least one label from the specified list.
  *
- * @param {BirthdayContact[]} contacts - An array of BirthdayContact objects to filter.
- * @param {string[]} labels - An array of label names to match.
+ * @param {BirthdayContact[]} contacts An array of BirthdayContact objects to filter.
+ * @param {string[]} labels An array of label names to match.
  * @returns {BirthdayContact[]} An array of BirthdayContact objects that have at least one matching label.
  */
 function getContactsByLabels(contacts, labels) {
@@ -426,8 +428,8 @@ function getContactsByLabels(contacts, labels) {
 /**
  * Retrieves all contacts with birthdays upcoming within a specified number of days.
  *
- * @param {BirthdayContact[]} contacts - An array of BirthdayContact objects to filter.
- * @param {number} days - The number of days to look ahead for upcoming birthdays.
+ * @param {BirthdayContact[]} contacts An array of BirthdayContact objects to filter.
+ * @param {number} days The number of days to look ahead for upcoming birthdays.
  * @returns {BirthdayContact[]} An array of BirthdayContact objects with upcoming birthdays.
  */
 function getUpcomingBirthdays(contacts, days) {
@@ -482,7 +484,7 @@ function getContactsByBirthdayBetweenDates(contacts, startDate, endDate) {
 /**
  * Retrieves all contacts that do not have any labels.
  *
- * @param {BirthdayContact[]} contacts - An array of BirthdayContact objects to filter.
+ * @param {BirthdayContact[]} contacts An array of BirthdayContact objects to filter.
  * @returns {BirthdayContact[]} An array of BirthdayContact objects without labels.
  */
 function getContactsWithoutLabels(contacts) {
@@ -493,8 +495,8 @@ function getContactsWithoutLabels(contacts) {
 /**
  * Retrieves contacts that have multiple labels.
  *
- * @param {BirthdayContact[]} contacts - An array of BirthdayContact objects to filter.
- * @param {number} minLabels - The minimum number of labels a contact must have.
+ * @param {BirthdayContact[]} contacts An array of BirthdayContact objects to filter.
+ * @param {number} minLabels The minimum number of labels a contact must have.
  * @returns {BirthdayContact[]} An array of BirthdayContact objects with at least the specified number of labels.
  */
 function getContactsWithMultipleLabels(contacts, minLabels) {
@@ -505,9 +507,9 @@ function getContactsWithMultipleLabels(contacts, minLabels) {
 /**
  * Retrieves contacts whose age falls within a specified range.
  *
- * @param {BirthdayContact[]} contacts - An array of BirthdayContact objects to filter.
- * @param {number} minAge - The minimum age of the contacts.
- * @param {number} maxAge - The maximum age of the contacts.
+ * @param {BirthdayContact[]} contacts An array of BirthdayContact objects to filter.
+ * @param {number} minAge The minimum age of the contacts.
+ * @param {number} maxAge The maximum age of the contacts.
  * @returns {BirthdayContact[]} An array of BirthdayContact objects within the specified age range.
  */
 function getContactsByAgeRange(contacts, minAge, maxAge) {
@@ -521,9 +523,9 @@ function getContactsByAgeRange(contacts, minAge, maxAge) {
 /**
  * Retrieves contacts with a birthday on a specific day.
  *
- * @param {BirthdayContact[]} contacts - An array of BirthdayContact objects to filter.
- * @param {number} day - The day of the month (1-31).
- * @param {number} month - The month (0 = January, 11 = December).
+ * @param {BirthdayContact[]} contacts An array of BirthdayContact objects to filter.
+ * @param {number} day The day of the month (1-31).
+ * @param {number} month The month (0 = January, 11 = December).
  * @returns {BirthdayContact[]} An array of BirthdayContact objects with a birthday on the specified day and month.
  */
 function getContactsByBirthday(contacts, day, month) {
@@ -534,7 +536,7 @@ function getContactsByBirthday(contacts, day, month) {
 /**
  * Logs the names of a list of BirthdayContact objects.
  *
- * @param {BirthdayContact[]} contacts - An array of BirthdayContact objects to log.
+ * @param {BirthdayContact[]} contacts An array of BirthdayContact objects to log.
  * @returns {void}
  */
 function logContactsNames(contacts) {
@@ -551,7 +553,7 @@ function logContactsNames(contacts) {
 /**
  * Logs the details of a list of BirthdayContact objects.
  *
- * @param {BirthdayContact[]} contacts - An array of BirthdayContact objects to log.
+ * @param {BirthdayContact[]} contacts An array of BirthdayContact objects to log.
  * @returns {void}
  */
 function logContactsSummaryList(contacts) {
@@ -570,7 +572,7 @@ function logContactsSummaryList(contacts) {
 /**
  * Logs detailed information for a list of BirthdayContact instances.
  *
- * @param {BirthdayContact[]} contacts - An array of BirthdayContact objects to log.
+ * @param {BirthdayContact[]} contacts An array of BirthdayContact objects to log.
  * @returns {void}
  */
 function logDetailedContactsList(contacts) {
@@ -588,8 +590,8 @@ function logDetailedContactsList(contacts) {
 /**
  * Logs contacts that have a specific label.
  *
- * @param {BirthdayContact[]} contacts - An array of BirthdayContact objects to log.
- * @param {string} label - The label to filter contacts by.
+ * @param {BirthdayContact[]} contacts An array of BirthdayContact objects to log.
+ * @param {string} label The label to filter contacts by.
  * @returns {void}
  */
 function logContactsByLabel(contacts, label) {
@@ -606,6 +608,3 @@ function logContactsByLabel(contacts, label) {
     Logger.log('------------------------');
   });
 }
-
-
-
