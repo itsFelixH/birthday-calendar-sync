@@ -213,7 +213,7 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, year = new
  * @param {number} month The numeric month (0-indexed) for the summary.
  * @param {number} year The year for the summary.
  */
-function createMonthlyBirthdaySummaryMail(contacts, month, year) {
+function createMonthlyBirthdaySummaryMail(contacts, month, year = new Date().getFullYear()) {
   if (contacts.length === 0) {
     Logger.log("No contacts found. Aborting.");
     return;
@@ -534,22 +534,6 @@ function sendMail(toEmail, fromEmail, senderName, subject, textBody, htmlBody) {
 
   rawMessage = Utilities.base64EncodeWebSafe(mailData);
   Gmail.Users.Messages.send({ raw: rawMessage }, "me");
-}
-
-
-/**
- * Gets the own user's profile.
- */
-function getSelf() {
-  try {
-    const people = People.People.getBatchGet({
-      resourceNames: ['people/me'],
-      personFields: 'names'
-    });
-    console.log('Myself: %s', JSON.stringify(people, null, 2));
-  } catch (err) {
-    console.log('Failed to get own profile with an error %s', err.message);
-  }
 }
 
 
