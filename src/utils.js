@@ -63,86 +63,135 @@ function logConfiguration() {
 
 /**
  * Fetches all contacts with birthdays from Google Contacts, optionally filtering by labels.
- *
- * @param {string[]} labelFilter An array of label names to filter contacts by.
- * @returns {BirthdayContact[]} An array of BirthdayContact objects.
+ * @param {string[]} [labelFilter=[]] Array of label names to filter
+ * @param {number} [maxRetries=3] Max API retry attempts
+ * @returns {BirthdayContact[]} Array of BirthdayContact objects
  */
-function fetchContactsWithBirthdays(labelFilter = []) {
-  const peopleService = People.People;
-  var labelManager = new LabelManager();
-
-  if (labelFilter == [] || labelFilter == [''] || labelFilter == '' || labelFilter.length < 1) {
-    Logger.log(`Fetching all contacts from Google Contacts...`);
-  } else {
-    Logger.log(`Fetching all contacts with any label(s) from '${labelFilter}' from Google Contacts...`);
-  }
-
-  let contacts = [];
-
-  let pageToken = null;
-  const pageSize = 100;
-
+function fetchContactsWithBirthdays(labelFilter = [], maxRetries = 3) {
   try {
-    do {
-      const response = peopleService.Connections.list('people/me', {
-        pageSize: pageSize,
-        personFields: 'names,birthdays,memberships,emailAddresses,phoneNumbers,addresses,biographies',
-        pageToken: pageToken
-      });
+    validateLabelFilter(labelFilter);
+    const peopleService = People.People;
+    var labelManager = new LabelManager();
+    let contacts = [];
+    let pageToken = null;
+    let attempt = 0;
 
-      const connections = response.connections || [];
-      connections.forEach(person => {
-        const birthdayData = person.birthdays?.[0]?.date;
-        const memberships = person.memberships || [];
-        const labelIds = memberships.map(membership => membership.contactGroupMembership.contactGroupId);
-        const labelNames = labelManager.getLabelNamesByIds(labelIds);
-        const labelMatch = labelNames.length === 0 || labelNames.some(labelName => {
-          return labelFilter.includes(labelName);
+    if (labelFilter == [] || labelFilter == [''] || labelFilter.length < 1) {
+      Logger.log(`🔍 Fetching all contacts from Google Contacts...`);
+    } else {
+      Logger.log(`🔍 Fetching all contacts with any label(s) from '${labelFilter}' from Google Contacts...`);
+    }
+
+    do {
+      attempt++;
+      try {
+        const response = peopleService.Connections.list('people/me', {
+          pageSize: 100,
+          personFields: 'names,birthdays,memberships,emailAddresses,phoneNumbers,addresses,biographies',
+          pageToken: pageToken
         });
 
-        if ((!useLabel || labelMatch) && birthdayData) {
-          const year = birthdayData.year || new Date().getFullYear();
-          const birthday = new Date(year, birthdayData.month - 1, birthdayData.day);
+        const connections = response.connections || [];
+        connections.forEach(person => {
+          const birthdayData = person.birthdays?.[0]?.date;
+          const memberships = person.memberships || [];
+          const labelIds = memberships.map(membership => membership.contactGroupMembership.contactGroupId);
+          const labelNames = labelManager.getLabelNamesByIds(labelIds);
+          const labelMatch = labelNames.length === 0 || labelNames.some(labelName => {
+            return labelFilter.includes(labelName);
+          });
 
-          const name = person.names?.[0]?.displayName || 'Unnamed Contact';
-          const email = person.emailAddresses?.[0]?.value;
-          const city = (person.addresses || []).map(address => address.city || '').join(', ');
-          const phoneNumber = person.phoneNumbers?.[0]?.value || '';
-          const notes = (person.biographies || []).map(bio => bio.value).join('. ');
-          const instagramName = extractInstagramNameFromNotes(notes)
+          if ((!useLabel || labelMatch) && birthdayData) {
+            const year = birthdayData.year || new Date().getFullYear();
+            const birthday = new Date(year, birthdayData.month - 1, birthdayData.day);
 
-          const contact = new BirthdayContact(name, birthday, labelNames, email, city, phoneNumber, instagramName);
-          contacts.push(contact);
-        }
+            const name = person.names?.[0]?.displayName || 'Unnamed Contact';
+            const email = person.emailAddresses?.[0]?.value;
+            const city = (person.addresses || []).map(address => address.city || '').join(', ');
+            const phoneNumber = person.phoneNumbers?.[0]?.value || '';
+            const notes = (person.biographies || []).map(bio => bio.value).join('. ');
+            const instagramName = extractInstagramNameFromNotes(notes)
 
-      });
+            const contact = new BirthdayContact(name, birthday, labelNames, email, city, phoneNumber, instagramName);
+            contacts.push(contact);
+          }
 
-      pageToken = response.nextPageToken;
-    } while (pageToken);
+        });
+
+        pageToken = response.nextPageToken;
+        attempt = 0; // Reset retry counter on success
+      } catch (error) {
+        handleApiError(error, attempt, maxRetries);
+      }
+    } while (pageToken || attempt <= maxRetries);
+
+    // Sort contacts based on their birthday
+    contacts.sort((a, b) => {
+      const monthA = a.birthday.getMonth();
+      const dayA = a.birthday.getDate();
+      const monthB = b.birthday.getMonth();
+      const dayB = b.birthday.getDate();
+
+      if (monthA < monthB) {
+        return -1;
+      } else if (monthA > monthB) {
+        return 1;
+      } else { // months are the same
+        return dayA - dayB;
+      }
+    });
+
+    Logger.log(`📇 Fetched ${contacts.length} contacts with birthdays!`);
+    return contacts;
   } catch (error) {
-    Logger.log('Error fetching contacts:', error.toString());
+    Logger.log(`💥 Critical error fetching contacts: ${error.message}`);
   }
-
-  // Sort contacts based on their birthday
-  contacts.sort((a, b) => {
-    const monthA = a.birthday.getMonth();
-    const dayA = a.birthday.getDate();
-    const monthB = b.birthday.getMonth();
-    const dayB = b.birthday.getDate();
-
-    if (monthA < monthB) {
-      return -1;
-    } else if (monthA > monthB) {
-      return 1;
-    } else { // months are the same
-      return dayA - dayB;
-    }
-  });
-
-  Logger.log(`Got ${contacts.length} contacts with birthdays!`);
-  return contacts;
 }
 
+/**
+ * Handles API errors with retry logic
+ * @param {Error} error - Original error object
+ * @param {number} attempt - Current attempt number
+ * @param {number} maxRetries - Maximum allowed retries
+ * @throws {Error} If retries exhausted
+ */
+function handleApiError(error, attempt, maxRetries) {
+  const retryDelay = Math.pow(2, attempt) * 1000 + Math.random() * 1000;
+
+  Logger.log(`❌ API Error (attempt ${attempt}/${maxRetries}): ${error.message}`);
+  Logger.log(`⏳ Retrying in ${retryDelay / 1000} seconds...`);
+
+  if (attempt >= maxRetries) {
+    Logger.log("💥 Maximum retries exceeded");
+    throw error;
+  }
+
+  Utilities.sleep(retryDelay);
+}
+
+/**
+ * Creates BirthdayContact object from API response
+ * @private
+ */
+function createBirthdayContact(person, birthdayData, labelNames) {
+  try {
+    const year = birthdayData.year || new Date().getFullYear();
+    const birthday = new Date(year, birthdayData.month - 1, birthdayData.day);
+
+    return new BirthdayContact(
+      person.names?.[0]?.displayName || 'Unnamed Contact',
+      birthday,
+      labelNames,
+      person.emailAddresses?.[0]?.value,
+      (person.addresses || []).map(a => a.city).filter(Boolean).join(', '),
+      person.phoneNumbers?.[0]?.value || '',
+      extractInstagramNameFromNotes(person.biographies)
+    );
+  } catch (error) {
+    Logger.log(`⚠️ Error creating contact: ${error.message}`);
+    return null;
+  }
+}
 
 /**
  * Creates or updates monthly birthday summary events in the calendar for a configurable period.
@@ -192,7 +241,7 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, monthsAhea
       const title = `🎉🎂 GEBURTSTAGE 🎂🎉`;
       const events = calendar.getEvents(monthEventStart, monthEventEnd);
       const existingEvent = events.find(e => e.getTitle() === title);
-      
+
       const description = `Geburtstage im ${monthNamesLong[month]}\n\n` +
         monthContacts.map(contact => contact.getBirthdaySummaryEventString()).join('\n');
 
@@ -218,7 +267,7 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, monthsAhea
       Logger.log(`❌ Error processing ${monthName}: ${error.message}`);
     }
 
-  current.setMonth(month + 1);
+    current.setMonth(month + 1);
 
   }
 
@@ -479,6 +528,46 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
 }
 
 /**
+ * Validates label filter configuration
+ * @param {Array} labelFilter - Labels to validate
+ * @throws {Error} If invalid label format
+ */
+function validateLabelFilter(labelFilter) {
+  if (!Array.isArray(labelFilter)) {
+    throw new Error('🔴 Label filter must be an array');
+  }
+
+  if (labelFilter.some(label => typeof label !== 'string')) {
+    throw new Error('🔴 All labels must be strings');
+  }
+}
+
+/**
+ * Fetches Instagram profile picture URL
+ * @param {string} username - Instagram username
+ * @returns {string} Profile picture URL
+ * @throws {Error} If fetch fails
+ */
+function fetchInstagramPhoto(username) {
+  const apiUrl = `https://www.instagram.com/${username}/?__a=1`;
+  
+  try {
+    const response = UrlFetchApp.fetch(apiUrl, {
+      muteHttpExceptions: true
+    });
+    
+    if (response.getResponseCode() === 200) {
+      const data = JSON.parse(response.getContentText());
+      return data.graphql.user.profile_pic_url_hd;
+    }
+    
+    throw new Error(`HTTP ${response.getResponseCode()}`);
+  } catch (error) {
+    throw new Error(`Instagram API failed: ${error.message}`);
+  }
+}
+
+/**
  * Extracts an Instagram username from the given notes.
  *
  * @param {string} notes The notes containing the Instagram username.
@@ -503,19 +592,6 @@ function extractInstagramNameFromNotes(notes) {
 }
 
 /**
- * Updates the reminders for an existing event.
- *
- * @param {CalendarApp.CalendarEvent} event The event to update.
- * @param {CalendarApp.Reminder[]} newReminders An array of new reminder objects.
- */
-function updateEventReminders(event, newReminders) {
-  event.setReminders(newReminders);
-  event.saveEvent();
-  Logger.log(`Reminders for ${event.getTitle()} updated successfully.`);
-}
-
-
-/**
  * Calculates the date for the beginning of the next month.
  *
  * @returns {Date} - The date object representing the beginning of the next month.
@@ -526,6 +602,27 @@ function getNextMonth() {
   const nextMonth = (currentMonth + 1) % 12;
 
   return new Date(today.getFullYear(), nextMonth, 1);
+}
+
+/**
+ * Builds HTML email template from contact data
+ */
+function buildEmailTemplate(monthData) {
+  const emailFooter = `
+    <hr style="border-top:1px solid #eaeaea">
+    <p style="color:#666;font-size:12px">
+      Sent by Birthday Calendar Sync • 
+      <a href="https://github.com/itsFelixH/birthday-calendar-sync" style="color:#067df7">GitHub Repo</a>
+    </p>
+  `;
+
+  return `
+    <div style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">
+      <h2 style="color:#1a1a1a">🎉 ${monthData.title}</h2>
+      ${monthData.contacts.map(c => c.getSummaryHtml()).join('\n')}
+      ${emailFooter}
+    </div>
+  `;
 }
 
 function sendMail(toEmail, fromEmail, senderName, subject, textBody, htmlBody) {
@@ -554,7 +651,6 @@ function sendMail(toEmail, fromEmail, senderName, subject, textBody, htmlBody) {
   rawMessage = Utilities.base64EncodeWebSafe(mailData);
   Gmail.Users.Messages.send({ raw: rawMessage }, "me");
 }
-
 
 /**
  * Gets the current user's first name.
