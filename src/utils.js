@@ -73,7 +73,7 @@ function fetchContactsWithBirthdays(labelFilter = [], maxRetries = 3) {
       } catch (error) {
         handleApiError(error, attempt, maxRetries);
       }
-    } while (pageToken || attempt <= maxRetries);
+    } while (pageToken && attempt <= maxRetries);
 
     // Sort contacts based on their birthday
     const sortedContacts = sortContactsByBirthdate(contacts);
