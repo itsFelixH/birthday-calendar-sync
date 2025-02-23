@@ -145,62 +145,81 @@ function fetchContactsWithBirthdays(labelFilter = []) {
 
 
 /**
- * Creates or updates monthly birthday summary events in the calendar.
- *
- * @param {string} calendarId The ID of the calendar.
- * @param {BirthdayContact[]} contacts An array of BirthdayContact objects.
- * @param {number} [year=new Date().getFullYear()] The year for which to create / update the summaries.
+ * Creates or updates monthly birthday summary events in the calendar for a configurable period.
+ * 
+ * @param {string} calendarId The ID of the calendar
+ * @param {BirthdayContact[]} contacts  Array of BirthdayContact objects
+ * @param {number} [monthsAhead=12] Number of months to look ahead from current month
+ * @param {number} [reminderInMinutes=5760] Reminder minutes (default: 4 days)
+ * @param {string} [reminderMethod='popup'] Reminder method (popup/email)
  */
-function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, year = new Date().getFullYear()) {
+function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, monthsAhead = 12, reminderInMinutes = 5760, reminderMethod = 'popup') {
   if (contacts.length === 0) {
-    Logger.log("No contacts found. Aborting.");
+    Logger.log("🚫 No contacts found. Aborting monthly summaries.");
     return;
   }
 
   const calendar = CalendarApp.getCalendarById(calendarId);
 
-  Logger.log(`Creating/Updating birthday summary events in ${year} for each month...`);
-  for (var month = 0; month < 12; month++) {
-    const startDate = new Date(year, month, 1);
-    const endDate = new Date(year, month, 2);
+  const today = new Date();
+  const startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+  const endDate = new Date(startDate);
+  endDate.setMonth(endDate.getMonth() + monthsAhead);
 
-    const monthName = Utilities.formatDate(startDate, Session.getScriptTimeZone(), "MMMM");
-    Logger.log(`Processing month ${monthName}`);
+  Logger.log(`📅 Creating/updating birthday summaries for ${monthsAhead} months...`);
 
-    const title = `🎉🎂 GEBURTSTAGE 🎂🎉`;
-    const events = calendar.getEvents(startDate, endDate);
-    let event = events.find(e => e.getTitle() === title);
-
-    const monthContacts = contacts
-      .filter(contact => contact.birthday.getMonth() === month)
-      .sort((a, b) => a.birthday.getDate() - b.birthday.getDate());
-
-    const description = `Geburtstage im ${monthNamesLong[month]}\n\n` +
-      monthContacts.map(contact => contact.getBirthdaySummaryEventString()).join('\n');
+  let current = new Date(startDate);
+  while (current <= endDate) {
+    const year = current.getFullYear();
+    const month = current.getMonth();
+    const monthEventStart = new Date(year, month, 1);
+    const monthEventEnd = new Date(year, month, 2);
+    const monthName = Utilities.formatDate(monthEventStart, Session.getScriptTimeZone(), "MMMM");
 
     try {
-      if (!event) {
-        event = calendar.createAllDayEvent(title, new Date(startDate), {
+      Logger.log(`Processing month ${monthName}`);
+
+      const monthContacts = contacts
+        .filter(contact => contact.birthday.getMonth() === month)
+        .sort((a, b) => a.birthday.getDate() - b.birthday.getDate());
+
+      if (monthContacts.length === 0) {
+        logDebug(`⏩ Skipping ${monthName} - no birthdays`);
+        current.setMonth(month + 1);
+        continue;
+      }
+
+      const title = `🎉🎂 GEBURTSTAGE 🎂🎉`;
+      const events = calendar.getEvents(monthEventStart, monthEventEnd);
+      const existingEvent = events.find(e => e.getTitle() === title);
+      
+      const description = `Geburtstage im ${monthNamesLong[month]}\n\n` +
+        monthContacts.map(contact => contact.getBirthdaySummaryEventString()).join('\n');
+
+      if (!existingEvent) {
+        calendar.createAllDayEvent(title, new Date(monthEventStart), {
           description: description,
           reminders: {
             useDefaults: false,
-            minutes: 60 * 24 * 4,
-            method: 'email',
+            minutes: reminderInMinutes,
+            method: reminderMethod,
           }
         });
-        Logger.log(`Event '${title}' for ${monthName} created`);
+        Logger.log(`✅ Created ${monthName} ${year} summary event`);
       } else {
-        if (event.getDescription() != description) {
-          event.setDescription(description);
-          Logger.log(`Event '${title}' for ${monthName} updated`);
-        }
-        else {
-          Logger.log(`Event '${title}' for ${monthName} already existed`);
+        if (existingEvent.getDescription() !== description) {
+          existingEvent.setDescription(description);
+          Logger.log(`🔄 Updated ${monthName} ${year} summary event`);
+        } else {
+          Logger.log(`⏩ ${monthName} ${year} summary event unchanged`);
         }
       }
     } catch (error) {
-      Logger.log(`Error creating/updating summary event for ${monthName}:`, error.toString());
+      Logger.log(`❌ Error processing ${monthName}: ${error.message}`);
     }
+
+  current.setMonth(month + 1);
+
   }
 
   Logger.log(`All summary events created or updated!`);
