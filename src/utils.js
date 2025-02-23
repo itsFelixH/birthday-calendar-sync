@@ -125,7 +125,7 @@ function createBirthdayContact(person, birthdayData, labelNames) {
       (person.addresses || []).map(address => address.city).filter(Boolean).join(', '),
       person.phoneNumbers?.[0]?.value || '',
       instagramName,
-      enableContactPhotos ? fetchInstagramPhoto(instagramName) : '',
+      (enableContactPhotos && instagramName != '') ? fetchInstagramPhoto(instagramName) : '',
     );
   } catch (error) {
     Logger.log(`⚠️ Error creating contact: ${error.message}`);
