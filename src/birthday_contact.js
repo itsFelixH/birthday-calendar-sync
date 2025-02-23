@@ -14,7 +14,7 @@ class BirthdayContact {
    * @param {string} phoneNumber The phone number the contact.
    * @param {string} instagramName The Instagram username for the contact.
    */
-  constructor(name, birthday, labels = [], email = '', city = '', phoneNumber = '', instagramName = '', photoUrl = '') {
+  constructor(name, birthday, labels = [], email = '', city = '', phoneNumber = '', instagramName = '') {
     if (!name || !birthday) {
       throw new Error('Name and birthday are required.');
     }
@@ -25,13 +25,6 @@ class BirthdayContact {
     this.city = city || '';
     this.phoneNumber = phoneNumber;
     this.instagramName = instagramName;
-    this.photoUrl = photoUrl;
-  }
-
-  getPhotoMarkup() {
-    return this.photoUrl ?
-      `<img src="${this.photoUrl}" alt="${this.name}" style="max-width: 150px; border-radius: 8px; margin: 10px 0;">` :
-      '';
   }
 
   /**
@@ -105,10 +98,9 @@ class BirthdayContact {
 
     if (this.phoneNumber) string += `WhatsApp: ${this.getWhatsAppLink()}\n`;
     if (this.instagramName) string += `Instagram: ${this.getInstagramLink()}\n`;
-    if (this.photoUrl && enableContactPhotos) string += `${this.getPhotoMarkup()}\n`;
 
     if (this.labels.length > 0) {
-      if (this.phoneNumber || this.instagramName || (this.photoUrl && enableContactPhotos)) string += `\n`;
+      if (this.phoneNumber || this.instagramName) string += `\n`;
       string += `${this.labels}\n`
     }
     return string;

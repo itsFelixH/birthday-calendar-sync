@@ -24,7 +24,6 @@ function logConfiguration() {
   Logger.log("createIndividualBirthdayEvents: " + createIndividualBirthdayEvents);
   Logger.log("createBirthdaySummaryEvents: " + createBirthdaySummaryEvents);
   Logger.log("monthsAhead: " + monthsAhead);
-  Logger.log("enableContactPhotos: " + enableContactPhotos);
 }
 
 /**
@@ -115,8 +114,6 @@ function createBirthdayContact(person, birthdayData, labelNames) {
     const year = birthdayData.year || new Date().getFullYear();
     const birthday = new Date(year, birthdayData.month - 1, birthdayData.day);
 
-    const instagramName = extractInstagramNameFromNotes((person.biographies || []).map(bio => bio.value).join('. '))
-
     return new BirthdayContact(
       person.names?.[0]?.displayName || 'Unnamed Contact',
       birthday,
@@ -124,8 +121,7 @@ function createBirthdayContact(person, birthdayData, labelNames) {
       person.emailAddresses?.[0]?.value,
       (person.addresses || []).map(address => address.city).filter(Boolean).join(', '),
       person.phoneNumbers?.[0]?.value || '',
-      instagramName,
-      (enableContactPhotos && instagramName != '') ? fetchInstagramPhoto(instagramName) : '',
+      extractInstagramNameFromNotes((person.biographies || []).map(bio => bio.value).join('. '))
     );
   } catch (error) {
     Logger.log(`⚠️ Error creating contact: ${error.message}`);
@@ -564,24 +560,24 @@ function validateLabelFilter(labelFilter) {
  * @returns {string} Profile picture URL
  * @throws {Error} If fetch fails
  */
-function fetchInstagramPhoto(username) {
-  const apiUrl = `https://www.instagram.com/${username}/?__a=1`;
+// function fetchInstagramPhoto(username) {
+//   const apiUrl = `https://www.instagram.com/${username}/?__a=1`;
 
-  try {
-    const response = UrlFetchApp.fetch(apiUrl, {
-      muteHttpExceptions: true
-    });
+//   try {
+//     const response = UrlFetchApp.fetch(apiUrl, {
+//       muteHttpExceptions: true
+//     });
 
-    if (response.getResponseCode() === 200) {
-      const data = JSON.parse(response.getContentText());
-      return data.graphql.user.profile_pic_url_hd;
-    }
+//     if (response.getResponseCode() === 200) {
+//       const data = JSON.parse(response.getContentText());
+//       return data.graphql.user.profile_pic_url_hd;
+//     }
 
-    throw new Error(`HTTP ${response.getResponseCode()}`);
-  } catch (error) {
-    throw new Error(`Instagram API failed: ${error.message}`);
-  }
-}
+//     throw new Error(`HTTP ${response.getResponseCode()}`);
+//   } catch (error) {
+//     throw new Error(`Instagram API failed: ${error.message}`);
+//   }
+// }
 
 /**
  * Extracts an Instagram username from the given notes.
