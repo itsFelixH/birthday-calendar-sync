@@ -14,11 +14,10 @@ class BirthdayContact {
    * @param {string} phoneNumber The phone number the contact.
    * @param {string} instagramName The Instagram username for the contact.
    */
-  constructor(name, birthday, labels = [], email = '', city = '', phoneNumber = '', instagramName = '') {
+  constructor(name, birthday, labels = [], email = '', city = '', phoneNumber = '', instagramName = '', photoUrl = '') {
     if (!name || !birthday) {
       throw new Error('Name and birthday are required.');
     }
-    
     this.name = name;
     this.birthday = new Date(birthday);
     this.labels = Array.isArray(labels) ? labels : [];
@@ -26,8 +25,14 @@ class BirthdayContact {
     this.city = city || '';
     this.phoneNumber = phoneNumber;
     this.instagramName = instagramName;
+    this.photoUrl = photoUrl;
   }
 
+  getPhotoMarkup() {
+    return this.photoUrl ?
+      `<img src="${this.photoUrl}" alt="${this.name}" style="max-width: 150px; border-radius: 8px; margin: 10px 0;">` :
+      '';
+  }
 
   /**
    * Gets the name of the contact.
@@ -100,9 +105,10 @@ class BirthdayContact {
 
     if (this.phoneNumber) string += `WhatsApp: ${this.getWhatsAppLink()}\n`;
     if (this.instagramName) string += `Instagram: ${this.getInstagramLink()}\n`;
+    if (this.photoUrl && enableContactPhotos) string += `${this.getPhotoMarkup()}\n`;
 
     if (this.labels.length > 0) {
-      if (this.phoneNumber || this.instagramName) string += `\n`;
+      if (this.phoneNumber || this.instagramName || (this.photoUrl && enableContactPhotos)) string += `\n`;
       string += `${this.labels}\n`
     }
     return string;
@@ -280,7 +286,7 @@ class BirthdayContact {
     ];
 
     // Find first date that falls within the range
-    const validDate = candidates.find(date => 
+    const validDate = candidates.find(date =>
       date >= startDate && date <= endDate
     );
 
@@ -409,7 +415,8 @@ function getContactByName(contacts, name) {
  * @returns {BirthdayContact[]} An array of BirthdayContact objects with birthdays this month.
  */
 function getContactsWithBirthdaysThisMonth(contacts) {
-  return contacts.filter(contact => contact.isBirthdayThisMonth());
+  const filtered = contacts.filter(contact => contact.isBirthdayThisMonth());
+  return sortContactsByBirthdate(filtered);
 }
 
 
@@ -426,6 +433,36 @@ function getContactsByLabels(contacts, labels) {
 
 
 /**
+ * Sorts contacts by birthdate (month/day)
+ *
+ * @param {BirthdayContact[]} contacts - Unsorted contacts
+ * @returns {BirthdayContact[]} Sorted copy of contacts
+ */
+function sortContactsByBirthdate(contacts) {
+  try {
+    // 🔃 Sorting contacts by birthdate
+
+    // Create copy to avoid mutating original
+    const sorted = [...contacts].sort((a, b) => {
+      const monthA = a.birthday.getMonth();
+      const dayA = a.birthday.getDate();
+      const monthB = b.birthday.getMonth();
+      const dayB = b.birthday.getDate();
+
+      if (!monthA || !monthB || !dayA || !dayB) return 0;
+      return monthA - monthB || dayA - dayB;
+
+    });
+
+    return sorted;
+  } catch (error) {
+    Logger.log(`❌ Sorting failed: ${error.message}`);
+    return contacts; // Return original on failure
+  }
+}
+
+
+/**
  * Retrieves all contacts with birthdays upcoming within a specified number of days.
  *
  * @param {BirthdayContact[]} contacts An array of BirthdayContact objects to filter.
@@ -434,14 +471,15 @@ function getContactsByLabels(contacts, labels) {
  */
 function getUpcomingBirthdays(contacts, days) {
   const today = new Date();
-  return contacts.filter(contact => {
+  const filtered = contacts.filter(contact => {
     const nextBirthday = new Date(today.getFullYear(), contact.birthday.getMonth(), contact.birthday.getDate());
     if (today > nextBirthday) {
       nextBirthday.setFullYear(today.getFullYear() + 1);
     }
     const diffDays = Math.round((nextBirthday - today) / (1000 * 60 * 60 * 24));
     return diffDays <= days;
-  }).sort((a, b) => a.birthday.getDate() - b.birthday.getDate());
+  });
+  return sortContactsByBirthdate(filtered);
 }
 
 
@@ -453,10 +491,11 @@ function getUpcomingBirthdays(contacts, days) {
  * @return {BirthdayContact[]} An array of contacts with birthdays on the specified date.
  */
 function getContactsByBirthdayDate(contacts, date) {
-  return contacts.filter(contact =>
+  const filtered = contacts.filter(contact =>
     contact.birthday.getMonth() === date.getMonth() &&
     contact.birthday.getDate() === date.getDate()
-  ).sort((a, b) => a.birthday.getDate() - b.birthday.getDate());
+  );
+  return sortContactsByBirthdate(filtered);
 }
 
 
@@ -469,7 +508,7 @@ function getContactsByBirthdayDate(contacts, date) {
  * @return {BirthdayContact[]} An array of contacts with birthdays between the specified dates.
  */
 function getContactsByBirthdayBetweenDates(contacts, startDate, endDate) {
-  return contacts.filter(contact => {
+  const filtered = contacts.filter(contact => {
     const contactBirthdayMonth = contact.birthday.getMonth();
     const contactBirthdayDay = contact.birthday.getDate();
 
@@ -477,7 +516,8 @@ function getContactsByBirthdayBetweenDates(contacts, startDate, endDate) {
       contactBirthdayMonth <= endDate.getMonth() &&
       contactBirthdayDay >= startDate.getDate() &&
       contactBirthdayDay <= endDate.getDate();
-  }).sort((a, b) => a.birthday.getDate() - b.birthday.getDate());
+  });
+  return sortContactsByBirthdate(filtered);
 }
 
 
