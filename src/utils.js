@@ -64,7 +64,7 @@ function fetchContactsWithBirthdays(labelFilter = [], maxRetries = 3) {
           const labelMatch = contactMatchesLabelFilter(labelFilter, contactLabels)
 
           if ((!useLabel || labelMatch) && birthdayData) {
-            const contact = createBirthdayContact(person, birthdayData, labelNames);
+            const contact = createBirthdayContact(person, birthdayData, contactLabels);
             contacts.push(contact);
           }
         });
