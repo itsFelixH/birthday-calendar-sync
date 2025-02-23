@@ -54,23 +54,3 @@ function testScriptName() {
 function testFirstName() {
 	Logger.log(getCurrentUserFirstName())
 }
-
-// Example usage:
-function testLogging() {
-	setLogLevel(LOG_LEVELS.DEBUG); // Set to DEBUG level
-	logTrace("This is a trace message."); // Will be logged
-	logDebug("This is a debug message."); // Will be logged
-	logInfo("This is an info message."); // Will be logged
-	logWarning("This is a warning message."); // Will be logged
-	logError("This is an error message."); // Will be logged
-
-	setLogLevel(LOG_LEVELS.ERROR); // Set to ERROR level
-	logTrace("This is a trace message."); // Will NOT be logged
-	logDebug("This is a debug message."); // Will NOT be logged
-	logInfo("This is an info message."); // Will NOT be logged
-	logWarning("This is a warning message."); // Will NOT be logged
-	logError("This is an error message."); // Will be logged
-
-	setLogLevel(LOG_LEVELS.NONE); // Disable all logging
-	logInfo("This will not be logged");
-}
