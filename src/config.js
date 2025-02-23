@@ -32,8 +32,3 @@ var createBirthdaySummaryEvents = true;
 // The amount of months ahead for which birthday events and summaries will be created/updated.
 // By default, it creates events for the next year (=12 months).
 var monthsAhead = 12;
-
-// The year for which birthday events and summaries will be created/updated.
-// By default, it uses the current year.
-var yearToUse = 2025;
-
