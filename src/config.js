@@ -34,4 +34,4 @@ const createBirthdaySummaryEvents = true;
 const monthsAhead = 12;
 
 // Set this to true if you want to add contact photos to the events.
-const enableContactPhotos = false;
+const enableContactPhotos = true;
