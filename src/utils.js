@@ -453,7 +453,7 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
 
       if (!nextBirthday) {
         stats.skipped++;
-        Logger.log(`Skipped: ${contact.name} - No birthday in range`);
+        Logger.log(`⏩ ${contact.name} skipped: No birthday in range`);
         return;
       }
 
@@ -478,45 +478,16 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
           },
         });
         stats.created++;
-        Logger.log(`Created: '${title}' for ${contact.name}`);
+        Logger.log(`✅ Created ${contact.name} birthday event`);
       } else {
-        let needsUpdate = false;
         if (existingEvent.getDescription() !== description) {
-          existingEvent.setDescription(description);
-          needsUpdate = true;
-        }
-        if (reminderMethod === 'popup' || reminderMethod === 'email') {
-          const currentPopup = existingEvent.getPopupReminders();
-          const currentEmail = existingEvent.getEmailReminders();
-
-          const isPopupCorrect = reminderMethod === 'popup' &&
-            currentPopup[0] === reminderMinutes &&
-            currentEmail.length === 0;
-
-          const isEmailCorrect = reminderMethod === 'email' &&
-            currentEmail[0] === reminderMinutes &&
-            currentPopup.length === 0;
-
-          if (!isPopupCorrect && !isEmailCorrect) {
-            existingEvent.setPopupReminders([]);
-            existingEvent.setEmailReminders([]);
-
-            if (reminderMethod === 'popup') {
-              existingEvent.setPopupReminders([reminderMinutes]);
-            } else {
-              existingEvent.setEmailReminders([reminderMinutes]);
-            }
-            needsUpdate = true;
-          }
-        }
-
-        if (needsUpdate) {
           stats.updated++;
-          Logger.log(`Updated: '${title}' for ${contact.name}`);
+          existingEvent.setDescription(description);
+          Logger.log(`🔄 Updated ${contact.name} birthday event`);
         }
         else {
           stats.skipped++;
-          Logger.log(`Already existed: '${title}' for ${contact.name}`);
+          Logger.log(`⏩ ${contact.name} birthday event unchanged`);
         }
       }
 
@@ -530,7 +501,7 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
   });
 
   Logger.log([
-    `Operation complete.`,
+    `All birthday events created or updated!`,
     `Processed: ${stats.processed}`,
     `Created: ${stats.created}`,
     `Updated: ${stats.updated}`,
@@ -553,31 +524,6 @@ function validateLabelFilter(labelFilter) {
     throw new Error('🔴 All labels must be strings');
   }
 }
-
-/**
- * Fetches Instagram profile picture URL
- * @param {string} username - Instagram username
- * @returns {string} Profile picture URL
- * @throws {Error} If fetch fails
- */
-// function fetchInstagramPhoto(username) {
-//   const apiUrl = `https://www.instagram.com/${username}/?__a=1`;
-
-//   try {
-//     const response = UrlFetchApp.fetch(apiUrl, {
-//       muteHttpExceptions: true
-//     });
-
-//     if (response.getResponseCode() === 200) {
-//       const data = JSON.parse(response.getContentText());
-//       return data.graphql.user.profile_pic_url_hd;
-//     }
-
-//     throw new Error(`HTTP ${response.getResponseCode()}`);
-//   } catch (error) {
-//     throw new Error(`Instagram API failed: ${error.message}`);
-//   }
-// }
 
 /**
  * Extracts an Instagram username from the given notes.
