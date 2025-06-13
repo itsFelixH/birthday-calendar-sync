@@ -107,6 +107,18 @@ function handleApiError(error, attempt, maxRetries) {
 }
 
 /**
+ * Checks if there were any changes made to the calendar
+ * @param {Object} changes Object containing changes made to calendar
+ * @returns {boolean} True if there were any changes
+ */
+function hasChanges(changes) {
+  return changes.individual.created.length > 0 ||
+    changes.individual.updated.length > 0 ||
+    changes.summary.created.length > 0 ||
+    changes.summary.updated.length > 0;
+}
+
+/**
  * Creates BirthdayContact object from API response
  */
 function createBirthdayContact(person, birthdayData, labelNames) {
@@ -193,11 +205,12 @@ function contactMatchesLabelFilter(labelFilter, contactLabels) {
  * @param {number} [monthsAhead=12] Number of months to look ahead from current month
  * @param {number} [reminderInMinutes=5760] Reminder minutes (default: 4 days)
  * @param {string} [reminderMethod='popup'] Reminder method (popup/email)
+ * @returns {Object} Object containing arrays of created and updated events
  */
 function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, monthsAhead = 12, reminderInMinutes = 5760, reminderMethod = 'popup') {
   if (contacts.length === 0) {
     Logger.log("🚫 No contacts found. Aborting monthly summaries.");
-    return;
+    return { created: [], updated: [] };
   }
 
   const calendar = CalendarApp.getCalendarById(calendarId);
@@ -210,8 +223,8 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, monthsAhea
 
   const stats = {
     processed: 0,
-    created: 0,
-    updated: 0,
+    created: [],
+    updated: [],
     skipped: 0,
     errors: 0
   };
@@ -257,12 +270,12 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, monthsAhea
             method: reminderMethod,
           }
         });
-        stats.created++;
+        stats.created.push(`${monthName} ${year}`);
         Logger.log(`✅ Created ${monthName} ${year} summary event`);
       } else {
         if (existingEvent.getDescription() !== description) {
           existingEvent.setDescription(description);
-          stats.updated++;
+          stats.updated.push(`${monthName} ${year}`);
           Logger.log(`🔄 Updated ${monthName} ${year} summary event`);
         } else {
           stats.skipped++;
@@ -279,11 +292,16 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, monthsAhea
   Logger.log([
     `All summary events created or updated!`,
     `Processed: ${stats.processed}`,
-    `Created: ${stats.created}`,
-    `Updated: ${stats.updated}`,
+    `Created: ${stats.created.length}`,
+    `Updated: ${stats.updated.length}`,
     `Skipped: ${stats.skipped}`,
     `Errors: ${stats.errors}`
   ].join('\n'));
+
+  return {
+    created: stats.created,
+    updated: stats.updated
+  };
 }
 
 /**
@@ -340,7 +358,7 @@ function createMonthlyBirthdaySummaryMail(contacts, month, year = new Date().get
   `;
 
   sendMail(toEmail, fromEmail, senderName, subject, '', mailBody)
-  Logger.log(`Email sent successfully!`);
+  Logger.log(`Birthday summary email sent successfully!`);
 }
 
 
@@ -410,7 +428,78 @@ function createDailyBirthdayMail(contacts, date = new Date(), previewDays = 5) {
   `;
 
   sendMail(toEmail, fromEmail, senderName, subject, '', mailBody)
-  Logger.log(`Email sent successfully!`);
+  Logger.log(`Daily reminder email sent successfully!`);
+}
+
+/**
+ * Sends an email with details about calendar changes
+ * @param {Object} changes Object containing changes made to calendar
+ */
+function sendCalendarUpdateEmail(changes) {
+  const recipientName = getCurrentUserFirstName();
+
+  const subject = '🔄 Birthday Calendar Updates 🔄';
+  const senderName = DriveApp.getFileById(ScriptApp.getScriptId()).getName();
+  const toEmail = Session.getActiveUser().getEmail();
+  const fromEmail = Session.getActiveUser().getEmail();
+
+  let mailBody = `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+      <h3>🔄 Birthday Calendar Updates 🔄</h3>
+      <p>Hallo${recipientName ? ` ${recipientName},` : ','}</p>
+      <p>The following changes have been made to your birthday calendar:</p>`;
+
+  if (changes.individual.created.length > 0 || changes.individual.updated.length > 0) {
+    mailBody += `<h4>Individual Birthday Events:</h4>`;
+
+    if (changes.individual.created.length > 0) {
+      mailBody += `<p>✨ New events created:</p><ul>`;
+      changes.individual.created.forEach(event => {
+        mailBody += `<li>${event}</li>`;
+      });
+      mailBody += `</ul>`;
+    }
+
+    if (changes.individual.updated.length > 0) {
+      mailBody += `<p>🔄 Events updated:</p><ul>`;
+      changes.individual.updated.forEach(event => {
+        mailBody += `<li>${event}</li>`;
+      });
+      mailBody += `</ul>`;
+    }
+  }
+
+  if (changes.summary.created.length > 0 || changes.summary.updated.length > 0) {
+    mailBody += `<h4>Monthly Summary Events:</h4>`;
+
+    if (changes.summary.created.length > 0) {
+      mailBody += `<p>✨ New summaries created:</p><ul>`;
+      changes.summary.created.forEach(event => {
+        mailBody += `<li>${event}</li>`;
+      });
+      mailBody += `</ul>`;
+    }
+
+    if (changes.summary.updated.length > 0) {
+      mailBody += `<p>🔄 Summaries updated:</p><ul>`;
+      changes.summary.updated.forEach(event => {
+        mailBody += `<li>${event}</li>`;
+      });
+      mailBody += `</ul>`;
+    }
+  }
+
+  mailBody += `
+      <hr style="border:0; height:1px; background:#ccc;">
+      <p style="text-align: center; margin-top: 2em;">
+        <a href="https://calendar.google.com/calendar/r" style="color: #007BFF;">View Calendar</a><br>
+        <a href="https://github.com/itsFelixH/birthday-calendar-sync" style="color: #007BFF;">Git-Repo</a>
+      </p>
+    </div>
+  `;
+
+  sendMail(toEmail, fromEmail, senderName, subject, '', mailBody);
+  Logger.log('Calendar update email sent successfully!');
 }
 
 /**
@@ -421,11 +510,12 @@ function createDailyBirthdayMail(contacts, date = new Date(), previewDays = 5) {
  * @param {number} [monthsAhead=12] Number of months to look ahead for birthdays
  * @param {number} [reminderMinutes=1440] Minutes before event for reminder (default: 1 day)
  * @param {string} [reminderMethod='popup'] Reminder method (popup/email)
+ * @returns {Object} Object containing arrays of created and updated events
  */
 function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 12, reminderMinutes = 1440, reminderMethod = 'popup') {
   if (contacts.length === 0) {
     Logger.log("No contacts found. Aborting");
-    return;
+    return { created: [], updated: [] };
   }
 
   const calendar = CalendarApp.getCalendarById(calendarId);
@@ -438,8 +528,8 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
 
   const stats = {
     processed: 0,
-    created: 0,
-    updated: 0,
+    created: [],
+    updated: [],
     skipped: 0,
     errors: 0
   };
@@ -473,15 +563,15 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
           description: description,
           reminders: {
             useDefaults: false,
-            minutes: reminderInMinutes,
+            minutes: reminderMinutes,
             method: reminderMethod,
           },
         });
-        stats.created++;
+        stats.created.push(`${contact.name} (${Utilities.formatDate(eventDate, Session.getScriptTimeZone(), "dd.MM.yyyy")})`);
         Logger.log(`✅ Created ${contact.name} birthday event`);
       } else {
         if (existingEvent.getDescription() !== description) {
-          stats.updated++;
+          stats.updated.push(`${contact.name} (${Utilities.formatDate(eventDate, Session.getScriptTimeZone(), "dd.MM.yyyy")})`);
           existingEvent.setDescription(description);
           Logger.log(`🔄 Updated ${contact.name} birthday event`);
         }
@@ -503,11 +593,16 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
   Logger.log([
     `All birthday events created or updated!`,
     `Processed: ${stats.processed}`,
-    `Created: ${stats.created}`,
-    `Updated: ${stats.updated}`,
+    `Created: ${stats.created.length}`,
+    `Updated: ${stats.updated.length}`,
     `Skipped: ${stats.skipped}`,
     `Errors: ${stats.errors}`
   ].join('\n'));
+
+  return {
+    created: stats.created,
+    updated: stats.updated
+  };
 }
 
 /**

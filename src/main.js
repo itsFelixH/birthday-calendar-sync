@@ -9,15 +9,25 @@ var monthNamesLong = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Jul
  * Updates birthdays and summaries in the calendar.
  */
 function updateBirthdaysAndSummariesInCalendar() {
-  logConfiguration();
   const contacts = fetchContactsWithBirthdays();
 
+  const changes = {
+    individual: { created: [], updated: [] },
+    summary: { created: [], updated: [] }
+  };
+
   if (createIndividualBirthdayEvents) {
-    createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead);
+    const individualStats = createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead);
+    changes.individual = individualStats;
   }
 
   if (createBirthdaySummaryEvents) {
-    createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, monthsAhead);
+    const summaryStats = createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, monthsAhead);
+    changes.summary = summaryStats;
+  }
+
+  if (hasChanges(changes)) {
+    sendCalendarUpdateEmail(changes);
   }
 }
 
