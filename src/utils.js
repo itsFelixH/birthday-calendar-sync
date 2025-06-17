@@ -438,22 +438,22 @@ function createDailyBirthdayMail(contacts, date = new Date(), previewDays = 5) {
 function sendCalendarUpdateEmail(changes) {
   const recipientName = getCurrentUserFirstName();
 
-  const subject = '🔄 Birthday Calendar Updates 🔄';
+  const subject = '🔄 Geburtstags Updates 🔄';
   const senderName = DriveApp.getFileById(ScriptApp.getScriptId()).getName();
   const toEmail = Session.getActiveUser().getEmail();
   const fromEmail = Session.getActiveUser().getEmail();
 
   let mailBody = `
     <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-      <h3>🔄 Birthday Calendar Updates 🔄</h3>
+      <h3>🔄 Updates zu Geburtstags-Events 🔄</h3>
       <p>Hallo${recipientName ? ` ${recipientName},` : ','}</p>
-      <p>The following changes have been made to your birthday calendar:</p>`;
+      <p>Die folgenden Geburtstags-Events wurden deinem Kalender hinzugefügt.</p>`;
 
   if (changes.individual.created.length > 0 || changes.individual.updated.length > 0) {
-    mailBody += `<h4>Individual Birthday Events:</h4>`;
+    mailBody += `<h4>Individuelle Geburtstage:</h4>`;
 
     if (changes.individual.created.length > 0) {
-      mailBody += `<p>✨ New events created:</p><ul>`;
+      mailBody += `<p>✨ Neue Geburtstage:</p><ul>`;
       changes.individual.created.forEach(event => {
         mailBody += `<li>${event}</li>`;
       });
@@ -461,7 +461,7 @@ function sendCalendarUpdateEmail(changes) {
     }
 
     if (changes.individual.updated.length > 0) {
-      mailBody += `<p>🔄 Events updated:</p><ul>`;
+      mailBody += `<p>🔄 Aktualisierte Geburtstage:</p><ul>`;
       changes.individual.updated.forEach(event => {
         mailBody += `<li>${event}</li>`;
       });
@@ -470,10 +470,10 @@ function sendCalendarUpdateEmail(changes) {
   }
 
   if (changes.summary.created.length > 0 || changes.summary.updated.length > 0) {
-    mailBody += `<h4>Monthly Summary Events:</h4>`;
+    mailBody += `<h4>Monatliche Geburtstagsüberichten:</h4>`;
 
     if (changes.summary.created.length > 0) {
-      mailBody += `<p>✨ New summaries created:</p><ul>`;
+      mailBody += `<p>✨ Neue Monatsübersichten:</p><ul>`;
       changes.summary.created.forEach(event => {
         mailBody += `<li>${event}</li>`;
       });
@@ -481,7 +481,7 @@ function sendCalendarUpdateEmail(changes) {
     }
 
     if (changes.summary.updated.length > 0) {
-      mailBody += `<p>🔄 Summaries updated:</p><ul>`;
+      mailBody += `<p>🔄 Aktualisierte Monatsübersichten:</p><ul>`;
       changes.summary.updated.forEach(event => {
         mailBody += `<li>${event}</li>`;
       });
