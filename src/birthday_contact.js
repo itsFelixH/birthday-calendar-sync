@@ -12,9 +12,9 @@ class BirthdayContact {
    * @param {string} email The email address of the contact.
    * @param {string} city The city of the contact.
    * @param {string} phoneNumber The phone number the contact.
-   * @param {string} instagramName The Instagram username for the contact.
+   * @param {Array<string>} instagramNames The Instagram usernames for the contact.
    */
-  constructor(name, birthday, labels = [], email = '', city = '', phoneNumber = '', instagramName = '') {
+  constructor(name, birthday, labels = [], email = '', city = '', phoneNumber = '', instagramNames = []) {
     if (!name || !birthday) {
       throw new Error('Name and birthday are required.');
     }
@@ -24,7 +24,7 @@ class BirthdayContact {
     this.email = email || '';
     this.city = city || '';
     this.phoneNumber = phoneNumber;
-    this.instagramName = instagramName;
+    this.instagramNames = Array.isArray(instagramNames) ? instagramNames : [instagramNames].filter(name => name !== '');
   }
 
   /**
@@ -97,10 +97,14 @@ class BirthdayContact {
       : `${this.name} hat heute Geburtstag\n\n`;
 
     if (this.phoneNumber) string += `WhatsApp: ${this.getWhatsAppLink()}\n`;
-    if (this.instagramName) string += `Instagram: ${this.getInstagramLink()}\n`;
+    if (this.instagramNames.length > 0) {
+      this.instagramNames.forEach(name => {
+        string += `Instagram: ${this.getInstagramLink(name)}\n`;
+      });
+    }
 
     if (this.labels.length > 0) {
-      if (this.phoneNumber || this.instagramName) string += `\n`;
+      if (this.phoneNumber || this.instagramNames.length > 0) string += `\n`;
       string += `${this.labels}\n`
     }
     return string;
@@ -148,7 +152,11 @@ class BirthdayContact {
     }
 
     if (this.phoneNumber) string += `<li>💬 <a href="${this.getWhatsAppLink()}">${this.phoneNumber}</a></li>`;
-    if (this.instagramName) string += `<li>📷 <a href="${this.getInstagramLink()}">${this.instagramName}</a></li>`;
+    if (this.instagramNames.length > 0) {
+      this.instagramNames.forEach(name => {
+        string += `<li>📷 <a href="${this.getInstagramLink(name)}">${name}</a></li>`;
+      });
+    }
     if (this.labels.length > 0) {
       string += `<li>${this.labels}</li>`
     }
@@ -324,16 +332,26 @@ class BirthdayContact {
 
 
   /**
-   * Extracts an Instagram link from the given notes.
+   * Gets the Instagram link for a given username.
    *
-   * @returns {string} The Instagram link, or an empty string if no Instagram link is found.
+   * @param {string} username The Instagram username
+   * @returns {string} The Instagram link for the given username.
    */
-  getInstagramLink() {
+  getInstagramLink(username) {
     const baseUrl = "https://www.instagram.com/";
-    if (this.instagramName) {
-      return `${baseUrl}${this.instagramName.substring(1)}/`;
+    if (username) {
+      return `${baseUrl}${username.substring(1)}/`;
     }
     return '';
+  }
+
+  /**
+   * Gets all Instagram links for this contact.
+   *
+   * @returns {Array<string>} Array of Instagram links.
+   */
+  getAllInstagramLinks() {
+    return this.instagramNames.map(name => this.getInstagramLink(name));
   }
 
 
@@ -360,7 +378,11 @@ class BirthdayContact {
     if (this.city) Logger.log(`City: ${this.city}`);
     if (this.hasKnownBirthYear()) Logger.log(`Age: ${this.calculateAge()}`);
     if (this.phoneNumber) Logger.log(`WhatsApp: ${this.getWhatsAppLink()}`);
-    if (this.instagramName) Logger.log(`Instagram: ${this.getInstagramLink()}`);
+    if (this.instagramNames.length > 0) {
+      this.instagramNames.forEach(name => {
+        Logger.log(`Instagram: ${this.getInstagramLink(name)}`);
+      });
+    }
     if (this.labels.length > 0) Logger.log(`Labels: ${this.labels.join(', ')}`);
   }
 
