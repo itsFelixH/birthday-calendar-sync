@@ -323,8 +323,7 @@ function createMonthlyBirthdaySummaryMail(contacts, month, year = new Date().get
 
   // Filter contacts with birthdays in the specified month
   const monthContacts = contacts.filter(contact => contact.birthday.getMonth() === month)
-    .sort((a, b) => a.birthday.getDate() - b.birthday.getDate());
-
+    .sort((a, b) => a.birthday.getDate() - b.birthday.getDate() || a.name.localeCompare(b.name));
   // Check if there are any birthdays in the specified month
   if (monthContacts.length === 0) {
     Logger.log('No birthdays found for this month.');
