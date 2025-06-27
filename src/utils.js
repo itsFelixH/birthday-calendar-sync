@@ -133,7 +133,7 @@ function createBirthdayContact(person, birthdayData, labelNames) {
       person.emailAddresses?.[0]?.value,
       (person.addresses || []).map(address => address.city).filter(Boolean).join(', '),
       person.phoneNumbers?.[0]?.value || '',
-      extractInstagramNameFromNotes((person.biographies || []).map(bio => bio.value).join('. '))
+      extractInstagramNamesFromNotes((person.biographies || []).map(bio => bio.value).join('. '))
     );
   } catch (error) {
     Logger.log(`⚠️ Error creating contact: ${error.message}`);
@@ -342,7 +342,7 @@ function createMonthlyBirthdaySummaryMail(contacts, month, year = new Date().get
   // Build the email body with formatted birthdates
   let mailBody = `
     <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-      <h3>🎉 Geburtstage im ${monthNamesLong[month]} 🎉</h3>
+      <h3>🎉 Geburtstage im ${monthNamesLong[month]}</h3>
       <p>Hallo${recipientName ? ` ${recipientName},` : ','}</p>
       <p>Mach dich bereit zum Feiern! Hier sind die Geburtstage deiner Kontakte im ${monthNamesLong[month]} ${year}. Vergiss nicht, ihnen zu gratulieren!</p>
       <p>Insgesamt gibt es ${numBirthdays} Geburtstag${numBirthdays > 1 ? 'e' : ''} in diesem Monat:</p>
@@ -400,7 +400,7 @@ function createDailyBirthdayMail(contacts, date = new Date(), previewDays = 5) {
 
   const recipientName = getCurrentUserFirstName();
 
-  const subject = '🎂 Heutige Geburtstage 🎂';
+  const subject = '🎁 Heutige Geburtstage 🎁';
   const senderName = DriveApp.getFileById(ScriptApp.getScriptId()).getName();
   const toEmail = Session.getActiveUser().getEmail();
   const fromEmail = Session.getActiveUser().getEmail();
@@ -408,9 +408,9 @@ function createDailyBirthdayMail(contacts, date = new Date(), previewDays = 5) {
   // Build the email body with formatted birthdates
   let mailBody = `
     <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-      <h3>🎉 Geburtstage am ${day}. ${monthNamesLong[month]} 🎉</h3>
+      <h3>🎉 Geburtstage am ${day}. ${monthNamesLong[month]}</h3>
       <p>Hallo${recipientName ? ` ${recipientName},` : ','}</p>
-      <p>Hier sind die heutigen Geburtstage deiner Kontakte:</p>
+      <p>hier sind die heutigen Geburtstage deiner Kontakte:</p>
       ${todaysContacts.map(contact => contact.getMainBirthdayMailString()).join('<br>')}
       <br><br>
       ${nextDaysContacts.length > 0
@@ -438,16 +438,16 @@ function createDailyBirthdayMail(contacts, date = new Date(), previewDays = 5) {
 function sendCalendarUpdateEmail(changes) {
   const recipientName = getCurrentUserFirstName();
 
-  const subject = '🔄 Geburtstags Updates 🔄';
+  const subject = '📅 Geburtstags Updates 📅';
   const senderName = DriveApp.getFileById(ScriptApp.getScriptId()).getName();
   const toEmail = Session.getActiveUser().getEmail();
   const fromEmail = Session.getActiveUser().getEmail();
 
   let mailBody = `
     <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-      <h3>🔄 Updates zu Geburtstags-Events 🔄</h3>
+      <h3>🔄 Updates zu Geburtstags-Events</h3>
       <p>Hallo${recipientName ? ` ${recipientName},` : ','}</p>
-      <p>Die folgenden Geburtstags-Events wurden deinem Kalender hinzugefügt.</p>`;
+      <p>die folgenden Geburtstags-Events wurden deinem Kalender hinzugefügt:</p>`;
 
   if (changes.individual.created.length > 0 || changes.individual.updated.length > 0) {
     mailBody += `<h4>Individuelle Geburtstage:</h4>`;
@@ -470,7 +470,7 @@ function sendCalendarUpdateEmail(changes) {
   }
 
   if (changes.summary.created.length > 0 || changes.summary.updated.length > 0) {
-    mailBody += `<h4>Monatliche Geburtstagsüberichten:</h4>`;
+    mailBody += `<h4>Monatliche Geburtstagsübersichten:</h4>`;
 
     if (changes.summary.created.length > 0) {
       mailBody += `<p>✨ Neue Monatsübersichten:</p><ul>`;
@@ -621,27 +621,44 @@ function validateLabelFilter(labelFilter) {
 }
 
 /**
- * Extracts an Instagram username from the given notes.
+ * Extracts Instagram usernames from the given notes.
+ * Supports multiple usernames in different notes and comma-separated lists.
  *
- * @param {string} notes The notes containing the Instagram username.
- * @returns {string} The Instagram link, or an empty string if no Instagram link is found.
+ * @param {string} notes The notes containing Instagram usernames.
+ * @returns {string[]} Array of Instagram usernames (with @ prefix), or empty array if none found.
  */
-function extractInstagramNameFromNotes(notes) {
-  const instagramPrefixes = ["Instagram: ", "@"];
+function extractInstagramNamesFromNotes(notes) {
+  // Handle empty/undefined notes
+  if (!notes) return [];
 
-  const instagramNote = notes.split('. ').find(note => {
-    return instagramPrefixes.some(prefix => note.startsWith(prefix));
+  const instagramPrefix = "@";
+  const instagramNames = [];
+
+  // Split notes into individual entries
+  const noteEntries = notes.split('. ');
+
+  // Process each note entry
+  noteEntries.forEach(note => {
+    // Extract usernames - could be comma-separated
+    const usernamePart = note.substring(instagramPrefix.length).trim();
+    const usernames = usernamePart.split(',').map(username => {
+      username = username.trim();
+      return username.startsWith('@') ? username : '@' + username;
+    });
+    instagramNames.push(...usernames);
+    // Find all matches after prefix
+    const matches = note.match(new RegExp(`(?:${instagramPrefix}|,\\s*)([^,\\s]+)`, 'g'));
+    if (matches) {
+      const usernames = matches.map(match => {
+        // Clean up the username
+        const cleaned_name = match.replace(/^,\s*/, '').trim();
+        return cleaned_name.startsWith('@') ? cleaned_name : '@' + cleaned_name;
+      });
+      instagramNames.push(...usernames);
+    }
   });
 
-  if (instagramNote) {
-    const prefix = instagramPrefixes.find(prefix => instagramNote.startsWith(prefix));
-    let username = instagramNote.substring(prefix.length).trim();
-    if (!username.startsWith('@')) {
-      username = '@' + username;
-    }
-    return username;
-  }
-  return '';
+  return instagramNames;
 }
 
 /**
