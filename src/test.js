@@ -56,32 +56,6 @@ function testEmail() {
   sendMail(toEmail, fromEmail, 'Test', subject, '', htmlBody);
 }
 
-function testInstagramExtraction() {
-  // Test single Instagram name
-  var singleNote = "Instagram: johndoe";
-  var result1 = extractInstagramNamesFromNotes(singleNote);
-  Logger.log("Single Instagram name test:");
-  Logger.log(result1); // Should be ["@johndoe"]
-
-  // Test multiple Instagram names in one note
-  var multiNote = "Instagram: johndoe, janedoe, testuser";
-  var result2 = extractInstagramNamesFromNotes(multiNote);
-  Logger.log("\nMultiple Instagram names (comma-separated) test:");
-  Logger.log(result2); // Should be ["@johndoe", "@janedoe", "@testuser"]
-
-  // Test multiple Instagram names in different notes
-  var multiNotesSeparate = "Instagram: johndoe. Instagram: janedoe. @testuser";
-  var result3 = extractInstagramNamesFromNotes(multiNotesSeparate);
-  Logger.log("\nMultiple Instagram names (separate notes) test:");
-  Logger.log(result3); // Should be ["@johndoe", "@janedoe", "@testuser"]
-
-  // Test mixed format
-  var mixedNotes = "Instagram: user1, user2. @user3. Instagram: user4, user5";
-  var result4 = extractInstagramNamesFromNotes(mixedNotes);
-  Logger.log("\nMixed format test:");
-  Logger.log(result4); // Should be ["@user1", "@user2", "@user3", "@user4", "@user5"]
-}
-
 function testScriptName() {
   var id = ScriptApp.getScriptId();
   var name = DriveApp.getFileById(id).getName();
