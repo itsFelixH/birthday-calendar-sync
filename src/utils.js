@@ -385,8 +385,8 @@ function createDailyBirthdayMail(contacts, date = new Date(), previewDays = 5) {
   Logger.log(`Creating daily mail`);
 
   // Filter contacts with birthdays in the specified time
-  const todaysContacts = getContactsByBirthday(contacts, day, month)
-  const nextDaysContacts = getContactsByBirthdayBetweenDates(contacts, startDate, endDate)
+  const todaysContacts = getContactsByBirthday(contacts, day, month);
+  const nextDaysContacts = getContactsByBirthdayBetweenDates(contacts, startDate, endDate);
 
   // Check if there are any birthdays in the specified timespan
   if (todaysContacts.length === 0) {
@@ -394,39 +394,88 @@ function createDailyBirthdayMail(contacts, date = new Date(), previewDays = 5) {
     return;
   }
 
-  Logger.log(todaysContacts);
-  Logger.log(nextDaysContacts);
-
   const recipientName = getCurrentUserFirstName();
-
   const subject = '🎁 Heutige Geburtstage 🎁';
   const senderName = DriveApp.getFileById(ScriptApp.getScriptId()).getName();
   const toEmail = Session.getActiveUser().getEmail();
   const fromEmail = Session.getActiveUser().getEmail();
 
-  // Build the email body with formatted birthdates
-  let mailBody = `
-    <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-      <h3>🎉 Geburtstage am ${day}. ${monthNamesLong[month]}</h3>
-      <p>Hallo${recipientName ? ` ${recipientName},` : ','}</p>
-      <p>hier sind die heutigen Geburtstage deiner Kontakte:</p>
-      ${todaysContacts.map(contact => contact.getMainBirthdayMailString()).join('<br>')}
-      <br><br>
-      ${nextDaysContacts.length > 0
-      ? `<p>In den nächsten Tagen ${nextDaysContacts.length > 1 ? `haben ${nextDaysContacts.length}` : `hat einer`} deiner Kontakte Geburtstag:</p>
-            <ul style="list-style-type: none; padding: 0;">
-              ${nextDaysContacts.map(contact => `<li>${contact.getNextBirthdayMailString()}</li>`).join('')}
-            </ul><br><br>`
-      : ''}
-      <hr style="border:0; height:1px; background:#ccc;">
-      <p style="text-align: center; margin-top: 2em;">
-        <a href="https://calendar.google.com/calendar/r" style="color: #007BFF;">Google Kalender anzeigen</a><br>
-        <a href="https://github.com/itsFelixH/birthday-calendar-sync" style="color: #007BFF;">Git-Repo</a>
-      </p>
+  // Build the email content
+  const content = `
+    ${EmailTemplates.header(
+      '🎉 Heutige Geburtstage',
+      `${day}. ${monthNamesLong[month]} ${date.getFullYear()}`
+    )}
+    
+    <div class="section">
+      <p>Hallo${recipientName ? ` ${recipientName}` : ''},</p>
+      <p>heute haben ${todaysContacts.length} deiner Kontakte Geburtstag. 
+      Hier sind alle Details, die du brauchst, um zu gratulieren:</p>
     </div>
+
+    <div class="section">
+      <h3 class="section-title">🎂 Heute</h3>
+      <ul class="birthday-list">
+        ${todaysContacts.map(contact => `
+          <li class="birthday-item">
+            <strong>${contact.name}</strong>
+            ${contact.age ? ` - wird heute ${contact.age} Jahre alt!` : ''}
+            <div class="contact-info">
+              ${contact.email ? `
+                <span>📧</span>
+                <span>
+                  <a href="mailto:${contact.email}"
+                    class="button">Glückwunsch-Mail senden</a>
+                </span>
+              ` : ''}
+              ${contact.phone ? `
+                <span>📱</span>
+                <span><a href="tel:${contact.phone}" class="button">Anrufen</a></span>
+              ` : ''}
+              ${contact.instagramNames && contact.instagramNames.length > 0 ? `
+                <span>📸</span>
+                <span>${contact.instagramNames.map(name => 
+                  `<a href="https://instagram.com/${name.replace('@', '')}" class="button">${name}</a>`
+                ).join(' ')}</span>
+              ` : ''}
+            </div>
+          </li>
+        `).join('')}
+      </ul>
+    </div>
+
+    ${nextDaysContacts.length > 0 ? `
+      <div class="section">
+        <h3 class="section-title">📅 Kommende Geburtstage</h3>
+        <p>In den nächsten ${previewDays} Tagen ${nextDaysContacts.length > 1 ? 
+          `haben ${nextDaysContacts.length} deiner Kontakte` : 
+          'hat einer deiner Kontakte'} Geburtstag:</p>
+        <ul class="birthday-list">
+          ${nextDaysContacts.map(contact => `
+            <li class="birthday-item">
+              <strong>${contact.name}</strong> - 
+              ${contact.getBirthdayDateString()}
+              <div class="contact-info">
+                ${contact.email ? `<span>📧 ${contact.email}</span>` : ''}
+                ${contact.phone ? `<span>📱 ${contact.phone}</span>` : ''}
+              </div>
+            </li>
+          `).join('')}
+        </ul>
+      </div>
+    ` : ''}
+
+    <div class="action-buttons">
+      <a href="https://calendar.google.com/calendar/r" class="button">Kalender öffnen</a>
+      <a href="https://contacts.google.com" class="button">Kontakte verwalten</a>
+      <a href="https://github.com/itsFelixH/birthday-calendar-sync" class="button">Git-Repo</a>
+    </div>
+
+    ${EmailTemplates.footer()}
   `;
 
-  sendMail(toEmail, fromEmail, senderName, subject, '', mailBody)
+  const mailBody = EmailTemplates.wrapEmail(content);
+  sendMail(toEmail, fromEmail, senderName, subject, '', mailBody);
   Logger.log(`Daily reminder email sent successfully!`);
 }
 
@@ -674,25 +723,159 @@ function getNextMonth() {
 }
 
 /**
- * Builds HTML email template from contact data
+ * Shared email components and styles
  */
-function buildEmailTemplate(monthData) {
-  const emailFooter = `
-    <hr style="border-top:1px solid #eaeaea">
-    <p style="color:#666;font-size:12px">
-      Sent by Birthday Calendar Sync • 
-      <a href="https://github.com/itsFelixH/birthday-calendar-sync" style="color:#067df7">GitHub Repo</a>
-    </p>
-  `;
+const EmailTemplates = {
+  styles: `
+    .email-container {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .title {
+      color: #1a1a1a;
+      font-size: 24px;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+    .subtitle {
+      color: #666;
+      font-size: 16px;
+      margin: 10px 0;
+    }
+    .section {
+      margin: 20px 0;
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 6px;
+    }
+    .section-title {
+      color: #2c3e50;
+      font-size: 18px;
+      margin-bottom: 15px;
+      border-bottom: 2px solid #e9ecef;
+      padding-bottom: 5px;
+    }
+    .birthday-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .birthday-item {
+      padding: 10px;
+      margin: 5px 0;
+      border-left: 4px solid #007bff;
+      background: white;
+      transition: all 0.2s;
+    }
+    .birthday-item:hover {
+      transform: translateX(5px);
+    }
+    .contact-info {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 10px;
+      align-items: center;
+      margin-top: 5px;
+      font-size: 14px;
+      color: #666;
+    }
+    .action-buttons {
+      margin-top: 15px;
+      text-align: center;
+    }
+    .button {
+      display: inline-block;
+      padding: 8px 16px;
+      margin: 0 5px;
+      background-color: #007bff;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      font-size: 14px;
+      transition: background-color 0.2s;
+    }
+    .button:hover {
+      background-color: #0056b3;
+    }
+    .stats {
+      display: flex;
+      justify-content: space-around;
+      margin: 20px 0;
+      text-align: center;
+    }
+    .stat-item {
+      flex: 1;
+      padding: 10px;
+    }
+    .stat-number {
+      font-size: 24px;
+      font-weight: bold;
+      color: #007bff;
+    }
+    .stat-label {
+      font-size: 14px;
+      color: #666;
+    }
+    .footer {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #eaeaea;
+      text-align: center;
+      font-size: 12px;
+      color: #666;
+    }
+    .footer a {
+      color: #007bff;
+      text-decoration: none;
+    }
+    .footer a:hover {
+      text-decoration: underline;
+    }
+  `,
 
-  return `
-    <div style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">
-      <h2 style="color:#1a1a1a">🎉 ${monthData.title}</h2>
-      ${monthData.contacts.map(c => c.getSummaryHtml()).join('\n')}
-      ${emailFooter}
+  header: (title, subtitle = '') => `
+    <div class="header">
+      <h1 class="title">${title}</h1>
+      ${subtitle ? `<p class="subtitle">${subtitle}</p>` : ''}
     </div>
-  `;
-}
+  `,
+
+  footer: () => `
+    <div class="footer">
+      <p>
+        Sent by Birthday Calendar Sync •
+        <a href="https://calendar.google.com/calendar/r">View Calendar</a> •
+        <a href="https://contacts.google.com">Manage Contacts</a> •
+        <a href="https://github.com/itsFelixH/birthday-calendar-sync">GitHub Repo</a>
+      </p>
+    </div>
+  `,
+
+  wrapEmail: (content) => `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <style>${EmailTemplates.styles}</style>
+    </head>
+    <body>
+      <div class="email-container">
+        ${content}
+      </div>
+    </body>
+    </html>
+  `
+};
 
 function sendMail(toEmail, fromEmail, senderName, subject, textBody, htmlBody) {
   const boundary = "boundaryboundary";
