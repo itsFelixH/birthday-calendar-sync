@@ -65,3 +65,47 @@ function testScriptName() {
 function testFirstName() {
   Logger.log(getCurrentUserFirstName())
 }
+
+function testEmailManager() {
+  const emailManager = new EmailManager();
+
+  const contacts = [
+    new BirthdayContact(
+      'Test User 1',
+      new Date(1990, 0, 15),
+      ['Friend'],
+      'test1@example.com',
+      'Berlin',
+      '+1234567890',
+      ['@test1']
+    ),
+    new BirthdayContact(
+      'Test User 2',
+      new Date(1985, 0, 16),
+      ['Family'],
+      'test2@example.com',
+      'Hamburg',
+      '+0987654321',
+      ['@test2']
+    )
+  ];
+
+  Logger.log('Testing monthly summary email...');
+  emailManager.sendMonthlyBirthdaySummaryMail(contacts, 0, 2024);
+
+  Logger.log('Testing daily birthday email...');
+  emailManager.sendDailyBirthdayMail(contacts, new Date(2024, 0, 15), 5);
+
+  Logger.log('Testing calendar update email...');
+  const changes = {
+    individual: {
+      created: ['Test User 1 (15.01.2024)'],
+      updated: []
+    },
+    summary: {
+      created: ['January 2024'],
+      updated: []
+    }
+  };
+  emailManager.sendCalendarUpdateEmail(changes);
+}
