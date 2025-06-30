@@ -12,7 +12,6 @@ function testSocials() {
   kim.logContactDetails()
   lara.logContactDetails()
 
-  // Test multiple Instagram names
   var testContact = new BirthdayContact(
     "Test User",
     new Date(),

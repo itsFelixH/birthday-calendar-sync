@@ -6,6 +6,7 @@ class EmailManager {
     this.templates = EmailTemplates;
   }
 
+
   /**
    * Sends an email with the specified parameters
    * @param {string} toEmail - Recipient email address
@@ -41,6 +42,7 @@ class EmailManager {
     const rawMessage = Utilities.base64EncodeWebSafe(mailData);
     Gmail.Users.Messages.send({ raw: rawMessage }, "me");
   }
+
 
   /**
    * Creates and sends a monthly birthday summary email
@@ -96,6 +98,7 @@ class EmailManager {
     this.sendMail(toEmail, fromEmail, senderName, subject, '', mailBody);
     Logger.log(`Birthday summary email sent successfully!`);
   }
+
 
   /**
    * Sends daily birthday reminder emails
@@ -213,6 +216,7 @@ class EmailManager {
     this.sendMail(toEmail, fromEmail, senderName, subject, '', mailBody);
     Logger.log(`Daily reminder email sent successfully!`);
   }
+
 
   /**
    * Sends an email with details about calendar changes

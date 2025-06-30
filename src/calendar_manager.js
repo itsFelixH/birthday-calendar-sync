@@ -53,6 +53,7 @@ class CalendarManager {
 		}
 	}
 
+
 	/**
 	 * Deletes events by title within date range
 	 * @param {string} titlePattern
@@ -67,6 +68,7 @@ class CalendarManager {
 		events.forEach(event => event.deleteEvent());
 		return events.length;
 	}
+
 
 	/**
 	 * Gets calendar events in a date range
@@ -92,6 +94,7 @@ class CalendarManager {
 			events;
 	}
 
+
 	/**
 	 * Formats date using instance configuration
 	 * @param {Date} date
@@ -105,6 +108,7 @@ class CalendarManager {
 			format || this.dateFormat
 		);
 	}
+
 
 	/**
 	 * Gets calendar events in a date range
@@ -129,6 +133,7 @@ class CalendarManager {
 			events.reverse() :
 			events;
 	}
+
 
 	/**
 	 * Creates all-day event with formatted dates
@@ -162,6 +167,7 @@ class CalendarManager {
 		}
 	}
 
+
 	/**
 	 * Checks if a year is a leap year
 	 * @param {number} year
@@ -170,6 +176,7 @@ class CalendarManager {
 	isLeapYear(year) {
 		return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
 	}
+
 
 	/**
 	 * Gets the number of days in a month
@@ -180,6 +187,7 @@ class CalendarManager {
 	static getDaysInMonth(month, year) {
 		return new Date(year, month + 1, 0).getDate();
 	}
+
 
 	/**
 	 * Updates multiple event properties
@@ -210,6 +218,7 @@ class CalendarManager {
 
 		return changed;
 	}
+
 
 	/**
 	 * Gets date range for processing

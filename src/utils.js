@@ -26,6 +26,7 @@ function logConfiguration() {
   Logger.log("monthsAhead: " + monthsAhead);
 }
 
+
 /**
  * Fetches all contacts with birthdays from Google Contacts, optionally filtering by labels.
  * @param {string[]} [labelFilter=[]] Array of label names to filter
@@ -85,6 +86,7 @@ function fetchContactsWithBirthdays(labelFilter = [], maxRetries = 3) {
   }
 }
 
+
 /**
  * Handles API errors with retry logic
  * @param {Error} error - Original error object
@@ -106,6 +108,7 @@ function handleApiError(error, attempt, maxRetries) {
   Utilities.sleep(retryDelay);
 }
 
+
 /**
  * Checks if there were any changes made to the calendar
  * @param {Object} changes Object containing changes made to calendar
@@ -117,6 +120,7 @@ function hasChanges(changes) {
     changes.summary.created.length > 0 ||
     changes.summary.updated.length > 0;
 }
+
 
 /**
  * Creates BirthdayContact object from API response
@@ -140,6 +144,7 @@ function createBirthdayContact(person, birthdayData, labelNames) {
     return null;
   }
 }
+
 
 /**
  * Retrieves all contact labels for a person
@@ -166,6 +171,7 @@ function getContactLabels(person, labelManager) {
     return [];
   }
 }
+
 
 /**
  * Determines if contact matches label filter criteria
@@ -196,6 +202,7 @@ function contactMatchesLabelFilter(labelFilter, contactLabels) {
     return false;
   }
 }
+
 
 /**
  * Creates or updates monthly birthday summary events in the calendar for a configurable period.
@@ -303,6 +310,7 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, monthsAhea
     updated: stats.updated
   };
 }
+
 
 /**
  * Creates and sends a monthly birthday summary email.
@@ -479,6 +487,7 @@ function createDailyBirthdayMail(contacts, date = new Date(), previewDays = 5) {
   Logger.log(`Daily reminder email sent successfully!`);
 }
 
+
 /**
  * Sends an email with details about calendar changes
  * @param {Object} changes Object containing changes made to calendar
@@ -549,6 +558,7 @@ function sendCalendarUpdateEmail(changes) {
   sendMail(toEmail, fromEmail, senderName, subject, '', mailBody);
   Logger.log('Calendar update email sent successfully!');
 }
+
 
 /**
  * Creates or updates individual birthday events in the calendar for an upcoming time span.
@@ -653,6 +663,7 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
   };
 }
 
+
 /**
  * Validates label filter configuration
  * @param {Array} labelFilter - Labels to validate
@@ -667,6 +678,7 @@ function validateLabelFilter(labelFilter) {
     throw new Error('🔴 All labels must be strings');
   }
 }
+
 
 /**
  * Extracts Instagram usernames from the given notes.
@@ -709,6 +721,7 @@ function extractInstagramNamesFromNotes(notes) {
   return instagramNames;
 }
 
+
 /**
  * Calculates the date for the beginning of the next month.
  *
@@ -722,160 +735,6 @@ function getNextMonth() {
   return new Date(today.getFullYear(), nextMonth, 1);
 }
 
-/**
- * Shared email components and styles
- */
-const EmailTemplates = {
-  styles: `
-    .email-container {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 20px;
-      background-color: #ffffff;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    .header {
-      text-align: center;
-      margin-bottom: 30px;
-    }
-    .title {
-      color: #1a1a1a;
-      font-size: 24px;
-      font-weight: bold;
-      margin: 10px 0;
-    }
-    .subtitle {
-      color: #666;
-      font-size: 16px;
-      margin: 10px 0;
-    }
-    .section {
-      margin: 20px 0;
-      padding: 15px;
-      background: #f8f9fa;
-      border-radius: 6px;
-    }
-    .section-title {
-      color: #2c3e50;
-      font-size: 18px;
-      margin-bottom: 15px;
-      border-bottom: 2px solid #e9ecef;
-      padding-bottom: 5px;
-    }
-    .birthday-list {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-    .birthday-item {
-      padding: 10px;
-      margin: 5px 0;
-      border-left: 4px solid #007bff;
-      background: white;
-      transition: all 0.2s;
-    }
-    .birthday-item:hover {
-      transform: translateX(5px);
-    }
-    .contact-info {
-      display: grid;
-      grid-template-columns: auto 1fr;
-      gap: 10px;
-      align-items: center;
-      margin-top: 5px;
-      font-size: 14px;
-      color: #666;
-    }
-    .action-buttons {
-      margin-top: 15px;
-      text-align: center;
-    }
-    .button {
-      display: inline-block;
-      padding: 8px 16px;
-      margin: 0 5px;
-      background-color: #007bff;
-      color: white;
-      text-decoration: none;
-      border-radius: 4px;
-      font-size: 14px;
-      transition: background-color 0.2s;
-    }
-    .button:hover {
-      background-color: #0056b3;
-    }
-    .stats {
-      display: flex;
-      justify-content: space-around;
-      margin: 20px 0;
-      text-align: center;
-    }
-    .stat-item {
-      flex: 1;
-      padding: 10px;
-    }
-    .stat-number {
-      font-size: 24px;
-      font-weight: bold;
-      color: #007bff;
-    }
-    .stat-label {
-      font-size: 14px;
-      color: #666;
-    }
-    .footer {
-      margin-top: 30px;
-      padding-top: 20px;
-      border-top: 1px solid #eaeaea;
-      text-align: center;
-      font-size: 12px;
-      color: #666;
-    }
-    .footer a {
-      color: #007bff;
-      text-decoration: none;
-    }
-    .footer a:hover {
-      text-decoration: underline;
-    }
-  `,
-
-  header: (title, subtitle = '') => `
-    <div class="header">
-      <h1 class="title">${title}</h1>
-      ${subtitle ? `<p class="subtitle">${subtitle}</p>` : ''}
-    </div>
-  `,
-
-  footer: () => `
-    <div class="footer">
-      <p>
-        Sent by Birthday Calendar Sync •
-        <a href="https://calendar.google.com/calendar/r">View Calendar</a> •
-        <a href="https://contacts.google.com">Manage Contacts</a> •
-        <a href="https://github.com/itsFelixH/birthday-calendar-sync">GitHub Repo</a>
-      </p>
-    </div>
-  `,
-
-  wrapEmail: (content) => `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <style>${EmailTemplates.styles}</style>
-    </head>
-    <body>
-      <div class="email-container">
-        ${content}
-      </div>
-    </body>
-    </html>
-  `
-};
 
 function sendMail(toEmail, fromEmail, senderName, subject, textBody, htmlBody) {
   const boundary = "boundaryboundary";
