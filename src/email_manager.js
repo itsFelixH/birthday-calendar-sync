@@ -70,7 +70,7 @@ class EmailManager {
     }
 
     const numBirthdays = monthContacts.length;
-    const recipientName = this.getCurrentUserFirstName();
+    const recipientName = getCurrentUserFirstName();
 
     const subject = '🎂 Geburtstags Reminder 🎂';
     const senderName = DriveApp.getFileById(ScriptApp.getScriptId()).getName();
@@ -132,7 +132,7 @@ class EmailManager {
       return;
     }
 
-    const recipientName = this.getCurrentUserFirstName();
+    const recipientName = getCurrentUserFirstName();
     const subject = '🎁 Heutige Geburtstage 🎁';
     const senderName = DriveApp.getFileById(ScriptApp.getScriptId()).getName();
     const toEmail = Session.getActiveUser().getEmail();
@@ -223,7 +223,7 @@ class EmailManager {
    * @param {Object} changes - Object containing calendar changes
    */
   sendCalendarUpdateEmail(changes) {
-    const recipientName = this.getCurrentUserFirstName();
+    const recipientName = getCurrentUserFirstName();
 
     const subject = '📅 Geburtstags Updates 📅';
     const senderName = DriveApp.getFileById(ScriptApp.getScriptId()).getName();
