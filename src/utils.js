@@ -42,7 +42,7 @@ function fetchContactsWithBirthdays(labelFilter = [], maxRetries = 3) {
     let pageToken = null;
     let attempt = 0;
 
-    if (!useLabel || labelFilter == [] || labelFilter == [''] || labelFilter.length < 1) {
+    if (labelFilter == [] || labelFilter == [''] || labelFilter.length < 1) {
       Logger.log(`🔍 Fetching all contacts from Google Contacts...`);
     } else {
       Logger.log(`🔍 Fetching all contacts with any label(s) from '${labelFilter}' from Google Contacts...`);
@@ -63,7 +63,7 @@ function fetchContactsWithBirthdays(labelFilter = [], maxRetries = 3) {
           const contactLabels = getContactLabels(person, labelManager)
           const labelMatch = contactMatchesLabelFilter(labelFilter, contactLabels)
 
-          if ((!useLabel || labelMatch) && birthdayData) {
+          if (labelMatch && birthdayData) {
             const contact = createBirthdayContact(person, birthdayData, contactLabels);
             contacts.push(contact);
           }
@@ -181,13 +181,8 @@ function getContactLabels(person, labelManager) {
  */
 function contactMatchesLabelFilter(labelFilter, contactLabels) {
   try {
-    if (!useLabel) {
-      // ⏩ Label filtering disabled in config
-      return true;
-    }
-
     if (labelFilter.length === 0) {
-      // ⚠️ Label filter empty but label usage enabled
+      // ⚠️ Label filter empty
       return true;
     }
 
