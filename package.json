@@ -1,6 +1,28 @@
 {
+  "name": "birthday-calendar-sync",
+  "version": "1.0.0",
+  "description": "Google Apps Script for syncing birthdays from contacts to calendar",
+  "main": "src/main.js",
+  "scripts": {
+    "test": "jest"
+  },
   "dependencies": {
     "@google/clasp": "^2.4.2",
     "@types/google-apps-script": "^1.0.86"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "jest": {
+    "setupFiles": ["<rootDir>/tests/setup.js"],
+    "testEnvironment": "node",
+    "testMatch": ["**/tests/**/*.test.js"],
+    "collectCoverage": true,
+    "coverageDirectory": "coverage",
+    "coverageReporters": ["text", "lcov"],
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/test.js"
+    ]
   }
 }
