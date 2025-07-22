@@ -1,11 +1,5 @@
 # Birthday Calendar Sync
 
-## 🎯 Project Overview
-
-This roadmap outlines the evolution of the Birthday Calendar Sync project from its current state to a comprehensive birthday management system with advanced features, integrations, and user experience improvements.
-
----
-
 ## 📋 Current State Analysis
 
 - ✅ Basic birthday sync from Google Contacts to Calendar
