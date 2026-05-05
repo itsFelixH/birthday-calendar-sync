@@ -23,12 +23,12 @@ function updateBirthdaysAndSummariesInCalendar() {
     };
 
     if (createIndividualBirthdayEvents) {
-      const individualStats = createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead);
+      const individualStats = createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead, reminderInMinutes, reminderMethod);
       changes.individual = individualStats;
     }
 
     if (createBirthdaySummaryEvents) {
-      const summaryStats = createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, monthsAhead);
+      const summaryStats = createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, monthsAhead, reminderInMinutes, reminderMethod);
       changes.summary = summaryStats;
     }
 
