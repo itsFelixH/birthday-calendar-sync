@@ -33,7 +33,8 @@ function updateBirthdaysAndSummariesInCalendar() {
     }
 
     if (hasChanges(changes)) {
-      sendCalendarUpdateEmail(changes);
+      const emailManager = new EmailManager();
+      emailManager.sendCalendarUpdateEmail(changes);
     }
   } catch (error) {
     Logger.log(`💥 Error in updateBirthdaysAndSummariesInCalendar: ${error.message}`);
@@ -50,7 +51,8 @@ function sendSummaryMail() {
     }
 
     const nextMonthDate = getNextMonth();
-    createMonthlyBirthdaySummaryMail(contacts, nextMonthDate.getMonth(), nextMonthDate.getFullYear());
+    const emailManager = new EmailManager();
+    emailManager.sendMonthlyBirthdaySummaryMail(contacts, nextMonthDate.getMonth(), nextMonthDate.getFullYear());
   } catch (error) {
     Logger.log(`💥 Error in sendSummaryMail: ${error.message}`);
   }
@@ -69,7 +71,8 @@ function sendDailyMail() {
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
 
-    createDailyBirthdayMail(contacts, tomorrow, 15);
+    const emailManager = new EmailManager();
+    emailManager.sendDailyBirthdayMail(contacts, tomorrow, 15);
   } catch (error) {
     Logger.log(`💥 Error in sendDailyMail: ${error.message}`);
   }
