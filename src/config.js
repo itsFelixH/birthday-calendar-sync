@@ -1,5 +1,10 @@
 // CONFIGURATION SETTINGS
 
+// Month name abbreviations (German)
+var monthNames = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+// Full month names (German)
+var monthNamesLong = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+
 // The ID of the Google Calendar where birthdays will be added.
 // You can find this ID in your Google Calendar settings.
 const calendarId = '99406ed07130a00e82235b91df15a0fe67a28b8fd7bbaf08f81fff2fd2b77a9a@group.calendar.google.com';
