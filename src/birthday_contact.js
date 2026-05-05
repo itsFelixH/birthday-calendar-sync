@@ -463,7 +463,7 @@ function sortContactsByBirthdate(contacts) {
       const monthB = b.birthday.getMonth();
       const dayB = b.birthday.getDate();
 
-      if (!monthA || !monthB || !dayA || !dayB) return 0;
+      if (monthA == null || monthB == null || dayA == null || dayB == null) return 0;
       return monthA - monthB || dayA - dayB;
 
     });
