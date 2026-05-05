@@ -12,13 +12,7 @@ function logConfiguration() {
     Logger.log("Calendar with ID " + calendarId + " not found.");
   }
   Logger.log("useLabel: " + useLabel);
-
-  if (typeof labelFilter !== 'undefined') {
-    Logger.log("labelFilter: " + labelFilter.join(", "));
-  } else {
-    Logger.log("labelFilter: Not defined in config.js");
-  }
-
+  Logger.log("labelFilter: " + labelFilter.join(", "));
   Logger.log("reminderMethod: " + reminderMethod);
   Logger.log("reminderInMinutes: " + reminderInMinutes);
   Logger.log("createIndividualBirthdayEvents: " + createIndividualBirthdayEvents);
@@ -42,7 +36,7 @@ function fetchContactsWithBirthdays(labelFilter = [], maxRetries = 3) {
     let pageToken = null;
     let attempt = 0;
 
-    if (labelFilter == [] || labelFilter == [''] || labelFilter.length < 1) {
+    if (labelFilter.length < 1) {
       Logger.log(`🔍 Fetching all contacts from Google Contacts...`);
     } else {
       Logger.log(`🔍 Fetching all contacts with any label(s) from '${labelFilter}' from Google Contacts...`);
@@ -65,7 +59,9 @@ function fetchContactsWithBirthdays(labelFilter = [], maxRetries = 3) {
 
           if (labelMatch && birthdayData) {
             const contact = createBirthdayContact(person, birthdayData, contactLabels);
-            contacts.push(contact);
+            if (contact) {
+              contacts.push(contact);
+            }
           }
         });
 
@@ -388,7 +384,7 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
       }
 
       // Add delay every 20 operations to avoid rate limits
-      if (index % 20 === 0) Utilities.sleep(500);
+      if (index > 0 && index % 20 === 0) Utilities.sleep(500);
 
     } catch (error) {
       stats.errors++;
@@ -497,15 +493,12 @@ function getCurrentUserFirstName() {
     if (peopleResponse && peopleResponse.responses && peopleResponse.responses.length > 0) {
       const person = peopleResponse.responses[0].person;
       if (person && person.names && person.names.length > 0) {
-        const firstName = person.names[0].givenName;
-        return firstName;
-      } else {
-        Logger.log("User names not available.");
+        return person.names[0].givenName || '';
       }
-    } else {
-      Logger.log("No valid response received.");
     }
+    return '';
   } catch (err) {
     Logger.log('Failed to get own profile with an error: ' + err.message);
+    return '';
   }
 }
