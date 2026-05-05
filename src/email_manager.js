@@ -157,7 +157,7 @@ class EmailManager {
           ${todaysContacts.map(contact => `
             <li class="birthday-item">
               <strong>${contact.name}</strong>
-              ${contact.age ? ` - wird heute ${contact.age} Jahre alt!` : ''}
+              ${contact.hasKnownBirthYear() ? ` - wird heute ${contact.getAgeThisYear()} Jahre alt!` : ''}
               <div class="contact-info">
                 ${contact.email ? `
                   <span>📧</span>
@@ -166,9 +166,9 @@ class EmailManager {
                       class="button">Glückwunsch-Mail senden</a>
                   </span>
                 ` : ''}
-                ${contact.phone ? `
+                ${contact.phoneNumber ? `
                   <span>📱</span>
-                  <span><a href="tel:${contact.phone}" class="button">Anrufen</a></span>
+                  <span><a href="tel:${contact.phoneNumber}" class="button">Anrufen</a></span>
                 ` : ''}
                 ${contact.instagramNames && contact.instagramNames.length > 0 ? `
                   <span>📸</span>
@@ -192,10 +192,10 @@ class EmailManager {
             ${nextDaysContacts.map(contact => `
               <li class="birthday-item">
                 <strong>${contact.name}</strong> - 
-                ${contact.getBirthdayDateString()}
+                ${contact.getBirthdayLongMonthFormat()}
                 <div class="contact-info">
                   ${contact.email ? `<span>📧 ${contact.email}</span>` : ''}
-                  ${contact.phone ? `<span>📱 ${contact.phone}</span>` : ''}
+                  ${contact.phoneNumber ? `<span>📱 ${contact.phoneNumber}</span>` : ''}
                 </div>
               </li>
             `).join('')}
