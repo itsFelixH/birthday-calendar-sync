@@ -13,12 +13,18 @@ describe('Utility Functions', () => {
     };
 
     beforeEach(() => {
-      // Mock global objects
-      global.People = { People: mockPeopleService };
-      global.Logger = { log: jest.fn() };
-
       // Reset mocks
       jest.clearAllMocks();
+
+      // Mock global objects
+      global.People = {
+        People: mockPeopleService,
+        ContactGroups: {
+          list: jest.fn().mockReturnValue({ contactGroups: [] }),
+          batchGet: jest.fn().mockReturnValue({ responses: [] })
+        }
+      };
+      global.Logger = { log: jest.fn() };
     });
 
     it('should fetch and process contacts correctly', () => {
@@ -68,10 +74,21 @@ describe('Utility Functions', () => {
         ]
       };
 
+      // Mock ContactGroups to return label data that LabelManager will use
+      global.People.ContactGroups.list.mockReturnValue({
+        contactGroups: [
+          { resourceName: 'contactGroups/123' },
+          { resourceName: 'contactGroups/456' }
+        ]
+      });
+      global.People.ContactGroups.batchGet.mockReturnValue({
+        responses: [
+          { contactGroup: { resourceName: 'contactGroups/123', name: 'Friends' } },
+          { contactGroup: { resourceName: 'contactGroups/456', name: 'Family' } }
+        ]
+      });
+
       mockPeopleService.Connections.list.mockReturnValue(mockResponse);
-      mockLabelManager.getLabelNamesByIds
-        .mockReturnValueOnce(['Friends'])
-        .mockReturnValueOnce(['Family']);
 
       const contacts = fetchContactsWithBirthdays(['Friends']);
       expect(contacts).toHaveLength(1);
@@ -140,6 +157,10 @@ describe('Utility Functions', () => {
       getLabelNamesByIds: jest.fn()
     };
 
+    beforeEach(() => {
+      mockLabelManager.getLabelNamesByIds.mockReset();
+    });
+
     it('should extract labels from person object', () => {
       const person = {
         memberships: [
@@ -155,6 +176,7 @@ describe('Utility Functions', () => {
 
     it('should handle missing memberships', () => {
       const person = {};
+      mockLabelManager.getLabelNamesByIds.mockReturnValue([]);
       const labels = getContactLabels(person, mockLabelManager);
       expect(labels).toEqual([]);
     });

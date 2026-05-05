@@ -16,6 +16,10 @@ describe('EmailManager', () => {
 
     // Mock global Utilities object
     global.Utilities = {
+      formatDate: jest.fn((date, tz, format) => {
+        if (format === 'MMMM') return global.monthNamesLong[date.getMonth()];
+        return '';
+      }),
       base64Encode: jest.fn().mockReturnValue('base64encoded'),
       base64EncodeWebSafe: jest.fn().mockReturnValue('base64encoded'),
       Charset: { UTF_8: 'UTF-8' }

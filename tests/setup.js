@@ -11,9 +11,14 @@ global.Logger = {
 
 // Mock Utilities
 global.Utilities = {
-  formatDate: jest.fn(),
-  base64Encode: jest.fn(),
-  base64EncodeWebSafe: jest.fn(),
+  formatDate: jest.fn((date, tz, format) => {
+    if (format === 'dd.MM.') return `${String(date.getDate()).padStart(2, '0')}.${String(date.getMonth() + 1).padStart(2, '0')}.`;
+    if (format === 'dd.MM.yyyy') return `${String(date.getDate()).padStart(2, '0')}.${String(date.getMonth() + 1).padStart(2, '0')}.${date.getFullYear()}`;
+    if (format === 'MMMM') return global.monthNamesLong[date.getMonth()];
+    return '';
+  }),
+  base64Encode: jest.fn((str) => Buffer.from(String(str)).toString('base64')),
+  base64EncodeWebSafe: jest.fn((str) => Buffer.from(String(str)).toString('base64url')),
   sleep: jest.fn(),
   Charset: {
     UTF_8: 'UTF-8'
@@ -50,7 +55,8 @@ global.People = {
   People: {
     Connections: {
       list: jest.fn()
-    }
+    },
+    getBatchGet: jest.fn()
   },
   ContactGroups: {
     list: jest.fn(),
@@ -67,3 +73,35 @@ global.Gmail = {
     }
   }
 };
+
+// Load source files into global scope (mimics Google Apps Script runtime)
+const fs = require('fs');
+const path = require('path');
+
+const srcDir = path.join(__dirname, '..', 'src');
+const loadOrder = [
+  'config.js',
+  'birthday_contact.js',
+  'label_manager.js',
+  'calendar_manager.js',
+  'email_manager.js',
+  'utils.js',
+  'main.js'
+];
+
+loadOrder.forEach(file => {
+  const filePath = path.join(srcDir, file);
+  if (fs.existsSync(filePath)) {
+    let code = fs.readFileSync(filePath, 'utf8');
+    // Replace const/let declarations with var so they don't throw on redeclaration
+    code = code.replace(/^const /gm, 'var ');
+    code = code.replace(/^let /gm, 'var ');
+    // For class declarations, assign to global
+    code = code.replace(/^class (\w+)/gm, 'global.$1 = class $1');
+    // For function declarations, assign to global
+    code = code.replace(/^function (\w+)/gm, 'global.$1 = function $1');
+    // Evaluate in current context
+    const fn = new Function(code);
+    fn();
+  }
+});

@@ -59,7 +59,8 @@ describe('LabelManager', () => {
       const errorLabelManager = new LabelManager();
       expect(errorLabelManager.labels).toEqual([]);
       expect(global.Logger.log).toHaveBeenCalledWith(
-        expect.stringContaining('Error fetching contact labels:')
+        'Error fetching contact labels:',
+        expect.stringContaining('API Error')
       );
     });
   });
@@ -155,7 +156,8 @@ describe('LabelManager', () => {
       const result = labelManager.addLabel('Error Label');
       expect(result).toBeNull();
       expect(global.Logger.log).toHaveBeenCalledWith(
-        expect.stringContaining('Error adding contact label:')
+        'Error adding contact label: ',
+        expect.stringContaining('Creation failed')
       );
     });
   });
