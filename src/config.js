@@ -9,11 +9,11 @@
 const calendarId = '99406ed07130a00e82235b91df15a0fe67a28b8fd7bbaf08f81fff2fd2b77a9a@group.calendar.google.com';
 
 // Set this to true if you want to sync birthdays only for contacts with a specific label(s).
-// const useLabel = false;
+const useLabel = false;
 
 // The name(s) of the label(s) to be used if useLabel is set to true.
 // Only contacts with one of these labels will be fetched.
-// const labelFilter = ["❤️ Gemeinsam", "👮 Hannover"];
+const labelFilter = [];
 
 // The type of reminder to be added to the birthday events.
 // Possible values: 'none', 'email', 'popup'.
