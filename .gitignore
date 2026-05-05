@@ -3,3 +3,6 @@ node_modules/
 
 # Test coverage output
 coverage/
+
+# Clasp config (contains scriptId)
+.clasp.json
