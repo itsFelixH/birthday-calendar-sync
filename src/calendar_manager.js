@@ -111,31 +111,6 @@ class CalendarManager {
 
 
 	/**
-	 * Gets calendar events in a date range
-	 * @param {Date} start
-	 * @param {Date} end
-	 * @param {Object} [options]
-	 * @param {string} [options.search] Search query
-	 * @param {boolean} [options.ascending=true] Sort order
-	 * @returns {GoogleAppsScript.Calendar.CalendarEvent[]}
-	 */
-	getEventsInRange(start, end, options = {}) {
-		let events = this.calendar.getEvents(start, end);
-
-		if (options.search) {
-			events = events.filter(e =>
-				e.getTitle().includes(options.search) ||
-				e.getDescription().includes(options.search)
-			);
-		}
-
-		return options.ascending === false ?
-			events.reverse() :
-			events;
-	}
-
-
-	/**
 	 * Creates all-day event with formatted dates
 	 * @param {Object} params
 	 * @param {string} params.title
@@ -232,5 +207,26 @@ class CalendarManager {
 		const end = new Date(start);
 		end.setMonth(end.getMonth() + monthsAhead);
 		return { start, end };
+	}
+
+
+	/**
+	 * Creates reminder configuration object for calendar events
+	 * @param {Array<{type: string, minutes: number}>} reminders - Array of reminder configs
+	 * @returns {Object} Reminder configuration for Google Calendar API
+	 * @private
+	 */
+	_createReminderConfig(reminders) {
+		if (!reminders || reminders.length === 0) {
+			return { useDefaults: true };
+		}
+
+		return {
+			useDefaults: false,
+			overrides: reminders.map(r => ({
+				method: r.type || 'popup',
+				minutes: r.minutes || 10
+			}))
+		};
 	}
 }
