@@ -1,9 +1,5 @@
 // CONFIGURATION SETTINGS
 
-// Language to use for the calendar events
-// Change this to the desired language ('en', 'de', 'es', 'fr')
-// const language = 'de';
-
 // The ID of the Google Calendar where birthdays will be added.
 // You can find this ID in your Google Calendar settings.
 const calendarId = '99406ed07130a00e82235b91df15a0fe67a28b8fd7bbaf08f81fff2fd2b77a9a@group.calendar.google.com';
