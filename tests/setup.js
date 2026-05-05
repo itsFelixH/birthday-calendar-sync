@@ -86,6 +86,8 @@ const loadOrder = [
   'calendar_manager.js',
   'email_manager.js',
   'utils.js',
+  'contact_manager.js',
+  'calendar_sync.js',
   'main.js'
 ];
 
