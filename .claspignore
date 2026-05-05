@@ -1,0 +1,13 @@
+node_modules/**
+tests/**
+coverage/**
+.git/**
+.vscode/**
+package.json
+package-lock.json
+renovate.json
+README.md
+ROADMAP.md
+.clasp.json
+.claspignore
+.gitignore
