@@ -74,7 +74,7 @@ function fetchContactsWithBirthdays(labelFilter = [], maxRetries = 3) {
       } catch (error) {
         handleApiError(error, attempt, maxRetries);
       }
-    } while (pageToken && attempt <= maxRetries);
+    } while (pageToken || (attempt > 0 && attempt <= maxRetries));
 
     // Sort contacts based on their birthday
     const sortedContacts = sortContactsByBirthdate(contacts);
@@ -83,6 +83,7 @@ function fetchContactsWithBirthdays(labelFilter = [], maxRetries = 3) {
     return sortedContacts;
   } catch (error) {
     Logger.log(`💥 Critical error fetching contacts: ${error.message}`);
+    return [];
   }
 }
 
@@ -422,7 +423,7 @@ function createDailyBirthdayMail(contacts, date = new Date(), previewDays = 5) {
         ${todaysContacts.map(contact => `
           <li class="birthday-item">
             <strong>${contact.name}</strong>
-            ${contact.age ? ` - wird heute ${contact.age} Jahre alt!` : ''}
+            ${contact.hasKnownBirthYear() ? ` - wird heute ${contact.getAgeThisYear()} Jahre alt!` : ''}
             <div class="contact-info">
               ${contact.email ? `
                 <span>📧</span>
@@ -431,9 +432,9 @@ function createDailyBirthdayMail(contacts, date = new Date(), previewDays = 5) {
                     class="button">Glückwunsch-Mail senden</a>
                 </span>
               ` : ''}
-              ${contact.phone ? `
+              ${contact.phoneNumber ? `
                 <span>📱</span>
-                <span><a href="tel:${contact.phone}" class="button">Anrufen</a></span>
+                <span><a href="tel:${contact.phoneNumber}" class="button">Anrufen</a></span>
               ` : ''}
               ${contact.instagramNames && contact.instagramNames.length > 0 ? `
                 <span>📸</span>
@@ -457,10 +458,10 @@ function createDailyBirthdayMail(contacts, date = new Date(), previewDays = 5) {
           ${nextDaysContacts.map(contact => `
             <li class="birthday-item">
               <strong>${contact.name}</strong> - 
-              ${contact.getBirthdayDateString()}
+              ${contact.getBirthdayLongMonthFormat()}
               <div class="contact-info">
                 ${contact.email ? `<span>📧 ${contact.email}</span>` : ''}
-                ${contact.phone ? `<span>📱 ${contact.phone}</span>` : ''}
+                ${contact.phoneNumber ? `<span>📱 ${contact.phoneNumber}</span>` : ''}
               </div>
             </li>
           `).join('')}
@@ -686,32 +687,28 @@ function extractInstagramNamesFromNotes(notes) {
   // Handle empty/undefined notes
   if (!notes) return [];
 
-  const instagramPrefix = "@";
   const instagramNames = [];
 
-  // Split notes into individual entries
-  const noteEntries = notes.split('. ');
-
-  // Process each note entry
-  noteEntries.forEach(note => {
-    // Extract usernames - could be comma-separated
-    const usernamePart = note.substring(instagramPrefix.length).trim();
-    const usernames = usernamePart.split(',').map(username => {
-      username = username.trim();
-      return username.startsWith('@') ? username : '@' + username;
+  // Match all @username patterns in the notes
+  const atMatches = notes.match(/@[\w.]+/g);
+  if (atMatches) {
+    atMatches.forEach(match => {
+      const username = match.startsWith('@') ? match : '@' + match;
+      if (!instagramNames.includes(username)) {
+        instagramNames.push(username);
+      }
     });
-    instagramNames.push(...usernames);
-    // Find all matches after prefix
-    const matches = note.match(new RegExp(`(?:${instagramPrefix}|,\\s*)([^,\\s]+)`, 'g'));
-    if (matches) {
-      const usernames = matches.map(match => {
-        // Clean up the username
-        const cleaned_name = match.replace(/^,\s*/, '').trim();
-        return cleaned_name.startsWith('@') ? cleaned_name : '@' + cleaned_name;
-      });
-      instagramNames.push(...usernames);
+  }
+
+  // Also match "Instagram: username" pattern (without @)
+  const instaPattern = /Instagram:\s*([^\s,@][^\s,]*)/gi;
+  let match;
+  while ((match = instaPattern.exec(notes)) !== null) {
+    const username = '@' + match[1].trim();
+    if (!instagramNames.includes(username)) {
+      instagramNames.push(username);
     }
-  });
+  }
 
   return instagramNames;
 }
@@ -725,9 +722,12 @@ function extractInstagramNamesFromNotes(notes) {
 function getNextMonth() {
   const today = new Date();
   const currentMonth = today.getMonth();
-  const nextMonth = (currentMonth + 1) % 12;
+  const currentYear = today.getFullYear();
 
-  return new Date(today.getFullYear(), nextMonth, 1);
+  if (currentMonth === 11) {
+    return new Date(currentYear + 1, 0, 1);
+  }
+  return new Date(currentYear, currentMonth + 1, 1);
 }
 
 
