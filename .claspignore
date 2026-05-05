@@ -11,3 +11,4 @@ ROADMAP.md
 .clasp.json
 .claspignore
 .gitignore
+src/test.js
