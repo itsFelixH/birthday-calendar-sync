@@ -8,6 +8,20 @@ class EmailManager {
 
 
   /**
+   * Gets common email context (sender, recipient, names).
+   * @returns {{toEmail: string, fromEmail: string, senderName: string, recipientName: string}}
+   */
+  getEmailContext() {
+    return {
+      toEmail: Session.getActiveUser().getEmail(),
+      fromEmail: Session.getActiveUser().getEmail(),
+      senderName: DriveApp.getFileById(ScriptApp.getScriptId()).getName(),
+      recipientName: getCurrentUserFirstName()
+    };
+  }
+
+
+  /**
    * Sends an email with the specified parameters
    * @param {string} toEmail - Recipient email address
    * @param {string} fromEmail - Sender email address
@@ -70,12 +84,9 @@ class EmailManager {
     }
 
     const numBirthdays = monthContacts.length;
-    const recipientName = getCurrentUserFirstName();
+    const { toEmail, fromEmail, senderName, recipientName } = this.getEmailContext();
 
     const subject = '🎂 Geburtstags Reminder 🎂';
-    const senderName = DriveApp.getFileById(ScriptApp.getScriptId()).getName();
-    const toEmail = Session.getActiveUser().getEmail();
-    const fromEmail = Session.getActiveUser().getEmail();
 
     // Build the email body with formatted birthdates
     let mailBody = `
@@ -132,11 +143,8 @@ class EmailManager {
       return;
     }
 
-    const recipientName = getCurrentUserFirstName();
+    const { toEmail, fromEmail, senderName, recipientName } = this.getEmailContext();
     const subject = '🎁 Heutige Geburtstage 🎁';
-    const senderName = DriveApp.getFileById(ScriptApp.getScriptId()).getName();
-    const toEmail = Session.getActiveUser().getEmail();
-    const fromEmail = Session.getActiveUser().getEmail();
 
     // Build the email content
     const content = `
@@ -223,12 +231,9 @@ class EmailManager {
    * @param {Object} changes - Object containing calendar changes
    */
   sendCalendarUpdateEmail(changes) {
-    const recipientName = getCurrentUserFirstName();
+    const { toEmail, fromEmail, senderName, recipientName } = this.getEmailContext();
 
     const subject = '📅 Geburtstags Updates 📅';
-    const senderName = DriveApp.getFileById(ScriptApp.getScriptId()).getName();
-    const toEmail = Session.getActiveUser().getEmail();
-    const fromEmail = Session.getActiveUser().getEmail();
 
     let mailBody = `
       <div style="font-family: Arial, sans-serif; line-height: 1.6;">
