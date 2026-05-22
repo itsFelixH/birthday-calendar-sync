@@ -42,3 +42,7 @@ const dryRun = false;
 // How to handle leap year birthdays (Feb 29) in non-leap years.
 // Possible values: 'feb28' (move to Feb 28) or 'mar1' (move to Mar 1).
 const leapYearHandling = 'feb28';
+
+// Unique tag used to identify birthday events created by this script.
+// Stored in event descriptions to prevent duplicate creation when contact names change.
+const eventTag = '[BirthdaySync]';
