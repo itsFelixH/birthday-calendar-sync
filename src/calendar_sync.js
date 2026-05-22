@@ -37,8 +37,14 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, monthsAhea
     try {
       stats.processed++;
 
+      // Filter deceased contacts based on config
+      const handling = typeof deceasedHandling !== 'undefined' ? deceasedHandling : 'skip';
       const monthContacts = contacts
-        .filter(contact => contact.birthday.getMonth() === month)
+        .filter(contact => {
+          if (contact.birthday.getMonth() !== month) return false;
+          if (contact.isDeceased() && handling === 'skip') return false;
+          return true;
+        })
         .sort((a, b) => a.birthday.getDate() - b.birthday.getDate());
 
       if (monthContacts.length === 0) {
@@ -50,7 +56,13 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, monthsAhea
       const summaryTag = `${eventTag}:summary:${year}-${('0' + (month + 1)).slice(-2)}`;
       const title = `🎉🎂 GEBURTSTAGE 🎂🎉`;
       const description = `Geburtstage im ${monthNamesLong[month]}\n\n` +
-        monthContacts.map(contact => contact.getBirthdaySummaryEventString()).join('\n') +
+        monthContacts.map(contact => {
+          if (contact.isDeceased() && handling === 'memorial') {
+            const base = `${contact.getBirthdayLongMonthFormat()}: 🕯️ ${contact.name}`;
+            return contact.hasKnownBirthYear() ? `${base} (*${contact.birthday.getFullYear()})` : base;
+          }
+          return contact.getBirthdaySummaryEventString();
+        }).join('\n') +
         `\n\n${summaryTag}`;
 
       if (isDryRun) {
@@ -128,6 +140,17 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
   contacts.forEach((contact, index) => {
     try {
       stats.processed++;
+
+      // Handle deceased contacts
+      const handling = typeof deceasedHandling !== 'undefined' ? deceasedHandling : 'skip';
+      if (contact.isDeceased()) {
+        if (handling === 'skip') {
+          stats.skipped++;
+          return;
+        }
+        // 'memorial' and 'normal' continue below
+      }
+
       const nextBirthday = contact.getNextBirthdayInRange(startDate, endDate);
 
       if (!nextBirthday) {
@@ -143,16 +166,27 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
       // Unique tag per contact based on birthday (stable even if name changes)
       const contactTag = `${eventTag}:${contact.birthday.getMonth() + 1}-${contact.birthday.getDate()}:${contact.name.replace(/[^a-zA-ZäöüÄÖÜß ]/g, '').trim()}`;
 
-      // Use milestone title if enabled and this is a milestone birthday
+      // Determine title and description based on deceased/milestone status
+      const isMemorial = contact.isDeceased() && handling === 'memorial';
       const eventYear = eventDate.getFullYear();
-      const isMilestone = typeof highlightMilestones !== 'undefined' && highlightMilestones && contact.isMilestoneBirthday(eventYear);
-      const title = isMilestone
-        ? `🎂🎉 ${contact.name} wird ${contact.getAgeInYear(eventYear)}! 🎉`
-        : `🎂 ${contact.name} hat Geburtstag`;
-      const description = contact.getBirthdayEventString() + `\n${contactTag}`;
+      const isMilestone = !isMemorial && typeof highlightMilestones !== 'undefined' && highlightMilestones && contact.isMilestoneBirthday(eventYear);
+
+      let title;
+      let description;
+      if (isMemorial) {
+        title = `🕯️ ${contact.name} (*${contact.birthday.getFullYear()})`;
+        description = contact.getMemorialEventString() + `\n${contactTag}`;
+      } else if (isMilestone) {
+        title = `🎂🎉 ${contact.name} wird ${contact.getAgeInYear(eventYear)}! 🎉`;
+        description = contact.getBirthdayEventString() + `\n${contactTag}`;
+      } else {
+        title = `🎂 ${contact.name} hat Geburtstag`;
+        description = contact.getBirthdayEventString() + `\n${contactTag}`;
+      }
 
       if (isDryRun) {
-        stats.created.push(`${contact.name} (${eventDate.toLocaleDateString()})${isMilestone ? ' 🎉 MILESTONE' : ''}`);
+        const suffix = isMemorial ? ' 🕯️ MEMORIAL' : (isMilestone ? ' 🎉 MILESTONE' : '');
+        stats.created.push(`${contact.name} (${eventDate.toLocaleDateString()})${suffix}`);
         Logger.log(`🧪 [DRY RUN] Would create/update event: ${title} on ${eventDate.toLocaleDateString()}`);
         return;
       }
