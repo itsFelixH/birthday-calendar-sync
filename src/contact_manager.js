@@ -95,16 +95,18 @@ function createBirthdayContact(person, birthdayData, labelNames) {
 
 /**
  * Extracts the death date from a contact's events array.
- * Looks for an event with type/formattedType matching "gestorben" (case-insensitive).
+ * Looks for an event with type/formattedType matching the configured deceasedDateLabel (case-insensitive).
  * @param {Object[]} events - Array of event objects from People API
  * @returns {Date|null} The death date, or null if not found
  */
 function extractDeathDate(events) {
   if (!events || events.length === 0) return null;
 
+  const dateLabel = (typeof deceasedDateLabel !== 'undefined' ? deceasedDateLabel : 'gestorben').toLowerCase();
+
   const deathEvent = events.find(event => {
     const type = (event.formattedType || event.type || '').toLowerCase();
-    return type === 'gestorben';
+    return type === dateLabel;
   });
 
   if (deathEvent && deathEvent.date) {
