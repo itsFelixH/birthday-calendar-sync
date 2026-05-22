@@ -33,3 +33,12 @@ const createBirthdaySummaryEvents = true;
 // The amount of months ahead for which birthday events and summaries will be created/updated.
 // By default, it creates events for the next year (=12 months).
 const monthsAhead = 12;
+
+// Set this to true to run in dry-run mode.
+// In dry-run mode, no calendar events are created/updated/deleted and no emails are sent.
+// All actions are logged so you can preview what would happen.
+const dryRun = false;
+
+// How to handle leap year birthdays (Feb 29) in non-leap years.
+// Possible values: 'feb28' (move to Feb 28) or 'mar1' (move to Mar 1).
+const leapYearHandling = 'feb28';
