@@ -59,7 +59,10 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, monthsAhea
         monthContacts.map(contact => {
           if (contact.isDeceased() && handling === 'memorial') {
             const base = `${contact.getBirthdayLongMonthFormat()}: 🕯️ ${contact.name}`;
-            return contact.hasKnownBirthYear() ? `${base} (*${contact.birthday.getFullYear()})` : base;
+            const birthYear = contact.hasKnownBirthYear() ? `*${contact.birthday.getFullYear()}` : '';
+            const deathYear = contact.deathDate ? `†${contact.deathDate.getFullYear()}` : '';
+            const lifespan = [birthYear, deathYear].filter(Boolean).join(' ');
+            return lifespan ? `${base} (${lifespan})` : base;
           }
           return contact.getBirthdaySummaryEventString();
         }).join('\n') +
