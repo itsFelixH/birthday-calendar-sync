@@ -50,6 +50,13 @@ const highlightMilestones = true;
 // The ages considered milestones. Events for these ages get a special title.
 const milestoneAges = [18, 20, 25, 30, 40, 50, 60, 70, 75, 80, 90, 100];
 
+// How to handle deceased contacts.
+// Possible values: 'skip' (no events created), 'memorial' (memorial-style event), 'normal' (treat like any other contact).
+const deceasedHandling = 'skip';
+
+// The label used to identify deceased contacts in Google Contacts.
+const deceasedLabel = '🪦 Verstorben';
+
 // Unique tag used to identify birthday events created by this script.
 // Stored in event descriptions to prevent duplicate creation when contact names change.
 const eventTag = '[BirthdaySync]';
