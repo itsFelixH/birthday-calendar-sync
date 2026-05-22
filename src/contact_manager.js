@@ -24,7 +24,7 @@ function fetchContactsWithBirthdays(labelFilter = [], maxRetries = 3) {
       try {
         const response = peopleService.Connections.list('people/me', {
           pageSize: 100,
-          personFields: 'names,birthdays,memberships,emailAddresses,phoneNumbers,addresses,biographies',
+          personFields: 'names,birthdays,memberships,emailAddresses,phoneNumbers,addresses,biographies,events',
           pageToken: pageToken
         });
 
@@ -73,6 +73,9 @@ function createBirthdayContact(person, birthdayData, labelNames) {
     const year = birthdayData.year || new Date().getFullYear();
     const birthday = new Date(year, birthdayData.month - 1, birthdayData.day);
 
+    // Extract death date from contact events (custom date labeled "gestorben")
+    const deathDate = extractDeathDate(person.events);
+
     return new BirthdayContact(
       person.names?.[0]?.displayName || 'Unnamed Contact',
       birthday,
@@ -80,12 +83,36 @@ function createBirthdayContact(person, birthdayData, labelNames) {
       person.emailAddresses?.[0]?.value,
       (person.addresses || []).map(address => address.city).filter(Boolean).join(', '),
       person.phoneNumbers?.[0]?.value || '',
-      extractInstagramNamesFromNotes((person.biographies || []).map(bio => bio.value).join('. '))
+      extractInstagramNamesFromNotes((person.biographies || []).map(bio => bio.value).join('. ')),
+      deathDate
     );
   } catch (error) {
     Logger.log(`⚠️ Error creating contact: ${error.message}`);
     return null;
   }
+}
+
+
+/**
+ * Extracts the death date from a contact's events array.
+ * Looks for an event with type/formattedType matching "gestorben" (case-insensitive).
+ * @param {Object[]} events - Array of event objects from People API
+ * @returns {Date|null} The death date, or null if not found
+ */
+function extractDeathDate(events) {
+  if (!events || events.length === 0) return null;
+
+  const deathEvent = events.find(event => {
+    const type = (event.formattedType || event.type || '').toLowerCase();
+    return type === 'gestorben';
+  });
+
+  if (deathEvent && deathEvent.date) {
+    const d = deathEvent.date;
+    return new Date(d.year || new Date().getFullYear(), (d.month || 1) - 1, d.day || 1);
+  }
+
+  return null;
 }
 
 
