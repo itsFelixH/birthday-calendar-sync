@@ -119,7 +119,9 @@ class BirthdayContact {
   getBirthdaySummaryEventString() {
     let string = `${this.getBirthdayLongMonthFormat()}: ${this.name}`;
     if (this.hasKnownBirthYear()) {
-      string += ` (${this.getAgeThisYear()})`;
+      const age = this.getAgeThisYear();
+      const isMilestone = typeof highlightMilestones !== 'undefined' && highlightMilestones && this.isMilestoneBirthday(new Date().getFullYear());
+      string += isMilestone ? ` (🎉 ${age}!)` : ` (${age})`;
     }
     return string;
   }
@@ -265,6 +267,31 @@ class BirthdayContact {
 
     const oneDay = 24 * 60 * 60 * 1000; // One day in milliseconds
     return Math.round((nextBirthday - today) / oneDay);
+  }
+
+  /**
+   * Checks if this contact has a milestone birthday in the given year.
+   * A milestone is defined by the milestoneAges config array.
+   *
+   * @param {number} year The year to check the age for.
+   * @returns {boolean} True if the contact turns a milestone age in that year.
+   */
+  isMilestoneBirthday(year) {
+    if (!this.hasKnownBirthYear()) return false;
+    const ages = typeof milestoneAges !== 'undefined' ? milestoneAges : [];
+    const ageInYear = year - this.birthday.getFullYear();
+    return ages.includes(ageInYear);
+  }
+
+  /**
+   * Gets the age the contact will turn in a specific year.
+   *
+   * @param {number} year The year to calculate age for.
+   * @returns {number} Age turning in that year, or 0 if birth year unknown.
+   */
+  getAgeInYear(year) {
+    if (!this.hasKnownBirthYear()) return 0;
+    return year - this.birthday.getFullYear();
   }
 
   /**
