@@ -13,8 +13,9 @@ class BirthdayContact {
    * @param {string} city The city of the contact.
    * @param {string} phoneNumber The phone number the contact.
    * @param {Array<string>} instagramNames The Instagram usernames for the contact.
+   * @param {Date|null} deathDate The date of death, or null if alive.
    */
-  constructor(name, birthday, labels = [], email = '', city = '', phoneNumber = '', instagramNames = []) {
+  constructor(name, birthday, labels = [], email = '', city = '', phoneNumber = '', instagramNames = [], deathDate = null) {
     if (!name || !birthday) {
       throw new Error('Name and birthday are required.');
     }
@@ -25,6 +26,7 @@ class BirthdayContact {
     this.city = city || '';
     this.phoneNumber = phoneNumber;
     this.instagramNames = Array.isArray(instagramNames) ? instagramNames : [instagramNames].filter(name => name !== '');
+    this.deathDate = deathDate ? new Date(deathDate) : null;
   }
 
   /**
@@ -49,6 +51,18 @@ class BirthdayContact {
    */
   getLabels() {
     return this.labels;
+  }
+
+
+  /**
+   * Checks if this contact is marked as deceased.
+   * A contact is deceased if they have the configured deceased label OR a death date.
+   * @returns {boolean} True if the contact is deceased.
+   */
+  isDeceased() {
+    if (this.deathDate) return true;
+    const label = typeof deceasedLabel !== 'undefined' ? deceasedLabel : 'Verstorben';
+    return this.labels.some(l => l.trim().toLowerCase() === label.trim().toLowerCase());
   }
 
 
@@ -106,6 +120,33 @@ class BirthdayContact {
     if (this.labels.length > 0) {
       if (this.phoneNumber || this.instagramNames.length > 0) string += `\n`;
       string += `${this.labels}\n`
+    }
+    return string;
+  }
+
+
+  /**
+   * Gets the memorial string representation for a deceased contact's birthday event.
+   * Shows birth year, death date (if known), and no contact action links.
+   * 
+   * @returns {string} The memorial event description string.
+   */
+  getMemorialEventString() {
+    let string = '🕯️ In Gedenken an ' + this.name + '\n';
+    if (this.hasKnownBirthYear() && this.deathDate) {
+      string += `* ${this.getBirthdayLongFormat()} † ${Utilities.formatDate(this.deathDate, Session.getScriptTimeZone(), "dd.MM.yyyy")}\n`;
+    } else if (this.hasKnownBirthYear()) {
+      string += `* ${this.getBirthdayLongFormat()}\n`;
+    } else if (this.deathDate) {
+      string += `† ${Utilities.formatDate(this.deathDate, Session.getScriptTimeZone(), "dd.MM.yyyy")}\n`;
+    }
+
+    if (this.labels.length > 0) {
+      const filteredLabels = this.labels.filter(l => {
+        const dl = typeof deceasedLabel !== 'undefined' ? deceasedLabel : 'Verstorben';
+        return l.trim().toLowerCase() !== dl.trim().toLowerCase();
+      });
+      if (filteredLabels.length > 0) string += `\n${filteredLabels}\n`;
     }
     return string;
   }
