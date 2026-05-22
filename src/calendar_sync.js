@@ -142,11 +142,17 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
 
       // Unique tag per contact based on birthday (stable even if name changes)
       const contactTag = `${eventTag}:${contact.birthday.getMonth() + 1}-${contact.birthday.getDate()}:${contact.name.replace(/[^a-zA-ZäöüÄÖÜß ]/g, '').trim()}`;
-      const title = `🎂 ${contact.name} hat Geburtstag`;
+
+      // Use milestone title if enabled and this is a milestone birthday
+      const eventYear = eventDate.getFullYear();
+      const isMilestone = typeof highlightMilestones !== 'undefined' && highlightMilestones && contact.isMilestoneBirthday(eventYear);
+      const title = isMilestone
+        ? `🎂🎉 ${contact.name} wird ${contact.getAgeInYear(eventYear)}! 🎉`
+        : `🎂 ${contact.name} hat Geburtstag`;
       const description = contact.getBirthdayEventString() + `\n${contactTag}`;
 
       if (isDryRun) {
-        stats.created.push(`${contact.name} (${eventDate.toLocaleDateString()})`);
+        stats.created.push(`${contact.name} (${eventDate.toLocaleDateString()})${isMilestone ? ' 🎉 MILESTONE' : ''}`);
         Logger.log(`🧪 [DRY RUN] Would create/update event: ${title} on ${eventDate.toLocaleDateString()}`);
         return;
       }
