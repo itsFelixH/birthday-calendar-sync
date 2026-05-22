@@ -4,6 +4,9 @@
  */
 function updateBirthdaysAndSummariesInCalendar() {
   try {
+    const isDryRun = typeof dryRun !== 'undefined' && dryRun;
+    if (isDryRun) Logger.log('🧪 DRY RUN MODE — no calendar or email changes will be made');
+
     const contacts = fetchContactsWithBirthdays(useLabel ? labelFilter : []);
 
     if (!contacts || contacts.length === 0) {
@@ -27,8 +30,14 @@ function updateBirthdaysAndSummariesInCalendar() {
     }
 
     if (hasChanges(changes)) {
-      const emailManager = new EmailManager();
-      emailManager.sendCalendarUpdateEmail(changes);
+      if (isDryRun) {
+        Logger.log('🧪 [DRY RUN] Would send calendar update email with changes:');
+        Logger.log(`   Individual created: ${changes.individual.created.length}, updated: ${changes.individual.updated.length}`);
+        Logger.log(`   Summary created: ${changes.summary.created.length}, updated: ${changes.summary.updated.length}`);
+      } else {
+        const emailManager = new EmailManager();
+        emailManager.sendCalendarUpdateEmail(changes);
+      }
     }
   } catch (error) {
     Logger.log(`💥 Error in updateBirthdaysAndSummariesInCalendar: ${error.message}`);
@@ -37,6 +46,7 @@ function updateBirthdaysAndSummariesInCalendar() {
 
 function sendSummaryMail() {
   try {
+    const isDryRun = typeof dryRun !== 'undefined' && dryRun;
     const contacts = fetchContactsWithBirthdays(useLabel ? labelFilter : []);
 
     if (!contacts || contacts.length === 0) {
@@ -45,6 +55,13 @@ function sendSummaryMail() {
     }
 
     const nextMonthDate = getNextMonth();
+
+    if (isDryRun) {
+      const monthContacts = contacts.filter(c => c.birthday.getMonth() === nextMonthDate.getMonth());
+      Logger.log(`🧪 [DRY RUN] Would send monthly summary email for ${monthNamesLong[nextMonthDate.getMonth()]} with ${monthContacts.length} birthdays`);
+      return;
+    }
+
     const emailManager = new EmailManager();
     emailManager.sendMonthlyBirthdaySummaryMail(contacts, nextMonthDate.getMonth(), nextMonthDate.getFullYear());
   } catch (error) {
@@ -54,6 +71,7 @@ function sendSummaryMail() {
 
 function sendDailyMail() {
   try {
+    const isDryRun = typeof dryRun !== 'undefined' && dryRun;
     const contacts = fetchContactsWithBirthdays(useLabel ? labelFilter : []);
 
     if (!contacts || contacts.length === 0) {
@@ -64,6 +82,12 @@ function sendDailyMail() {
     const today = new Date();
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
+
+    if (isDryRun) {
+      const tomorrowContacts = getContactsByBirthday(contacts, tomorrow.getDate(), tomorrow.getMonth());
+      Logger.log(`🧪 [DRY RUN] Would send daily birthday email for ${tomorrow.toLocaleDateString()} with ${tomorrowContacts.length} birthdays`);
+      return;
+    }
 
     const emailManager = new EmailManager();
     emailManager.sendDailyBirthdayMail(contacts, tomorrow, 15);
