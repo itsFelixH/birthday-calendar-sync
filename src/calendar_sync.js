@@ -174,7 +174,10 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
       let title;
       let description;
       if (isMemorial) {
-        title = `🕯️ ${contact.name} (*${contact.birthday.getFullYear()})`;
+        const birthYear = contact.hasKnownBirthYear() ? contact.birthday.getFullYear() : '?';
+        const deathYear = contact.deathDate ? contact.deathDate.getFullYear() : '';
+        const lifespan = deathYear ? `*${birthYear} †${deathYear}` : `*${birthYear}`;
+        title = `🕯️ ${contact.name} (${lifespan})`;
         description = contact.getMemorialEventString() + `\n${contactTag}`;
       } else if (isMilestone) {
         title = `🎂🎉 ${contact.name} wird ${contact.getAgeInYear(eventYear)}! 🎉`;
