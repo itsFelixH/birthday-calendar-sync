@@ -268,29 +268,51 @@ class BirthdayContact {
   }
 
   /**
+   * Checks if this contact has a leap year birthday (Feb 29).
+   * @returns {boolean} True if birthday is Feb 29.
+   */
+  isLeapYearBirthday() {
+    return this.birthday.getMonth() === 1 && this.birthday.getDate() === 29;
+  }
+
+  /**
    * Calculates the next birthday within a date range.
+   * Handles leap year birthdays (Feb 29) according to the leapYearHandling config.
    * @param {Date} startDate The start date of the date range.
    * @param {Date} endDate The end date of the date range.
    *
-   * @returns {Date} The next birthday that falls within the range.
+   * @returns {Date|null} The next birthday that falls within the range, or null.
    */
   getNextBirthdayInRange(startDate, endDate) {
     const currentYear = startDate.getFullYear();
     const bdayMonth = this.birthday.getMonth();
     const bdayDate = this.birthday.getDate();
 
-    // Create candidate dates for current and next year
-    const candidates = [
-      new Date(currentYear, bdayMonth, bdayDate),
-      new Date(currentYear + 1, bdayMonth, bdayDate)
-    ];
+    const years = [currentYear, currentYear + 1];
 
-    // Find first date that falls within the range
-    const validDate = candidates.find(date =>
-      date >= startDate && date <= endDate
-    );
+    for (const year of years) {
+      let candidateDate;
 
-    return validDate || null;
+      if (this.isLeapYearBirthday()) {
+        const isLeap = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+        if (isLeap) {
+          candidateDate = new Date(year, 1, 29);
+        } else {
+          // Non-leap year: use configured fallback
+          candidateDate = (typeof leapYearHandling !== 'undefined' && leapYearHandling === 'mar1')
+            ? new Date(year, 2, 1)   // March 1
+            : new Date(year, 1, 28); // Feb 28 (default)
+        }
+      } else {
+        candidateDate = new Date(year, bdayMonth, bdayDate);
+      }
+
+      if (candidateDate >= startDate && candidateDate <= endDate) {
+        return candidateDate;
+      }
+    }
+
+    return null;
   }
 
   /**
