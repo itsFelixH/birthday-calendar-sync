@@ -14,7 +14,10 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, monthsAhea
     return { created: [], updated: [] };
   }
 
-  const calendarManager = new CalendarManager({ calendarId: calendarId });
+  const isDryRun = typeof dryRun !== 'undefined' && dryRun;
+  if (isDryRun) Logger.log('🧪 DRY RUN MODE — no changes will be made');
+
+  const calendarManager = isDryRun ? null : new CalendarManager({ calendarId: calendarId });
   const { start: startDate, end: endDate } = getMonthlyDateRange(monthsAhead);
 
   const stats = { processed: 0, created: [], updated: [], skipped: 0, errors: 0 };
@@ -27,7 +30,9 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, monthsAhea
     const month = current.getMonth();
     const monthEventStart = new Date(year, month, 1);
     const monthEventEnd = new Date(year, month, 2);
-    const monthName = calendarManager.formatDate(monthEventStart, 'MMMM');
+    const monthName = isDryRun
+      ? monthNamesLong[month]
+      : calendarManager.formatDate(monthEventStart, 'MMMM');
 
     try {
       stats.processed++;
@@ -42,12 +47,24 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, monthsAhea
         continue;
       }
 
+      const summaryTag = `${eventTag}:summary:${year}-${('0' + (month + 1)).slice(-2)}`;
       const title = `🎉🎂 GEBURTSTAGE 🎂🎉`;
       const description = `Geburtstage im ${monthNamesLong[month]}\n\n` +
-        monthContacts.map(contact => contact.getBirthdaySummaryEventString()).join('\n');
+        monthContacts.map(contact => contact.getBirthdaySummaryEventString()).join('\n') +
+        `\n\n${summaryTag}`;
+
+      if (isDryRun) {
+        stats.created.push(`${monthName} ${year}`);
+        Logger.log(`🧪 [DRY RUN] Would create/update ${monthName} ${year} summary event`);
+        current.setMonth(month + 1);
+        continue;
+      }
 
       const events = calendarManager.getEventsInRange(monthEventStart, monthEventEnd);
-      const existingEvent = events.find(e => e.getTitle() === title);
+      // Match by tag in description (prevents duplicates if title format changes)
+      const existingEvent = events.find(e =>
+        e.getDescription() && e.getDescription().includes(summaryTag)
+      ) || events.find(e => e.getTitle() === title);
 
       if (!existingEvent) {
         calendarManager.createAllDayEvent({
@@ -61,6 +78,7 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, monthsAhea
       } else {
         if (existingEvent.getDescription() !== description) {
           existingEvent.setDescription(description);
+          existingEvent.setTitle(title);
           stats.updated.push(`${monthName} ${year}`);
           Logger.log(`🔄 Updated ${monthName} ${year} summary event`);
         } else {
@@ -95,8 +113,13 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
     return { created: [], updated: [] };
   }
 
-  const calendarManager = new CalendarManager({ calendarId: calendarId });
-  const { start: startDate, end: endDate } = calendarManager.getDateRange(monthsAhead);
+  const isDryRun = typeof dryRun !== 'undefined' && dryRun;
+  if (isDryRun) Logger.log('🧪 DRY RUN MODE — no changes will be made');
+
+  const calendarManager = isDryRun ? null : new CalendarManager({ calendarId: calendarId });
+  const { start: startDate, end: endDate } = isDryRun
+    ? getMonthlyDateRange(monthsAhead)
+    : calendarManager.getDateRange(monthsAhead);
 
   const stats = { processed: 0, created: [], updated: [], skipped: 0, errors: 0 };
 
@@ -117,11 +140,22 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
       const eventEnd = new Date(eventDate);
       eventEnd.setDate(eventEnd.getDate() + 1);
 
+      // Unique tag per contact based on birthday (stable even if name changes)
+      const contactTag = `${eventTag}:${contact.birthday.getMonth() + 1}-${contact.birthday.getDate()}:${contact.name.replace(/[^a-zA-ZäöüÄÖÜß ]/g, '').trim()}`;
       const title = `🎂 ${contact.name} hat Geburtstag`;
-      const description = contact.getBirthdayEventString();
+      const description = contact.getBirthdayEventString() + `\n${contactTag}`;
+
+      if (isDryRun) {
+        stats.created.push(`${contact.name} (${eventDate.toLocaleDateString()})`);
+        Logger.log(`🧪 [DRY RUN] Would create/update event: ${title} on ${eventDate.toLocaleDateString()}`);
+        return;
+      }
 
       const existingEvents = calendarManager.getEventsInRange(eventDate, eventEnd);
-      const existingEvent = existingEvents.find(e => e.getTitle() === title);
+      // Match by tag first (handles name changes), fall back to title match
+      const existingEvent = existingEvents.find(e =>
+        e.getDescription() && e.getDescription().includes(contactTag)
+      ) || existingEvents.find(e => e.getTitle() === title);
 
       if (!existingEvent) {
         calendarManager.createAllDayEvent({
@@ -133,8 +167,11 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
         stats.created.push(`${contact.name} (${calendarManager.formatDate(eventDate)})`);
         Logger.log(`✅ Created ${contact.name} birthday event`);
       } else {
-        if (existingEvent.getDescription() !== description) {
+        const needsUpdate = existingEvent.getDescription() !== description ||
+          existingEvent.getTitle() !== title;
+        if (needsUpdate) {
           existingEvent.setDescription(description);
+          existingEvent.setTitle(title);
           stats.updated.push(`${contact.name} (${calendarManager.formatDate(eventDate)})`);
           Logger.log(`🔄 Updated ${contact.name} birthday event`);
         } else {
