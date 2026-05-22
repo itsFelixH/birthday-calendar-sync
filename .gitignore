@@ -6,3 +6,6 @@ coverage/
 
 # Clasp config (contains scriptId)
 .clasp.json
+
+# Package lock (using pnpm)
+package-lock.json

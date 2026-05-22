@@ -5,22 +5,29 @@
   "main": "src/main.js",
   "scripts": {
     "test": "jest",
-    "deploy": "npm test && npx clasp push"
+    "deploy": "pnpm test && pnpx clasp push"
   },
   "dependencies": {
-    "@google/clasp": "^3.0.0",
-    "@types/google-apps-script": "^2.0.0"
+    "@google/clasp": "^3.3.0",
+    "@types/google-apps-script": "^2.0.8"
   },
   "devDependencies": {
-    "jest": "^30.0.0"
+    "jest": "^30.4.2"
   },
   "jest": {
-    "setupFiles": ["<rootDir>/tests/setup.js"],
+    "setupFiles": [
+      "<rootDir>/tests/setup.js"
+    ],
     "testEnvironment": "node",
-    "testMatch": ["**/tests/**/*.test.js"],
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ],
     "collectCoverage": true,
     "coverageDirectory": "coverage",
-    "coverageReporters": ["text", "lcov"],
+    "coverageReporters": [
+      "text",
+      "lcov"
+    ],
     "collectCoverageFrom": [
       "src/**/*.js",
       "!src/test.js"
