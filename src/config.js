@@ -43,6 +43,13 @@ const dryRun = false;
 // Possible values: 'feb28' (move to Feb 28) or 'mar1' (move to Mar 1).
 const leapYearHandling = 'feb28';
 
+// Highlight milestone birthdays with a special event title.
+// Set to true to enable milestone highlighting.
+const highlightMilestones = true;
+
+// The ages considered milestones. Events for these ages get a special title.
+const milestoneAges = [18, 20, 25, 30, 40, 50, 60, 70, 75, 80, 90, 100];
+
 // Unique tag used to identify birthday events created by this script.
 // Stored in event descriptions to prevent duplicate creation when contact names change.
 const eventTag = '[BirthdaySync]';
