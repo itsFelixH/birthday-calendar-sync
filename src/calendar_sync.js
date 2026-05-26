@@ -256,7 +256,6 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
         const colors = typeof eventColors !== 'undefined' ? eventColors : {};
         let eventColor = '';
         if (isMemorial) eventColor = colors.memorial || '';
-        else if (shouldRecur) eventColor = colors.recurring || '';
         else if (isMilestone) eventColor = colors.milestone || '';
         else eventColor = colors.birthday || '';
         if (eventColor) {
