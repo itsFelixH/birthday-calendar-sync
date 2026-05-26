@@ -116,7 +116,9 @@ class CalendarManager {
 	 * @param {string} params.title
 	 * @param {Date} params.date
 	 * @param {string} [params.description]
+	 * @param {string} [params.location]
 	 * @param {Array<{type: string, minutes: number}>} [params.reminders]
+	 * @param {string} [params.recurrence] - Recurrence rule (e.g., 'RRULE:FREQ=YEARLY')
 	 * @returns {GoogleAppsScript.Calendar.CalendarEvent}
 	 */
 	createAllDayEvent(params) {
@@ -132,11 +134,18 @@ class CalendarManager {
 		}
 
 		try {
-			return this.calendar.createAllDayEvent(
+			const event = this.calendar.createAllDayEvent(
 				params.title,
 				params.date,
 				options
 			);
+
+			if (params.recurrence) {
+				const recurrence = CalendarApp.newRecurrence().addYearlyRule();
+				event.setRecurrence(recurrence, params.date);
+			}
+
+			return event;
 		} catch (error) {
 			throw new Error(`All-day event creation failed: ${error.message}`);
 		}
