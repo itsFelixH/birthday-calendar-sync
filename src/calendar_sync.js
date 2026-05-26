@@ -95,6 +95,14 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, monthsAhea
           description: description,
           reminders: [{ type: reminderMethod, minutes: reminderInMinutes }]
         });
+        // Apply event color if configured
+        const colors = typeof eventColors !== 'undefined' ? eventColors : {};
+        const summaryColor = colors.summary || '';
+        if (summaryColor) {
+          const createdEvents = calendarManager.getEventsInRange(monthEventStart, monthEventEnd);
+          const newEvent = createdEvents.find(e => e.getDescription() && e.getDescription().includes(summaryTag));
+          if (newEvent && newEvent.setColor) newEvent.setColor(summaryColor);
+        }
         stats.created.push(`${monthName} ${year}`);
         Logger.log(`✅ Created ${monthName} ${year} summary event`);
       } else {
@@ -244,6 +252,18 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
           reminders: [{ type: reminderMethod, minutes: reminderMinutes }],
           recurrence: shouldRecur
         });
+        // Apply event color if configured
+        const colors = typeof eventColors !== 'undefined' ? eventColors : {};
+        let eventColor = '';
+        if (isMemorial) eventColor = colors.memorial || '';
+        else if (shouldRecur) eventColor = colors.recurring || '';
+        else if (isMilestone) eventColor = colors.milestone || '';
+        else eventColor = colors.birthday || '';
+        if (eventColor) {
+          const createdEvents = calendarManager.getEventsInRange(eventDate, eventEnd);
+          const newEvent = createdEvents.find(e => e.getDescription() && e.getDescription().includes(contactTag));
+          if (newEvent && newEvent.setColor) newEvent.setColor(eventColor);
+        }
         stats.created.push(`${contact.name} (${calendarManager.formatDate(eventDate)})`);
         Logger.log(`✅ Created ${contact.name} birthday event${shouldRecur ? ' (recurring)' : ''}`);
       } else {
