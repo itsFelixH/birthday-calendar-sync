@@ -109,36 +109,54 @@ class BirthdayContact {
    * @returns {string} The birthday summary string.
    */
   getBirthdayEventString(ageOverride) {
+    const texts = typeof eventTexts !== 'undefined' ? eventTexts : {};
+    const birthLabel = texts.birthDateLabel || 'Geburtstag';
+    const socialLinks = typeof showSocialLinks !== 'undefined' ? showSocialLinks : true;
+
     let string;
     if (ageOverride === null) {
       // Recurring mode: simple static description without year-specific info
       string = this.hasKnownBirthYear()
-        ? `Geburtstag: ${this.getBirthdayLongFormat()}\n`
+        ? `${birthLabel}: ${this.getBirthdayLongFormat()}\n`
         : '';
     } else {
       const age = ageOverride !== undefined ? ageOverride : this.getAgeThisYear();
-      string = this.hasKnownBirthYear()
-        ? `🎂 ${this.name} wird ${age}\nGeburtstag: ${this.getBirthdayLongFormat()}\n`
-        : `🎂 ${this.name} hat heute Geburtstag\n`;
+      if (this.hasKnownBirthYear()) {
+        const withAgeTemplate = texts.birthdayWithAge || '🎂 {name} wird {age}';
+        string = withAgeTemplate.replace('{name}', this.name).replace('{age}', age) + `\n${birthLabel}: ${this.getBirthdayLongFormat()}\n`;
+      } else {
+        const noAgeTemplate = texts.birthdayNoAge || '🎂 {name} hat heute Geburtstag';
+        string = noAgeTemplate.replace('{name}', this.name) + '\n';
+      }
     }
 
     const contactLink = this.getContactLink();
-    const hasContactSection = this.phoneNumber || this.instagramNames.length > 0 || contactLink;
+    const whatsappLabel = texts.whatsappLabel || 'WhatsApp';
+    const instagramLabel = texts.instagramLabel || 'Instagram';
+    const contactLinkLabel = texts.contactLabel || 'Kontakt';
+    const contactHeader = texts.contactSectionHeader || '── Kontakt ──';
+
+    const hasWhatsApp = socialLinks && this.phoneNumber;
+    const hasInstagram = socialLinks && this.instagramNames.length > 0;
+    const hasContactSection = hasWhatsApp || hasInstagram || contactLink;
 
     if (hasContactSection) {
-      string += `\n── Kontakt ──\n`;
-      if (this.phoneNumber) string += `WhatsApp: ${this.getWhatsAppLink()}\n`;
-      if (this.instagramNames.length > 0) {
+      if (contactHeader) string += `\n${contactHeader}\n`;
+      else string += '\n';
+      if (hasWhatsApp) string += `${whatsappLabel}: ${this.getWhatsAppLink()}\n`;
+      if (hasInstagram) {
         this.instagramNames.forEach(name => {
-          string += `Instagram: ${this.getInstagramLink(name)}\n`;
+          string += `${instagramLabel}: ${this.getInstagramLink(name)}\n`;
         });
       }
-      if (contactLink) string += `Kontakt: ${contactLink}\n`;
+      if (contactLink) string += `${contactLinkLabel}: ${contactLink}\n`;
     }
 
+    const infoHeader = texts.infoSectionHeader || '── Info ──';
     const hasInfoSection = this.city || this.labels.length > 0;
     if (hasInfoSection) {
-      string += `\n── Info ──\n`;
+      if (infoHeader) string += `\n${infoHeader}\n`;
+      else string += '\n';
       if (this.city) string += `📍 ${this.city}\n`;
       if (this.labels.length > 0) string += `${this.labels}\n`;
     }
@@ -154,7 +172,13 @@ class BirthdayContact {
    * @returns {string} The memorial event description string.
    */
   getMemorialEventString() {
-    let string = '🕯️ In Gedenken an ' + this.name + '\n';
+    const texts = typeof eventTexts !== 'undefined' ? eventTexts : {};
+    const memorialPrefix = texts.memorialPrefix || '🕯️ In Gedenken an';
+    const contactHeader = texts.contactSectionHeader || '── Kontakt ──';
+    const contactLinkLabel = texts.contactLabel || 'Kontakt';
+    const infoHeader = texts.infoSectionHeader || '── Info ──';
+
+    let string = `${memorialPrefix} ${this.name}\n`;
     if (this.hasKnownBirthYear() && this.deathDate) {
       string += `* ${this.getBirthdayLongFormat()} † ${Utilities.formatDate(this.deathDate, Session.getScriptTimeZone(), "dd.MM.yyyy")}\n`;
     } else if (this.hasKnownBirthYear()) {
@@ -165,7 +189,9 @@ class BirthdayContact {
 
     const contactLink = this.getContactLink();
     if (contactLink) {
-      string += `\n── Kontakt ──\nKontakt: ${contactLink}\n`;
+      if (contactHeader) string += `\n${contactHeader}\n`;
+      else string += '\n';
+      string += `${contactLinkLabel}: ${contactLink}\n`;
     }
 
     if (this.labels.length > 0) {
@@ -174,7 +200,9 @@ class BirthdayContact {
         return l.trim().toLowerCase() !== dl.trim().toLowerCase();
       });
       if (filteredLabels.length > 0) {
-        string += `\n── Info ──\n${filteredLabels}\n`;
+        if (infoHeader) string += `\n${infoHeader}\n`;
+        else string += '\n';
+        string += `${filteredLabels}\n`;
       }
     }
     return string;
