@@ -61,6 +61,10 @@ const summaryEventDay = 1;
 
 // ─── Event Behavior ───────────────────────────────────────────────────────────
 
+// Whether to send a calendar update email after syncing (listing created/updated events).
+// Set to false to disable the notification email.
+const sendCalendarUpdateEmail = true;
+
 // Whether to create recurring yearly events or single (non-recurring) events.
 // Possible values: 'single' (default, one event per birthday per year) or 'recurring' (one recurring annual event per contact).
 // Note: Recurring mode uses a static description (no year-specific age) since it repeats unchanged.
@@ -85,6 +89,24 @@ const showEventTag = true;
 // Whether to show WhatsApp and Instagram links in event descriptions.
 // Set to false to only show the Google Contacts link.
 const showSocialLinks = true;
+
+// ─── Event Colors ─────────────────────────────────────────────────────────────
+// Optional color for each event type. Set to '' (empty) to use the calendar's default color.
+// Google Calendar color IDs: '1'=Lavender, '2'=Sage, '3'=Grape, '4'=Flamingo,
+// '5'=Banana, '6'=Tangerine, '7'=Peacock, '8'=Graphite, '9'=Blueberry,
+// '10'=Basil, '11'=Tomato
+const eventColors = {
+  // Standard birthday event color (empty = calendar default)
+  birthday: '',
+  // Milestone birthday color
+  milestone: '',
+  // Recurring event color
+  recurring: '',
+  // Memorial event color
+  memorial: '',
+  // Monthly summary event color
+  summary: ''
+};
 
 // ─── Deceased Contacts ────────────────────────────────────────────────────────
 
