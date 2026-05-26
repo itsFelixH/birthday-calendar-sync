@@ -216,7 +216,7 @@ describe('BirthdayContact', () => {
     it('should omit age line when ageOverride is null (recurring mode)', () => {
       const result = contact.getBirthdayEventString(null);
       expect(result).not.toContain('wird heute');
-      expect(result).toContain('hat heute Geburtstag');
+      expect(result).not.toContain('hat heute Geburtstag');
       expect(result).toContain('Geburtstag: 15.01.1990');
     });
 

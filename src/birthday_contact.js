@@ -105,16 +105,16 @@ class BirthdayContact {
   /**
    * Gets the string representation for the birthday event.
    * 
-   * @param {number} [ageOverride] - Optional age to display. Pass `null` to omit age entirely (e.g., for recurring events).
+   * @param {number|null} [ageOverride] - Age to display. Pass `null` to omit age (recurring mode). Omit for default (current year age).
    * @returns {string} The birthday summary string.
    */
   getBirthdayEventString(ageOverride) {
     let string;
     if (ageOverride === null) {
-      // No age — used for recurring events where age changes yearly
+      // Recurring mode: simple static description without year-specific info
       string = this.hasKnownBirthYear()
-        ? `${this.name} hat heute Geburtstag\nGeburtstag: ${this.getBirthdayLongFormat()}\n\n`
-        : `${this.name} hat heute Geburtstag\n\n`;
+        ? `Geburtstag: ${this.getBirthdayLongFormat()}\n\n`
+        : '';
     } else {
       const age = ageOverride !== undefined ? ageOverride : this.getAgeThisYear();
       string = this.hasKnownBirthYear()
