@@ -113,38 +113,43 @@ class BirthdayContact {
     if (ageOverride === null) {
       // Recurring mode: simple static description without year-specific info
       string = this.hasKnownBirthYear()
-        ? `Geburtstag: ${this.getBirthdayLongFormat()}\n\n`
+        ? `Geburtstag: ${this.getBirthdayLongFormat()}\n`
         : '';
     } else {
       const age = ageOverride !== undefined ? ageOverride : this.getAgeThisYear();
       string = this.hasKnownBirthYear()
-        ? `${this.name} wird heute ${age}\nGeburtstag: ${this.getBirthdayLongFormat()}\n\n`
-        : `${this.name} hat heute Geburtstag\n\n`;
+        ? `🎂 ${this.name} wird ${age}\nGeburtstag: ${this.getBirthdayLongFormat()}\n`
+        : `🎂 ${this.name} hat heute Geburtstag\n`;
     }
 
     const contactLink = this.getContactLink();
+    const hasContactSection = this.phoneNumber || this.instagramNames.length > 0 || contactLink;
 
-    if (this.phoneNumber) string += `WhatsApp: ${this.getWhatsAppLink()}\n`;
-    if (this.instagramNames.length > 0) {
-      this.instagramNames.forEach(name => {
-        string += `Instagram: ${this.getInstagramLink(name)}\n`;
-      });
+    if (hasContactSection) {
+      string += `\n── Kontakt ──\n`;
+      if (this.phoneNumber) string += `WhatsApp: ${this.getWhatsAppLink()}\n`;
+      if (this.instagramNames.length > 0) {
+        this.instagramNames.forEach(name => {
+          string += `Instagram: ${this.getInstagramLink(name)}\n`;
+        });
+      }
+      if (contactLink) string += `Kontakt: ${contactLink}\n`;
     }
-    if (contactLink) string += `Kontakt: ${contactLink}\n`;
 
-    if (this.city) string += `📍 ${this.city}\n`;
-
-    if (this.labels.length > 0) {
-      if (this.phoneNumber || this.instagramNames.length > 0 || contactLink) string += `\n`;
-      string += `${this.labels}\n`
+    const hasInfoSection = this.city || this.labels.length > 0;
+    if (hasInfoSection) {
+      string += `\n── Info ──\n`;
+      if (this.city) string += `📍 ${this.city}\n`;
+      if (this.labels.length > 0) string += `${this.labels}\n`;
     }
+
     return string;
   }
 
 
   /**
    * Gets the memorial string representation for a deceased contact's birthday event.
-   * Shows birth year, death date (if known), and no contact action links.
+   * Shows birth year, death date (if known), and contact link.
    * 
    * @returns {string} The memorial event description string.
    */
@@ -158,14 +163,19 @@ class BirthdayContact {
       string += `† ${Utilities.formatDate(this.deathDate, Session.getScriptTimeZone(), "dd.MM.yyyy")}\n`;
     }
 
-    if (this.getContactLink()) string += `\nKontakt: ${this.getContactLink()}\n`;
+    const contactLink = this.getContactLink();
+    if (contactLink) {
+      string += `\n── Kontakt ──\nKontakt: ${contactLink}\n`;
+    }
 
     if (this.labels.length > 0) {
       const filteredLabels = this.labels.filter(l => {
         const dl = typeof deceasedLabel !== 'undefined' ? deceasedLabel : 'Verstorben';
         return l.trim().toLowerCase() !== dl.trim().toLowerCase();
       });
-      if (filteredLabels.length > 0) string += `\n${filteredLabels}\n`;
+      if (filteredLabels.length > 0) {
+        string += `\n── Info ──\n${filteredLabels}\n`;
+      }
     }
     return string;
   }

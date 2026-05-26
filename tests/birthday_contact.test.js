@@ -205,17 +205,18 @@ describe('BirthdayContact', () => {
 
     it('should include age when ageOverride is provided', () => {
       const result = contact.getBirthdayEventString(34);
-      expect(result).toContain('wird heute 34');
+      expect(result).toContain('wird 34');
+      expect(result).toContain('Geboren: 15.01.1990');
     });
 
     it('should use getAgeThisYear when no ageOverride', () => {
       const result = contact.getBirthdayEventString();
-      expect(result).toContain('wird heute 34');
+      expect(result).toContain('wird 34');
     });
 
     it('should omit age line when ageOverride is null (recurring mode)', () => {
       const result = contact.getBirthdayEventString(null);
-      expect(result).not.toContain('wird heute');
+      expect(result).not.toContain('wird');
       expect(result).not.toContain('hat heute Geburtstag');
       expect(result).toContain('Geburtstag: 15.01.1990');
     });
@@ -225,23 +226,31 @@ describe('BirthdayContact', () => {
         testName, testBirthday, [], '', '', '', [], null, 'people/c555'
       );
       const result = contactWithResource.getBirthdayEventString(34);
+      expect(result).toContain('── Kontakt ──');
       expect(result).toContain('Kontakt: https://contacts.google.com/person/c555');
     });
 
     it('should not include contact link when resourceName is empty', () => {
-      const result = contact.getBirthdayEventString(34);
+      const contactNoLinks = new BirthdayContact(testName, testBirthday, [], '', '', '');
+      const result = contactNoLinks.getBirthdayEventString(34);
       expect(result).not.toContain('Kontakt:');
     });
 
-    it('should include city when set', () => {
+    it('should include city in info section when set', () => {
       const result = contact.getBirthdayEventString(34);
+      expect(result).toContain('── Info ──');
       expect(result).toContain('📍 Berlin');
     });
 
-    it('should not include city when empty', () => {
-      const contactNoCity = new BirthdayContact(testName, testBirthday, [], '', '', testPhone);
-      const result = contactNoCity.getBirthdayEventString(34);
-      expect(result).not.toContain('📍');
+    it('should not include info section when no city and no labels', () => {
+      const contactNoInfo = new BirthdayContact(testName, testBirthday, [], '', '', testPhone);
+      const result = contactNoInfo.getBirthdayEventString(34);
+      expect(result).not.toContain('── Info ──');
+    });
+
+    it('should include labels in info section', () => {
+      const result = contact.getBirthdayEventString(34);
+      expect(result).toContain('Friend,Work');
     });
   });
 });
