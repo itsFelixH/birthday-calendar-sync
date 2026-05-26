@@ -70,3 +70,18 @@ const deceasedDateLabel = 'Todestag';
 // Unique tag used to identify birthday events created by this script.
 // Stored in event descriptions to prevent duplicate creation when contact names change.
 const eventTag = '[BirthdaySync]';
+
+// Event title templates. Use placeholders: {name}, {age}, {birthdate}
+// Each template controls the title for a specific event type.
+const eventTitles = {
+  // Standard individual birthday event
+  birthday: '🎂 {name} hat Geburtstag',
+  // Milestone birthday (e.g., 30, 50, etc.)
+  milestone: '🎂🎉 {name} wird {age}! 🎉',
+  // Recurring event (static, no year-specific info)
+  recurring: '🎂 {name} hat Geburtstag',
+  // Memorial event for deceased contacts
+  memorial: '🕯️ {name} ({lifespan})',
+  // Monthly summary event
+  summary: '🎉🎂 GEBURTSTAGE 🎂🎉'
+};
