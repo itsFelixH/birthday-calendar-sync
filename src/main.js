@@ -36,13 +36,16 @@ function updateBirthdaysAndSummariesInCalendar() {
     }
 
     if (hasChanges(changes)) {
+      const shouldEmail = typeof sendCalendarUpdateEmail !== 'undefined' ? sendCalendarUpdateEmail : true;
       if (isDryRun) {
         Logger.log('🧪 [DRY RUN] Would send calendar update email with changes:');
         Logger.log(`   Individual created: ${changes.individual.created.length}, updated: ${changes.individual.updated.length}`);
         Logger.log(`   Summary created: ${changes.summary.created.length}, updated: ${changes.summary.updated.length}`);
-      } else {
+      } else if (shouldEmail) {
         const emailManager = new EmailManager();
         emailManager.sendCalendarUpdateEmail(changes);
+      } else {
+        Logger.log('📧 Calendar update email disabled by config.');
       }
     }
   } catch (error) {
