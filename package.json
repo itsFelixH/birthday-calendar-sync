@@ -5,7 +5,7 @@
   "main": "src/main.js",
   "scripts": {
     "test": "jest",
-    "deploy": "pnpm test && pnpx clasp push"
+    "deploy": "pnpm test && pnpx @google/clasp push"
   },
   "dependencies": {
     "@google/clasp": "^3.3.0",
