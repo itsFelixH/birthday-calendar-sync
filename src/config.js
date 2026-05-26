@@ -54,6 +54,10 @@ const milestoneAges = [18, 20, 25, 30, 40, 50, 60, 70, 75, 80, 90, 100];
 // Possible values: 'skip' (no events created), 'memorial' (memorial-style event), 'normal' (treat like any other contact).
 const deceasedHandling = 'skip';
 
+// Whether to create recurring yearly events or single (non-recurring) events.
+// Possible values: 'single' (default, one event per birthday per year) or 'recurring' (one recurring annual event per contact).
+const eventRecurrence = 'single';
+
 // The Google Contacts group label used to identify deceased contacts.
 const deceasedLabel = '🪦 Verstorben';
 
