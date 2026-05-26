@@ -46,6 +46,44 @@ const summaryMonthsAhead = 6;
 // Send an email after syncing with a list of created/updated events.
 const sendCalendarUpdateEmail = true;
 
+// ─── Email subjects ───────────────────────────────────────────────────────────
+
+const emailSubjects = {
+  // Monthly birthday summary email
+  monthlySummary: '🎂 Geburtstags Reminder 🎂',
+  // Daily birthday reminder email
+  dailyReminder: '🎁 Heutige Geburtstage 🎁',
+  // Calendar sync update notification email
+  calendarUpdate: '📅 Geburtstags Updates 📅'
+};
+
+// ─── Email texts ──────────────────────────────────────────────────────────────
+// Configurable text strings used in email bodies.
+// Placeholders: {month}, {year}, {name}, {count}
+const emailTexts = {
+  // Greeting (used in all emails). {name} = recipient first name or empty.
+  greeting: 'Hallo{name},',
+  // Monthly summary email
+  monthlySummaryTitle: '🎉 Geburtstage im {month}',
+  monthlySummaryIntro: 'Mach dich bereit zum Feiern! Hier sind die Geburtstage deiner Kontakte im {month} {year}. Vergiss nicht, ihnen zu gratulieren!',
+  monthlySummaryCount: 'Insgesamt gibt es {count} Geburtstag(e) in diesem Monat:',
+  // Calendar update email
+  calendarUpdateTitle: '🔄 Updates zu Geburtstags-Events',
+  calendarUpdateIntro: 'Die folgenden Geburtstags-Events wurden deinem Kalender hinzugefügt:',
+  calendarUpdateIndividualHeader: 'Individuelle Geburtstage:',
+  calendarUpdateSummaryHeader: 'Monatliche Geburtstagsübersichten:',
+  calendarUpdateCreated: '✨ Neu erstellt:',
+  calendarUpdateUpdated: '🔄 Aktualisiert:',
+  // Daily reminder email
+  dailyReminderTitle: '🎉 Heutige Geburtstage',
+  dailyReminderIntro: 'Heute haben {count} deiner Kontakte Geburtstag. Hier sind alle Details, die du brauchst, um zu gratulieren:',
+  dailyReminderUpcomingHeader: '📅 Kommende Geburtstage',
+  dailyReminderUpcomingIntro: 'In den nächsten {days} Tagen haben {count} deiner Kontakte Geburtstag:',
+  // Link labels in emails
+  viewCalendar: 'Google Kalender anzeigen',
+  manageContacts: 'Kontakte verwalten'
+};
+
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // EVENT APPEARANCE
