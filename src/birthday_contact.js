@@ -105,14 +105,22 @@ class BirthdayContact {
   /**
    * Gets the string representation for the birthday event.
    * 
-   * @param {number} [ageOverride] - Optional age to display (used for recurring events with a specific year).
+   * @param {number} [ageOverride] - Optional age to display. Pass `null` to omit age entirely (e.g., for recurring events).
    * @returns {string} The birthday summary string.
    */
   getBirthdayEventString(ageOverride) {
-    const age = ageOverride !== undefined ? ageOverride : this.getAgeThisYear();
-    let string = this.hasKnownBirthYear()
-      ? `${this.name} wird heute ${age}\nGeburtstag: ${this.getBirthdayLongFormat()}\n\n`
-      : `${this.name} hat heute Geburtstag\n\n`;
+    let string;
+    if (ageOverride === null) {
+      // No age — used for recurring events where age changes yearly
+      string = this.hasKnownBirthYear()
+        ? `${this.name} hat heute Geburtstag\nGeburtstag: ${this.getBirthdayLongFormat()}\n\n`
+        : `${this.name} hat heute Geburtstag\n\n`;
+    } else {
+      const age = ageOverride !== undefined ? ageOverride : this.getAgeThisYear();
+      string = this.hasKnownBirthYear()
+        ? `${this.name} wird heute ${age}\nGeburtstag: ${this.getBirthdayLongFormat()}\n\n`
+        : `${this.name} hat heute Geburtstag\n\n`;
+    }
 
     const contactLink = this.getContactLink();
 
