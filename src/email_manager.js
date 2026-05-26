@@ -86,21 +86,31 @@ class EmailManager {
     const numBirthdays = monthContacts.length;
     const { toEmail, fromEmail, senderName, recipientName } = this.getEmailContext();
 
-    const subject = '🎂 Geburtstags Reminder 🎂';
+    const subjects = typeof emailSubjects !== 'undefined' ? emailSubjects : {};
+    const texts = typeof emailTexts !== 'undefined' ? emailTexts : {};
+    const subject = subjects.monthlySummary || '🎂 Geburtstags Reminder 🎂';
+    const greetingTemplate = texts.greeting || 'Hallo{name},';
+    const greeting = greetingTemplate.replace('{name}', recipientName ? ` ${recipientName}` : '');
+    const titleText = (texts.monthlySummaryTitle || '🎉 Geburtstage im {month}').replace('{month}', monthNamesLong[month]);
+    const introText = (texts.monthlySummaryIntro || 'Mach dich bereit zum Feiern! Hier sind die Geburtstage deiner Kontakte im {month} {year}. Vergiss nicht, ihnen zu gratulieren!')
+      .replace('{month}', monthNamesLong[month]).replace('{year}', year);
+    const countText = (texts.monthlySummaryCount || 'Insgesamt gibt es {count} Geburtstag(e) in diesem Monat:')
+      .replace('{count}', numBirthdays);
+    const viewCalendarLabel = texts.viewCalendar || 'Google Kalender anzeigen';
 
     // Build the email body with formatted birthdates
     let mailBody = `
       <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-        <h3>🎉 Geburtstage im ${monthNamesLong[month]}</h3>
-        <p>Hallo${recipientName ? ` ${recipientName},` : ','}</p>
-        <p>Mach dich bereit zum Feiern! Hier sind die Geburtstage deiner Kontakte im ${monthNamesLong[month]} ${year}. Vergiss nicht, ihnen zu gratulieren!</p>
-        <p>Insgesamt gibt es ${numBirthdays} Geburtstag${numBirthdays > 1 ? 'e' : ''} in diesem Monat:</p>
+        <h3>${titleText}</h3>
+        <p>${greeting}</p>
+        <p>${introText}</p>
+        <p>${countText}</p>
         <ul style="list-style-type: none; padding: 0;">
           ${monthContacts.map(contact => `<li>${contact.getBirthdaySummaryMailString()}</li>`).join('')}
         </ul><br>
         <hr style="border:0; height:1px; background:#ccc;">
         <p style="text-align: center; margin-top: 2em;">
-          <a href="https://calendar.google.com/calendar/r" style="color: #007BFF;">Google Kalender anzeigen</a><br>
+          <a href="https://calendar.google.com/calendar/r" style="color: #007BFF;">${viewCalendarLabel}</a><br>
           <a href="https://github.com/itsFelixH/birthday-calendar-sync" style="color: #007BFF;">Git-Repo</a>
         </p>
       </div>
@@ -144,19 +154,27 @@ class EmailManager {
     }
 
     const { toEmail, fromEmail, senderName, recipientName } = this.getEmailContext();
-    const subject = '🎁 Heutige Geburtstage 🎁';
+    const subjects = typeof emailSubjects !== 'undefined' ? emailSubjects : {};
+    const texts = typeof emailTexts !== 'undefined' ? emailTexts : {};
+    const subject = subjects.dailyReminder || '🎁 Heutige Geburtstage 🎁';
+    const greetingTemplate = texts.greeting || 'Hallo{name},';
+    const greeting = greetingTemplate.replace('{name}', recipientName ? ` ${recipientName}` : '');
+    const titleText = texts.dailyReminderTitle || '🎉 Heutige Geburtstage';
+    const introText = (texts.dailyReminderIntro || 'Heute haben {count} deiner Kontakte Geburtstag. Hier sind alle Details, die du brauchst, um zu gratulieren:')
+      .replace('{count}', todaysContacts.length);
+    const upcomingHeader = texts.dailyReminderUpcomingHeader || '📅 Kommende Geburtstage';
+    const upcomingIntro = (texts.dailyReminderUpcomingIntro || 'In den nächsten {days} Tagen haben {count} deiner Kontakte Geburtstag:')
+      .replace('{days}', previewDays).replace('{count}', nextDaysContacts.length);
+    const viewCalendarLabel = texts.viewCalendar || 'Google Kalender anzeigen';
+    const manageContactsLabel = texts.manageContacts || 'Kontakte verwalten';
 
     // Build the email content
     const content = `
-      ${this.templates.header(
-      '🎉 Heutige Geburtstage',
-      `${day}. ${monthNamesLong[month]} ${date.getFullYear()}`
-    )}
+      ${this.templates.header(titleText, `${day}. ${monthNamesLong[month]} ${date.getFullYear()}`)}
       
       <div class="section">
-        <p>Hallo${recipientName ? ` ${recipientName}` : ''},</p>
-        <p>heute haben ${todaysContacts.length} deiner Kontakte Geburtstag. 
-        Hier sind alle Details, die du brauchst, um zu gratulieren:</p>
+        <p>${greeting}</p>
+        <p>${introText}</p>
       </div>
 
       <div class="section">
@@ -192,10 +210,8 @@ class EmailManager {
 
       ${nextDaysContacts.length > 0 ? `
         <div class="section">
-          <h3 class="section-title">📅 Kommende Geburtstage</h3>
-          <p>In den nächsten ${previewDays} Tagen ${nextDaysContacts.length > 1 ?
-          `haben ${nextDaysContacts.length} deiner Kontakte` :
-          'hat einer deiner Kontakte'} Geburtstag:</p>
+          <h3 class="section-title">${upcomingHeader}</h3>
+          <p>${upcomingIntro}</p>
           <ul class="birthday-list">
             ${nextDaysContacts.map(contact => `
               <li class="birthday-item">
@@ -212,8 +228,8 @@ class EmailManager {
       ` : ''}
 
       <div class="action-buttons">
-        <a href="https://calendar.google.com/calendar/r" class="button">Kalender öffnen</a>
-        <a href="https://contacts.google.com" class="button">Kontakte verwalten</a>
+        <a href="https://calendar.google.com/calendar/r" class="button">${viewCalendarLabel}</a>
+        <a href="https://contacts.google.com" class="button">${manageContactsLabel}</a>
         <a href="https://github.com/itsFelixH/birthday-calendar-sync" class="button">Git-Repo</a>
       </div>
 
@@ -233,19 +249,30 @@ class EmailManager {
   sendCalendarUpdateEmail(changes) {
     const { toEmail, fromEmail, senderName, recipientName } = this.getEmailContext();
 
-    const subject = '📅 Geburtstags Updates 📅';
+    const subjects = typeof emailSubjects !== 'undefined' ? emailSubjects : {};
+    const texts = typeof emailTexts !== 'undefined' ? emailTexts : {};
+    const subject = subjects.calendarUpdate || '📅 Geburtstags Updates 📅';
+    const greetingTemplate = texts.greeting || 'Hallo{name},';
+    const greeting = greetingTemplate.replace('{name}', recipientName ? ` ${recipientName}` : '');
+    const titleText = texts.calendarUpdateTitle || '🔄 Updates zu Geburtstags-Events';
+    const introText = texts.calendarUpdateIntro || 'Die folgenden Geburtstags-Events wurden deinem Kalender hinzugefügt:';
+    const individualHeader = texts.calendarUpdateIndividualHeader || 'Individuelle Geburtstage:';
+    const summaryHeader = texts.calendarUpdateSummaryHeader || 'Monatliche Geburtstagsübersichten:';
+    const createdLabel = texts.calendarUpdateCreated || '✨ Neu erstellt:';
+    const updatedLabel = texts.calendarUpdateUpdated || '🔄 Aktualisiert:';
+    const viewCalendarLabel = texts.viewCalendar || 'Google Kalender anzeigen';
 
     let mailBody = `
       <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-        <h3>🔄 Updates zu Geburtstags-Events</h3>
-        <p>Hallo${recipientName ? ` ${recipientName},` : ','}</p>
-        <p>die folgenden Geburtstags-Events wurden deinem Kalender hinzugefügt:</p>`;
+        <h3>${titleText}</h3>
+        <p>${greeting}</p>
+        <p>${introText}</p>`;
 
     if (changes.individual.created.length > 0 || changes.individual.updated.length > 0) {
-      mailBody += `<h4>Individuelle Geburtstage:</h4>`;
+      mailBody += `<h4>${individualHeader}</h4>`;
 
       if (changes.individual.created.length > 0) {
-        mailBody += `<p>✨ Neue Geburtstage:</p><ul>`;
+        mailBody += `<p>${createdLabel}</p><ul>`;
         changes.individual.created.forEach(event => {
           mailBody += `<li>${event}</li>`;
         });
@@ -253,7 +280,7 @@ class EmailManager {
       }
 
       if (changes.individual.updated.length > 0) {
-        mailBody += `<p>🔄 Aktualisierte Geburtstage:</p><ul>`;
+        mailBody += `<p>${updatedLabel}</p><ul>`;
         changes.individual.updated.forEach(event => {
           mailBody += `<li>${event}</li>`;
         });
@@ -262,10 +289,10 @@ class EmailManager {
     }
 
     if (changes.summary.created.length > 0 || changes.summary.updated.length > 0) {
-      mailBody += `<h4>Monatliche Geburtstagsübersichten:</h4>`;
+      mailBody += `<h4>${summaryHeader}</h4>`;
 
       if (changes.summary.created.length > 0) {
-        mailBody += `<p>✨ Neue Monatsübersichten:</p><ul>`;
+        mailBody += `<p>${createdLabel}</p><ul>`;
         changes.summary.created.forEach(event => {
           mailBody += `<li>${event}</li>`;
         });
@@ -273,7 +300,7 @@ class EmailManager {
       }
 
       if (changes.summary.updated.length > 0) {
-        mailBody += `<p>🔄 Aktualisierte Monatsübersichten:</p><ul>`;
+        mailBody += `<p>${updatedLabel}</p><ul>`;
         changes.summary.updated.forEach(event => {
           mailBody += `<li>${event}</li>`;
         });
@@ -284,7 +311,7 @@ class EmailManager {
     mailBody += `
         <hr style="border:0; height:1px; background:#ccc;">
         <p style="text-align: center; margin-top: 2em;">
-          <a href="https://calendar.google.com/calendar/r" style="color: #007BFF;">View Calendar</a><br>
+          <a href="https://calendar.google.com/calendar/r" style="color: #007BFF;">${viewCalendarLabel}</a><br>
           <a href="https://github.com/itsFelixH/birthday-calendar-sync" style="color: #007BFF;">Git-Repo</a>
         </p>
       </div>
