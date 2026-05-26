@@ -84,7 +84,8 @@ function createBirthdayContact(person, birthdayData, labelNames) {
       (person.addresses || []).map(address => address.city).filter(Boolean).join(', '),
       person.phoneNumbers?.[0]?.value || '',
       extractInstagramNamesFromNotes((person.biographies || []).map(bio => bio.value).join('. ')),
-      deathDate
+      deathDate,
+      person.resourceName || ''
     );
   } catch (error) {
     Logger.log(`⚠️ Error creating contact: ${error.message}`);
