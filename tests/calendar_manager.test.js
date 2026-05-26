@@ -13,7 +13,10 @@ describe('CalendarManager', () => {
   beforeEach(() => {
     // Mock CalendarApp
     global.CalendarApp = {
-      getCalendarById: jest.fn().mockReturnValue(mockCalendar)
+      getCalendarById: jest.fn().mockReturnValue(mockCalendar),
+      newRecurrence: jest.fn().mockReturnValue({
+        addYearlyRule: jest.fn().mockReturnValue({})
+      })
     };
 
     // Mock Session
@@ -231,6 +234,85 @@ describe('CalendarManager', () => {
         expect(start).toEqual(new Date(2024, 0, 1));
         expect(end).toEqual(new Date(2024, 3, 1));
       });
+    });
+  });
+
+  describe('createAllDayEvent', () => {
+    const eventParams = {
+      title: '🎂 Test Birthday',
+      date: new Date(2024, 0, 15),
+      description: 'Test description',
+      location: 'Berlin',
+      reminders: [{ type: 'popup', minutes: 1440 }]
+    };
+
+    it('should create a single all-day event without recurrence', () => {
+      mockCalendar.createAllDayEvent.mockReturnValue({ getId: () => 'event-1' });
+
+      calendarManager.createAllDayEvent(eventParams);
+
+      expect(mockCalendar.createAllDayEvent).toHaveBeenCalledWith(
+        eventParams.title,
+        eventParams.date,
+        expect.objectContaining({
+          description: eventParams.description,
+          location: eventParams.location
+        })
+      );
+    });
+
+    it('should not call createAllDayEventSeries when recurrence is falsy', () => {
+      mockCalendar.createAllDayEvent.mockReturnValue({ getId: () => 'event-1' });
+      mockCalendar.createAllDayEventSeries = jest.fn();
+
+      calendarManager.createAllDayEvent({ ...eventParams, recurrence: false });
+
+      expect(mockCalendar.createAllDayEvent).toHaveBeenCalled();
+      expect(mockCalendar.createAllDayEventSeries).not.toHaveBeenCalled();
+    });
+
+    it('should create a recurring event series when recurrence is true', () => {
+      mockCalendar.createAllDayEventSeries = jest.fn().mockReturnValue({ getId: () => 'series-1' });
+
+      calendarManager.createAllDayEvent({ ...eventParams, recurrence: true });
+
+      expect(mockCalendar.createAllDayEventSeries).toHaveBeenCalledWith(
+        eventParams.title,
+        eventParams.date,
+        expect.any(Object), // recurrence rule
+        expect.objectContaining({
+          description: eventParams.description,
+          location: eventParams.location
+        })
+      );
+      expect(mockCalendar.createAllDayEvent).not.toHaveBeenCalled();
+    });
+
+    it('should pass location in options', () => {
+      mockCalendar.createAllDayEvent.mockReturnValue({ getId: () => 'event-1' });
+
+      calendarManager.createAllDayEvent(eventParams);
+
+      const calledOptions = mockCalendar.createAllDayEvent.mock.calls[0][2];
+      expect(calledOptions.location).toBe('Berlin');
+    });
+
+    it('should handle empty location', () => {
+      mockCalendar.createAllDayEvent.mockReturnValue({ getId: () => 'event-1' });
+
+      calendarManager.createAllDayEvent({ ...eventParams, location: '' });
+
+      const calledOptions = mockCalendar.createAllDayEvent.mock.calls[0][2];
+      expect(calledOptions.location).toBe('');
+    });
+
+    it('should throw wrapped error on failure', () => {
+      mockCalendar.createAllDayEvent.mockImplementation(() => {
+        throw new Error('API quota exceeded');
+      });
+
+      expect(() => calendarManager.createAllDayEvent(eventParams))
+        .toThrow('All-day event creation failed: API quota exceeded');
     });
   });
 });

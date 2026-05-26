@@ -35,7 +35,10 @@ global.Session = {
 
 // Mock CalendarApp
 global.CalendarApp = {
-  getCalendarById: jest.fn()
+  getCalendarById: jest.fn(),
+  newRecurrence: jest.fn().mockReturnValue({
+    addYearlyRule: jest.fn().mockReturnValue({})
+  })
 };
 
 // Mock DriveApp

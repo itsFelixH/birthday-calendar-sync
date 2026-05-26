@@ -151,6 +151,99 @@ describe('BirthdayContact', () => {
       expect(contact.getAllInstagramLinks()).toEqual(expected);
     });
   });
+
+  describe('getContactLink', () => {
+    it('should return correct Google Contacts URL when resourceName is set', () => {
+      const contactWithResource = new BirthdayContact(
+        testName, testBirthday, testLabels, testEmail, testCity, testPhone, testInstagram, null, 'people/c12345678'
+      );
+      expect(contactWithResource.getContactLink()).toBe('https://contacts.google.com/person/c12345678');
+    });
+
+    it('should return empty string when resourceName is not set', () => {
+      expect(contact.getContactLink()).toBe('');
+    });
+
+    it('should handle resourceName without people/ prefix gracefully', () => {
+      const contactWithResource = new BirthdayContact(
+        testName, testBirthday, [], '', '', '', [], null, 'c99999'
+      );
+      expect(contactWithResource.getContactLink()).toBe('https://contacts.google.com/person/c99999');
+    });
+  });
+
+  describe('resourceName constructor parameter', () => {
+    it('should store resourceName when provided', () => {
+      const contactWithResource = new BirthdayContact(
+        testName, testBirthday, [], '', '', '', [], null, 'people/c12345'
+      );
+      expect(contactWithResource.resourceName).toBe('people/c12345');
+    });
+
+    it('should default to empty string when not provided', () => {
+      const basicContact = new BirthdayContact(testName, testBirthday);
+      expect(basicContact.resourceName).toBe('');
+    });
+  });
+
+  describe('getBirthdayEventString', () => {
+    beforeEach(() => {
+      jest.useFakeTimers().setSystemTime(new Date(2024, 0, 15));
+      global.Utilities = {
+        formatDate: jest.fn((date, tz, format) => {
+          if (format === 'dd.MM.') return `${String(date.getDate()).padStart(2, '0')}.${String(date.getMonth() + 1).padStart(2, '0')}.`;
+          if (format === 'dd.MM.yyyy') return `${String(date.getDate()).padStart(2, '0')}.${String(date.getMonth() + 1).padStart(2, '0')}.${date.getFullYear()}`;
+          return '';
+        })
+      };
+      global.Session = { getScriptTimeZone: jest.fn().mockReturnValue('UTC') };
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('should include age when ageOverride is provided', () => {
+      const result = contact.getBirthdayEventString(34);
+      expect(result).toContain('wird heute 34');
+    });
+
+    it('should use getAgeThisYear when no ageOverride', () => {
+      const result = contact.getBirthdayEventString();
+      expect(result).toContain('wird heute 34');
+    });
+
+    it('should omit age line when ageOverride is null (recurring mode)', () => {
+      const result = contact.getBirthdayEventString(null);
+      expect(result).not.toContain('wird heute');
+      expect(result).toContain('hat heute Geburtstag');
+      expect(result).toContain('Geburtstag: 15.01.1990');
+    });
+
+    it('should include contact link when resourceName is set', () => {
+      const contactWithResource = new BirthdayContact(
+        testName, testBirthday, [], '', '', '', [], null, 'people/c555'
+      );
+      const result = contactWithResource.getBirthdayEventString(34);
+      expect(result).toContain('Kontakt: https://contacts.google.com/person/c555');
+    });
+
+    it('should not include contact link when resourceName is empty', () => {
+      const result = contact.getBirthdayEventString(34);
+      expect(result).not.toContain('Kontakt:');
+    });
+
+    it('should include city when set', () => {
+      const result = contact.getBirthdayEventString(34);
+      expect(result).toContain('📍 Berlin');
+    });
+
+    it('should not include city when empty', () => {
+      const contactNoCity = new BirthdayContact(testName, testBirthday, [], '', '', testPhone);
+      const result = contactNoCity.getBirthdayEventString(34);
+      expect(result).not.toContain('📍');
+    });
+  });
 });
 
 // Tests for utility functions
