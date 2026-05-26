@@ -206,7 +206,7 @@ describe('BirthdayContact', () => {
     it('should include age when ageOverride is provided', () => {
       const result = contact.getBirthdayEventString(34);
       expect(result).toContain('wird 34');
-      expect(result).toContain('Geboren: 15.01.1990');
+      expect(result).toContain('Geburtstag: 15.01.1990');
     });
 
     it('should use getAgeThisYear when no ageOverride', () => {

@@ -19,6 +19,10 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, monthsAhea
 
   const calendarManager = isDryRun ? null : new CalendarManager({ calendarId: calendarId });
   const { start: startDate, end: endDate } = getMonthlyDateRange(monthsAhead);
+  const tagVisible = typeof showEventTag !== 'undefined' ? showEventTag : true;
+  const eventDay = typeof summaryEventDay !== 'undefined' ? summaryEventDay : 1;
+  const texts = typeof eventTexts !== 'undefined' ? eventTexts : {};
+  const summaryHeaderTemplate = texts.summaryHeader || 'Geburtstage im {month}';
 
   const stats = { processed: 0, created: [], updated: [], skipped: 0, errors: 0 };
 
@@ -28,8 +32,8 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, monthsAhea
   while (current <= endDate) {
     const year = current.getFullYear();
     const month = current.getMonth();
-    const monthEventStart = new Date(year, month, 1);
-    const monthEventEnd = new Date(year, month, 2);
+    const monthEventStart = new Date(year, month, eventDay);
+    const monthEventEnd = new Date(year, month, eventDay + 1);
     const monthName = isDryRun
       ? monthNamesLong[month]
       : calendarManager.formatDate(monthEventStart, 'MMMM');
@@ -56,7 +60,9 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, monthsAhea
       const summaryTag = `${eventTag}:summary:${year}-${('0' + (month + 1)).slice(-2)}`;
       const titles = typeof eventTitles !== 'undefined' ? eventTitles : {};
       const title = titles.summary || '🎉🎂 GEBURTSTAGE 🎂🎉';
-      const description = `Geburtstage im ${monthNamesLong[month]}\n\n` +
+      const headerLine = summaryHeaderTemplate.replace('{month}', monthNamesLong[month]);
+      const tagLine = tagVisible ? summaryTag : wrapInvisible(summaryTag);
+      const description = `${headerLine}\n\n` +
         monthContacts.map(contact => {
           if (contact.isDeceased() && handling === 'memorial') {
             const base = `${contact.getBirthdayLongMonthFormat()}: 🕯️ ${contact.name}`;
@@ -67,7 +73,7 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, monthsAhea
           }
           return contact.getBirthdaySummaryEventString();
         }).join('\n') +
-        `\n\n${summaryTag}`;
+        `\n\n${tagLine}`;
 
       if (isDryRun) {
         stats.created.push(`${monthName} ${year}`);
@@ -133,6 +139,10 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
   if (isDryRun) Logger.log('🧪 DRY RUN MODE — no changes will be made');
 
   const useRecurrence = typeof eventRecurrence !== 'undefined' && eventRecurrence === 'recurring';
+  const tagVisible = typeof showEventTag !== 'undefined' ? showEventTag : true;
+  const batchSize = typeof rateLimitBatchSize !== 'undefined' ? rateLimitBatchSize : 20;
+  const delayMs = typeof rateLimitDelayMs !== 'undefined' ? rateLimitDelayMs : 500;
+
   const calendarManager = isDryRun ? null : new CalendarManager({ calendarId: calendarId });
   const { start: startDate, end: endDate } = isDryRun
     ? getMonthlyDateRange(monthsAhead)
@@ -170,6 +180,7 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
 
       // Unique tag per contact based on birthday (stable even if name changes)
       const contactTag = `${eventTag}:${contact.birthday.getMonth() + 1}-${contact.birthday.getDate()}:${contact.name.replace(/[^a-zA-ZäöüÄÖÜß ]/g, '').trim()}`;
+      const tagLine = tagVisible ? contactTag : wrapInvisible(contactTag);
 
       // Determine title and description based on deceased/milestone status
       const isMemorial = contact.isDeceased() && handling === 'memorial';
@@ -191,20 +202,20 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
         const lifespan = deathYear ? `*${birthYear} †${deathYear}` : `*${birthYear}`;
         const template = titles.memorial || '🕯️ {name} ({lifespan})';
         title = template.replace('{name}', contact.name).replace('{lifespan}', lifespan);
-        description = contact.getMemorialEventString() + `\n${contactTag}`;
+        description = contact.getMemorialEventString() + `\n${tagLine}`;
       } else if (useRecurrence) {
         // Recurring events: static title/description without year-specific age
         const template = titles.recurring || '🎂 {name} hat Geburtstag';
         title = template.replace('{name}', contact.name).replace('{birthdate}', contact.getBirthdayLongFormat());
-        description = contact.getBirthdayEventString(null) + `\n${contactTag}`;
+        description = contact.getBirthdayEventString(null) + `\n${tagLine}`;
       } else if (isMilestone) {
         const template = titles.milestone || '🎂🎉 {name} wird {age}! 🎉';
         title = template.replace('{name}', contact.name).replace('{age}', ageInYear);
-        description = contact.getBirthdayEventString(ageInYear) + `\n${contactTag}`;
+        description = contact.getBirthdayEventString(ageInYear) + `\n${tagLine}`;
       } else {
         const template = titles.birthday || '🎂 {name} hat Geburtstag';
         title = template.replace('{name}', contact.name).replace('{age}', ageInYear);
-        description = contact.getBirthdayEventString(ageInYear) + `\n${contactTag}`;
+        description = contact.getBirthdayEventString(ageInYear) + `\n${tagLine}`;
       }
 
       if (isDryRun) {
@@ -252,8 +263,8 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
         }
       }
 
-      // Add delay every 20 operations to avoid rate limits
-      if (index > 0 && index % 20 === 0) Utilities.sleep(500);
+      // Rate limiting: pause between batches to avoid Google API limits
+      if (index > 0 && index % batchSize === 0) Utilities.sleep(delayMs);
 
     } catch (error) {
       stats.errors++;
@@ -263,6 +274,17 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
 
   logSyncStats('individual', stats);
   return { created: stats.created, updated: stats.updated };
+}
+
+
+/**
+ * Wraps a string in zero-width characters to hide it visually while keeping it searchable.
+ * @param {string} text - The text to hide
+ * @returns {string} The text wrapped in zero-width spaces
+ */
+function wrapInvisible(text) {
+  // Use zero-width space (U+200B) as wrapper markers
+  return '\u200B' + text + '\u200B';
 }
 
 
