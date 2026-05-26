@@ -14,8 +14,9 @@ class BirthdayContact {
    * @param {string} phoneNumber The phone number the contact.
    * @param {Array<string>} instagramNames The Instagram usernames for the contact.
    * @param {Date|null} deathDate The date of death, or null if alive.
+   * @param {string} resourceName The Google Contacts resource name (e.g., 'people/c12345').
    */
-  constructor(name, birthday, labels = [], email = '', city = '', phoneNumber = '', instagramNames = [], deathDate = null) {
+  constructor(name, birthday, labels = [], email = '', city = '', phoneNumber = '', instagramNames = [], deathDate = null, resourceName = '') {
     if (!name || !birthday) {
       throw new Error('Name and birthday are required.');
     }
@@ -27,6 +28,7 @@ class BirthdayContact {
     this.phoneNumber = phoneNumber;
     this.instagramNames = Array.isArray(instagramNames) ? instagramNames : [instagramNames].filter(name => name !== '');
     this.deathDate = deathDate ? new Date(deathDate) : null;
+    this.resourceName = resourceName || '';
   }
 
   /**
@@ -116,9 +118,12 @@ class BirthdayContact {
         string += `Instagram: ${this.getInstagramLink(name)}\n`;
       });
     }
+    if (this.getContactLink()) string += `Kontakt: ${this.getContactLink()}\n`;
+
+    if (this.city) string += `📍 ${this.city}\n`;
 
     if (this.labels.length > 0) {
-      if (this.phoneNumber || this.instagramNames.length > 0) string += `\n`;
+      if (this.phoneNumber || this.instagramNames.length > 0 || this.getContactLink()) string += `\n`;
       string += `${this.labels}\n`
     }
     return string;
@@ -140,6 +145,8 @@ class BirthdayContact {
     } else if (this.deathDate) {
       string += `† ${Utilities.formatDate(this.deathDate, Session.getScriptTimeZone(), "dd.MM.yyyy")}\n`;
     }
+
+    if (this.getContactLink()) string += `\nKontakt: ${this.getContactLink()}\n`;
 
     if (this.labels.length > 0) {
       const filteredLabels = this.labels.filter(l => {
@@ -442,6 +449,19 @@ class BirthdayContact {
    */
   getAllInstagramLinks() {
     return this.instagramNames.map(name => this.getInstagramLink(name));
+  }
+
+
+  /**
+   * Gets the Google Contacts link for this contact.
+   *
+   * @returns {string} The Google Contacts URL, or empty string if no resourceName.
+   */
+  getContactLink() {
+    if (this.resourceName) {
+      return `https://contacts.google.com/${this.resourceName}`;
+    }
+    return '';
   }
 
 
