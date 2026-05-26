@@ -39,7 +39,7 @@ const summaryReminderMinutes = 5760; // 4 days
 
 // How many months ahead to create/update events.
 const individualMonthsAhead = 12;
-const summaryMonthsAhead = 12;
+const summaryMonthsAhead = 6;
 
 // ─── Notifications ────────────────────────────────────────────────────────────
 
@@ -94,7 +94,7 @@ const eventColors = {
 const showSocialLinks = true;
 
 // Show the [BirthdaySync] tag visibly. If false, it's hidden with zero-width characters.
-const showEventTag = true;
+const showEventTag = false;
 
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -112,7 +112,7 @@ const eventRecurrence = 'single';
 
 // Highlight milestone birthdays with a special title.
 const highlightMilestones = true;
-const milestoneAges = [18, 20, 25, 30, 40, 50, 60, 70, 75, 80, 90, 100];
+const milestoneAges = [18, 30, 40, 50, 60, 70, 75, 80, 90, 100];
 
 // ─── Leap year ────────────────────────────────────────────────────────────────
 
