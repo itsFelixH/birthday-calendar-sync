@@ -204,11 +204,14 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
       ) || existingEvents.find(e => e.getTitle() === title);
 
       if (!existingEvent) {
+        const useRecurrence = typeof eventRecurrence !== 'undefined' && eventRecurrence === 'recurring';
         calendarManager.createAllDayEvent({
           title: title,
           date: eventDate,
           description: description,
-          reminders: [{ type: reminderMethod, minutes: reminderMinutes }]
+          location: contact.city || '',
+          reminders: [{ type: reminderMethod, minutes: reminderMinutes }],
+          recurrence: useRecurrence ? 'yearly' : null
         });
         stats.created.push(`${contact.name} (${calendarManager.formatDate(eventDate)})`);
         Logger.log(`✅ Created ${contact.name} birthday event`);
