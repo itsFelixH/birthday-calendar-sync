@@ -56,6 +56,8 @@ const deceasedHandling = 'skip';
 
 // Whether to create recurring yearly events or single (non-recurring) events.
 // Possible values: 'single' (default, one event per birthday per year) or 'recurring' (one recurring annual event per contact).
+// Note: Recurring mode uses a static description (no year-specific age) since it repeats unchanged.
+// Leap year birthdays (Feb 29) always use single events because Google Calendar skips recurring events in non-leap years.
 const eventRecurrence = 'single';
 
 // The Google Contacts group label used to identify deceased contacts.
