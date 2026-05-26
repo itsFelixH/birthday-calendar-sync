@@ -105,12 +105,16 @@ class BirthdayContact {
   /**
    * Gets the string representation for the birthday event.
    * 
+   * @param {number} [ageOverride] - Optional age to display (used for recurring events with a specific year).
    * @returns {string} The birthday summary string.
    */
-  getBirthdayEventString() {
+  getBirthdayEventString(ageOverride) {
+    const age = ageOverride !== undefined ? ageOverride : this.getAgeThisYear();
     let string = this.hasKnownBirthYear()
-      ? `${this.name} wird heute ${this.getAgeThisYear()}\nGeburtstag: ${this.getBirthdayLongFormat()}\n\n`
+      ? `${this.name} wird heute ${age}\nGeburtstag: ${this.getBirthdayLongFormat()}\n\n`
       : `${this.name} hat heute Geburtstag\n\n`;
+
+    const contactLink = this.getContactLink();
 
     if (this.phoneNumber) string += `WhatsApp: ${this.getWhatsAppLink()}\n`;
     if (this.instagramNames.length > 0) {
@@ -118,12 +122,12 @@ class BirthdayContact {
         string += `Instagram: ${this.getInstagramLink(name)}\n`;
       });
     }
-    if (this.getContactLink()) string += `Kontakt: ${this.getContactLink()}\n`;
+    if (contactLink) string += `Kontakt: ${contactLink}\n`;
 
     if (this.city) string += `📍 ${this.city}\n`;
 
     if (this.labels.length > 0) {
-      if (this.phoneNumber || this.instagramNames.length > 0 || this.getContactLink()) string += `\n`;
+      if (this.phoneNumber || this.instagramNames.length > 0 || contactLink) string += `\n`;
       string += `${this.labels}\n`
     }
     return string;
@@ -454,12 +458,15 @@ class BirthdayContact {
 
   /**
    * Gets the Google Contacts link for this contact.
+   * Converts resourceName (e.g., 'people/c12345') to the correct Contacts URL.
    *
    * @returns {string} The Google Contacts URL, or empty string if no resourceName.
    */
   getContactLink() {
     if (this.resourceName) {
-      return `https://contacts.google.com/${this.resourceName}`;
+      // People API returns 'people/c12345', Contacts URL uses '/person/c12345'
+      const contactId = this.resourceName.replace('people/', '');
+      return `https://contacts.google.com/person/${contactId}`;
     }
     return '';
   }
