@@ -54,7 +54,8 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, monthsAhea
       }
 
       const summaryTag = `${eventTag}:summary:${year}-${('0' + (month + 1)).slice(-2)}`;
-      const title = `🎉🎂 GEBURTSTAGE 🎂🎉`;
+      const titles = typeof eventTitles !== 'undefined' ? eventTitles : {};
+      const title = titles.summary || '🎉🎂 GEBURTSTAGE 🎂🎉';
       const description = `Geburtstage im ${monthNamesLong[month]}\n\n` +
         monthContacts.map(contact => {
           if (contact.isDeceased() && handling === 'memorial') {
@@ -179,36 +180,38 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
       // For single events, include the specific age for that year
       const ageInYear = contact.hasKnownBirthYear() ? contact.getAgeInYear(eventYear) : undefined;
 
+      // Get configurable title templates
+      const titles = typeof eventTitles !== 'undefined' ? eventTitles : {};
+
       let title;
       let description;
       if (isMemorial) {
         const birthYear = contact.hasKnownBirthYear() ? contact.birthday.getFullYear() : '?';
         const deathYear = contact.deathDate ? contact.deathDate.getFullYear() : '';
         const lifespan = deathYear ? `*${birthYear} †${deathYear}` : `*${birthYear}`;
-        title = `🕯️ ${contact.name} (${lifespan})`;
+        const template = titles.memorial || '🕯️ {name} ({lifespan})';
+        title = template.replace('{name}', contact.name).replace('{lifespan}', lifespan);
         description = contact.getMemorialEventString() + `\n${contactTag}`;
       } else if (useRecurrence) {
         // Recurring events: static title/description without year-specific age
-        title = contact.hasKnownBirthYear()
-          ? `🎂 ${contact.name} (${contact.getBirthdayLongFormat()})`
-          : `🎂 ${contact.name} hat Geburtstag`;
-        description = contact.getBirthdayEventString() + `\n${contactTag}`;
+        const template = titles.recurring || '🎂 {name} hat Geburtstag';
+        title = template.replace('{name}', contact.name).replace('{birthdate}', contact.getBirthdayLongFormat());
+        description = contact.getBirthdayEventString(null) + `\n${contactTag}`;
       } else if (isMilestone) {
-        title = `🎂🎉 ${contact.name} wird ${ageInYear}! 🎉`;
+        const template = titles.milestone || '🎂🎉 {name} wird {age}! 🎉';
+        title = template.replace('{name}', contact.name).replace('{age}', ageInYear);
         description = contact.getBirthdayEventString(ageInYear) + `\n${contactTag}`;
       } else {
-        title = `🎂 ${contact.name} hat Geburtstag`;
+        const template = titles.birthday || '🎂 {name} hat Geburtstag';
+        title = template.replace('{name}', contact.name).replace('{age}', ageInYear);
         description = contact.getBirthdayEventString(ageInYear) + `\n${contactTag}`;
       }
 
-      const location = contact.city || '';
-
       if (isDryRun) {
         const suffix = isMemorial ? ' 🕯️ MEMORIAL' : (isMilestone ? ' 🎉 MILESTONE' : '');
-        const locationInfo = location ? ` [📍 ${location}]` : '';
         const recurrenceInfo = useRecurrence ? ' [🔁 recurring]' : '';
         stats.created.push(`${contact.name} (${eventDate.toLocaleDateString()})${suffix}`);
-        Logger.log(`🧪 [DRY RUN] Would create/update event: ${title} on ${eventDate.toLocaleDateString()}${locationInfo}${recurrenceInfo}`);
+        Logger.log(`🧪 [DRY RUN] Would create/update event: ${title} on ${eventDate.toLocaleDateString()}${recurrenceInfo}`);
         return;
       }
 
@@ -227,7 +230,6 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
           title: title,
           date: eventDate,
           description: description,
-          location: location,
           reminders: [{ type: reminderMethod, minutes: reminderMinutes }],
           recurrence: shouldRecur
         });
@@ -236,18 +238,13 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
       } else {
         const currentDescription = existingEvent.getDescription() || '';
         const currentTitle = existingEvent.getTitle() || '';
-        const currentLocation = existingEvent.getLocation ? existingEvent.getLocation() || '' : '';
 
         const needsUpdate = currentDescription !== description ||
-          currentTitle !== title ||
-          currentLocation !== location;
+          currentTitle !== title;
 
         if (needsUpdate) {
           existingEvent.setDescription(description);
           existingEvent.setTitle(title);
-          if (existingEvent.setLocation && currentLocation !== location) {
-            existingEvent.setLocation(location);
-          }
           stats.updated.push(`${contact.name} (${calendarManager.formatDate(eventDate)})`);
           Logger.log(`🔄 Updated ${contact.name} birthday event`);
         } else {
