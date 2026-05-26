@@ -20,12 +20,18 @@ function updateBirthdaysAndSummariesInCalendar() {
     };
 
     if (createIndividualBirthdayEvents) {
-      const individualStats = createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead, reminderInMinutes, reminderMethod);
+      const indMonths = typeof individualMonthsAhead !== 'undefined' ? individualMonthsAhead : 12;
+      const indReminderMin = typeof individualReminderMinutes !== 'undefined' ? individualReminderMinutes : 60 * 12;
+      const indReminderMethod = typeof individualReminderMethod !== 'undefined' ? individualReminderMethod : 'popup';
+      const individualStats = createOrUpdateIndividualBirthdays(calendarId, contacts, indMonths, indReminderMin, indReminderMethod);
       changes.individual = individualStats;
     }
 
     if (createBirthdaySummaryEvents) {
-      const summaryStats = createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, monthsAhead, reminderInMinutes, reminderMethod);
+      const sumMonths = typeof summaryMonthsAhead !== 'undefined' ? summaryMonthsAhead : 12;
+      const sumReminderMin = typeof summaryReminderMinutes !== 'undefined' ? summaryReminderMinutes : 5760;
+      const sumReminderMethod = typeof summaryReminderMethod !== 'undefined' ? summaryReminderMethod : 'popup';
+      const summaryStats = createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, sumMonths, sumReminderMin, sumReminderMethod);
       changes.summary = summaryStats;
     }
 
