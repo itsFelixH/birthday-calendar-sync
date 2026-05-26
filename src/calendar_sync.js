@@ -131,6 +131,7 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
   const isDryRun = typeof dryRun !== 'undefined' && dryRun;
   if (isDryRun) Logger.log('🧪 DRY RUN MODE — no changes will be made');
 
+  const useRecurrence = typeof eventRecurrence !== 'undefined' && eventRecurrence === 'recurring';
   const calendarManager = isDryRun ? null : new CalendarManager({ calendarId: calendarId });
   const { start: startDate, end: endDate } = isDryRun
     ? getMonthlyDateRange(monthsAhead)
@@ -138,7 +139,7 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
 
   const stats = { processed: 0, created: [], updated: [], skipped: 0, errors: 0 };
 
-  Logger.log(`📅 Creating/updating birthday events for the next ${monthsAhead} months`);
+  Logger.log(`📅 Creating/updating birthday events for the next ${monthsAhead} months (mode: ${useRecurrence ? 'recurring' : 'single'})`);
 
   contacts.forEach((contact, index) => {
     try {
@@ -174,6 +175,10 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
       const eventYear = eventDate.getFullYear();
       const isMilestone = !isMemorial && typeof highlightMilestones !== 'undefined' && highlightMilestones && contact.isMilestoneBirthday(eventYear);
 
+      // For recurring events, don't include age in description (it changes yearly)
+      // For single events, include the specific age for that year
+      const ageInYear = contact.hasKnownBirthYear() ? contact.getAgeInYear(eventYear) : undefined;
+
       let title;
       let description;
       if (isMemorial) {
@@ -182,20 +187,34 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
         const lifespan = deathYear ? `*${birthYear} †${deathYear}` : `*${birthYear}`;
         title = `🕯️ ${contact.name} (${lifespan})`;
         description = contact.getMemorialEventString() + `\n${contactTag}`;
-      } else if (isMilestone) {
-        title = `🎂🎉 ${contact.name} wird ${contact.getAgeInYear(eventYear)}! 🎉`;
+      } else if (useRecurrence) {
+        // Recurring events: static title/description without year-specific age
+        title = contact.hasKnownBirthYear()
+          ? `🎂 ${contact.name} (${contact.getBirthdayLongFormat()})`
+          : `🎂 ${contact.name} hat Geburtstag`;
         description = contact.getBirthdayEventString() + `\n${contactTag}`;
+      } else if (isMilestone) {
+        title = `🎂🎉 ${contact.name} wird ${ageInYear}! 🎉`;
+        description = contact.getBirthdayEventString(ageInYear) + `\n${contactTag}`;
       } else {
         title = `🎂 ${contact.name} hat Geburtstag`;
-        description = contact.getBirthdayEventString() + `\n${contactTag}`;
+        description = contact.getBirthdayEventString(ageInYear) + `\n${contactTag}`;
       }
+
+      const location = contact.city || '';
 
       if (isDryRun) {
         const suffix = isMemorial ? ' 🕯️ MEMORIAL' : (isMilestone ? ' 🎉 MILESTONE' : '');
+        const locationInfo = location ? ` [📍 ${location}]` : '';
+        const recurrenceInfo = useRecurrence ? ' [🔁 recurring]' : '';
         stats.created.push(`${contact.name} (${eventDate.toLocaleDateString()})${suffix}`);
-        Logger.log(`🧪 [DRY RUN] Would create/update event: ${title} on ${eventDate.toLocaleDateString()}`);
+        Logger.log(`🧪 [DRY RUN] Would create/update event: ${title} on ${eventDate.toLocaleDateString()}${locationInfo}${recurrenceInfo}`);
         return;
       }
+
+      // For recurring events with leap year birthdays, skip recurrence (use single instead)
+      // Google Calendar skips recurring events on Feb 29 in non-leap years
+      const shouldRecur = useRecurrence && !isMemorial && !contact.isLeapYearBirthday();
 
       const existingEvents = calendarManager.getEventsInRange(eventDate, eventEnd);
       // Match by tag first (handles name changes), fall back to title match
@@ -204,23 +223,31 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
       ) || existingEvents.find(e => e.getTitle() === title);
 
       if (!existingEvent) {
-        const useRecurrence = typeof eventRecurrence !== 'undefined' && eventRecurrence === 'recurring';
         calendarManager.createAllDayEvent({
           title: title,
           date: eventDate,
           description: description,
-          location: contact.city || '',
+          location: location,
           reminders: [{ type: reminderMethod, minutes: reminderMinutes }],
-          recurrence: useRecurrence ? 'yearly' : null
+          recurrence: shouldRecur
         });
         stats.created.push(`${contact.name} (${calendarManager.formatDate(eventDate)})`);
-        Logger.log(`✅ Created ${contact.name} birthday event`);
+        Logger.log(`✅ Created ${contact.name} birthday event${shouldRecur ? ' (recurring)' : ''}`);
       } else {
-        const needsUpdate = existingEvent.getDescription() !== description ||
-          existingEvent.getTitle() !== title;
+        const currentDescription = existingEvent.getDescription() || '';
+        const currentTitle = existingEvent.getTitle() || '';
+        const currentLocation = existingEvent.getLocation ? existingEvent.getLocation() || '' : '';
+
+        const needsUpdate = currentDescription !== description ||
+          currentTitle !== title ||
+          currentLocation !== location;
+
         if (needsUpdate) {
           existingEvent.setDescription(description);
           existingEvent.setTitle(title);
+          if (existingEvent.setLocation && currentLocation !== location) {
+            existingEvent.setLocation(location);
+          }
           stats.updated.push(`${contact.name} (${calendarManager.formatDate(eventDate)})`);
           Logger.log(`🔄 Updated ${contact.name} birthday event`);
         } else {
