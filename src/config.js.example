@@ -1,0 +1,165 @@
+// ╔══════════════════════════════════════════════════════════════════════════════╗
+// ║                         BIRTHDAY CALENDAR SYNC                              ║
+// ║                         Configuration Settings                              ║
+// ╚══════════════════════════════════════════════════════════════════════════════╝
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ESSENTIAL SETTINGS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// The ID of the Google Calendar where birthdays will be added.
+// Find it in Google Calendar → Settings → Calendar ID.
+const calendarId = 'your-calendar-id@group.calendar.google.com';
+
+// ─── What to create ───────────────────────────────────────────────────────────
+
+// Create individual birthday events (one per contact per year).
+const createIndividualBirthdayEvents = true;
+
+// Create monthly summary events (one per month listing all birthdays).
+const createBirthdaySummaryEvents = true;
+
+// ─── Contact filtering ────────────────────────────────────────────────────────
+
+// Only sync contacts with specific label(s). Set to true + fill labelFilter.
+const useLabel = false;
+const labelFilter = []; // e.g. ['Friends', 'Family']
+
+// ─── Reminders ────────────────────────────────────────────────────────────────
+
+// Individual events: reminder type ('popup', 'email', 'none') and minutes before.
+const individualReminderMethod = 'popup';
+const individualReminderMinutes = 60 * 24; // 1 day before
+
+// Summary events: reminder type and minutes before.
+const summaryReminderMethod = 'popup';
+const summaryReminderMinutes = 5760; // 4 days before
+
+// ─── Lookahead ────────────────────────────────────────────────────────────────
+
+// How many months ahead to create/update events.
+const individualMonthsAhead = 12;
+const summaryMonthsAhead = 6;
+
+// ─── Notifications ────────────────────────────────────────────────────────────
+
+// Send an email after syncing with a list of created/updated events.
+const sendCalendarUpdateEmail = false;
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// EVENT APPEARANCE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ─── Title templates ──────────────────────────────────────────────────────────
+// Placeholders: {name}, {age}, {birthdate}, {lifespan}
+const eventTitles = {
+  birthday: '🎂 {name}\'s Birthday',
+  milestone: '🎂🎉 {name} turns {age}! 🎉',
+  recurring: '🎂 {name}\'s Birthday',
+  memorial: '🕯️ {name} ({lifespan})',
+  summary: '🎉🎂 BIRTHDAYS 🎂🎉'
+};
+
+// ─── Description texts ────────────────────────────────────────────────────────
+// Labels and section headers used in event descriptions.
+// Set a header to '' to hide it (content still appears).
+const eventTexts = {
+  birthdayWithAge: '🎂 {name} turns {age}',
+  birthdayNoAge: '🎂 Happy Birthday, {name}!',
+  birthDateLabel: 'Birthday',
+  contactSectionHeader: '── Contact ──',
+  infoSectionHeader: '── Info ──',
+  memorialPrefix: '🕯️ In memory of',
+  summaryHeader: '{month} Birthdays',
+  whatsappLabel: 'WhatsApp',
+  instagramLabel: 'Instagram',
+  contactLabel: 'Contact'
+};
+
+// ─── Event colors ─────────────────────────────────────────────────────────────
+// Google Calendar color IDs ('' = calendar default):
+// '1'=Lavender, '2'=Sage, '3'=Grape, '4'=Flamingo, '5'=Banana,
+// '6'=Tangerine, '7'=Peacock, '8'=Graphite, '9'=Blueberry, '10'=Basil, '11'=Tomato
+const eventColors = {
+  birthday: '',    // also used for recurring events
+  milestone: '',
+  memorial: '',
+  summary: ''
+};
+
+// ─── Description content ──────────────────────────────────────────────────────
+
+// Show WhatsApp and Instagram links in event descriptions.
+const showSocialLinks = true;
+
+// Show the [BirthdaySync] tag visibly. If false, it's hidden with zero-width characters.
+const showEventTag = false;
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// BEHAVIOR
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ─── Event mode ───────────────────────────────────────────────────────────────
+
+// 'single' = one event per birthday per year (default).
+// 'recurring' = one recurring annual event per contact (static description, no age).
+// Leap year birthdays (Feb 29) always use single events.
+const eventRecurrence = 'single';
+
+// ─── Milestones ───────────────────────────────────────────────────────────────
+
+// Highlight milestone birthdays with a special title.
+const highlightMilestones = true;
+const milestoneAges = [18, 30, 40, 50, 60, 70, 75, 80, 90, 100];
+
+// ─── Leap year ────────────────────────────────────────────────────────────────
+
+// How to handle Feb 29 birthdays in non-leap years: 'feb28' or 'mar1'.
+const leapYearHandling = 'feb28';
+
+// ─── Summary event placement ──────────────────────────────────────────────────
+
+// Day of the month for the summary event (1-28).
+const summaryEventDay = 1;
+
+// ─── Deceased contacts ────────────────────────────────────────────────────────
+
+// 'skip' = no events, 'memorial' = memorial-style event, 'normal' = treat normally.
+const deceasedHandling = 'skip';
+
+// Google Contacts label that marks a contact as deceased.
+const deceasedLabel = 'Deceased';
+
+// Custom date field label in Google Contacts for the death date.
+const deceasedDateLabel = 'Death date';
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ADVANCED
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ─── Rate limiting ────────────────────────────────────────────────────────────
+
+// Pause every N events to avoid Google API rate limits.
+const rateLimitBatchSize = 20;
+const rateLimitDelayMs = 500;
+
+// ─── Dry run ──────────────────────────────────────────────────────────────────
+
+// Preview mode: logs all actions without making changes.
+const dryRun = false;
+
+// ─── Internal ─────────────────────────────────────────────────────────────────
+
+// Tag stored in event descriptions to identify script-created events.
+const eventTag = '[BirthdaySync]';
+
+// ─── Locale ───────────────────────────────────────────────────────────────────
+
+// Month name abbreviations (used in event descriptions).
+var monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+// Full month names (used in summary headers and formatting).
+var monthNamesLong = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
