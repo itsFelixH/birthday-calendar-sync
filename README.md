@@ -34,23 +34,23 @@ pnpm install
 ### 2. Authenticate with clasp
 
 ```bash
-clasp login
+pnpx @google/clasp login
 ```
 
 ### 3. Create or link a Google Apps Script project
 
 ```bash
-clasp create --type standalone --title "Birthday Calendar Sync"
+pnpx @google/clasp create --type standalone --title "Birthday Calendar Sync"
 ```
 
 Or copy `.clasp.json.example` to `.clasp.json` and set your `scriptId`.
 
 ### 4. Configure
 
-Copy the example config and fill in your values:
+Copy the template and fill in your values:
 
 ```bash
-cp src/config.js.example src/config.js
+cp src/config.js.template src/config.js
 ```
 
 At minimum, set your `calendarId`. Everything else has sensible defaults.
@@ -67,12 +67,14 @@ In the Apps Script editor, create time-based triggers:
 
 | Function | Schedule |
 |----------|----------|
-| `updateBirthdaysAndSummariesInCalendar()` | Daily (e.g., 2:00 AM) |
-| `sendSummaryMail()` | Monthly (e.g., last day of month) |
+| `updateBirthdaysAndSummariesInCalendar` | Daily (e.g., 2:00 AM) |
+| `sendSummaryMail` | Monthly (e.g., last day of month) |
 
 ## Configuration
 
-The config is split into sections. See `src/config.js.example` for the full template with comments.
+The config is split into sections. See `src/config.js.template` for the full template with comments.
+
+> **Note:** `src/config.js` is gitignored — it contains your personal calendar ID and settings. Only the template is committed.
 
 <details>
 <summary><strong>Essential Settings</strong></summary>
@@ -160,23 +162,9 @@ const eventColors = {
 </details>
 
 <details>
-<summary><strong>Behavior</strong></summary>
-
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `eventRecurrence` | `'single'` | `'single'` or `'recurring'` (yearly) |
-| `highlightMilestones` | `true` | Special title for milestone ages |
-| `milestoneAges` | `[18, 30, 40, ...]` | Which ages count as milestones |
-| `leapYearHandling` | `'feb28'` | Feb 29 fallback: `'feb28'` or `'mar1'` |
-| `summaryEventDay` | `1` | Day of month for summary event (1-28) |
-| `deceasedHandling` | `'skip'` | `'skip'`, `'memorial'`, or `'normal'` |
-| `deceasedLabel` | `'Deceased'` | Google Contacts label for deceased |
-| `deceasedDateLabel` | `'Death date'` | Custom date field label |
-
-</details>
-
-<details>
 <summary><strong>Email Subjects & Texts</strong></summary>
+
+**Subjects**
 
 ```js
 const emailSubjects = {
@@ -184,7 +172,11 @@ const emailSubjects = {
   dailyReminder: '🎁 Today\'s Birthdays 🎁',
   calendarUpdate: '📅 Birthday Updates 📅'
 };
+```
 
+**Body texts** — placeholders: `{name}`, `{month}`, `{year}`, `{count}`, `{days}`
+
+```js
 const emailTexts = {
   greeting: 'Hi{name},',
   monthlySummaryTitle: '🎉 {month} Birthdays',
@@ -208,6 +200,22 @@ const emailTexts = {
 </details>
 
 <details>
+<summary><strong>Behavior</strong></summary>
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `eventRecurrence` | `'single'` | `'single'` or `'recurring'` (yearly) |
+| `highlightMilestones` | `true` | Special title for milestone ages |
+| `milestoneAges` | `[18, 30, 40, ...]` | Which ages count as milestones |
+| `leapYearHandling` | `'feb28'` | Feb 29 fallback: `'feb28'` or `'mar1'` |
+| `summaryEventDay` | `1` | Day of month for summary event (1-28) |
+| `deceasedHandling` | `'skip'` | `'skip'`, `'memorial'`, or `'normal'` |
+| `deceasedLabel` | `'Deceased'` | Google Contacts label for deceased |
+| `deceasedDateLabel` | `'Death date'` | Custom date field label |
+
+</details>
+
+<details>
 <summary><strong>Advanced</strong></summary>
 
 | Setting | Default | Description |
@@ -225,7 +233,7 @@ const emailTexts = {
 Events use a structured description with sections:
 
 ```
-🎂 Max Mustermann turns 34
+🎂 Max turns 34
 Birthday: 15.01.1990
 
 ── Contact ──
@@ -250,14 +258,14 @@ Contacts are detected as deceased via:
 Either one is sufficient. Modes:
 
 - `'skip'` — no events created (default)
-- `'memorial'` — memorial event: `🕯️ Name (*1990 †2022)`
+- `'memorial'` — memorial event with `🕯️` prefix and lifespan
 - `'normal'` — treated like any other contact
 
 ## Project Structure
 
 ```
 src/
-├── config.js.example     # Configuration template (copy to config.js)
+├── config.js.template    # Configuration template (copy to config.js)
 ├── birthday_contact.js   # BirthdayContact class
 ├── calendar_manager.js   # Calendar API wrapper
 ├── calendar_sync.js      # Sync logic (individual + summary events)
