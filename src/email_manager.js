@@ -201,7 +201,11 @@ class EmailManager {
 
       let contactInfo = '';
       if (contact.email) contactInfo += `<span style="display: inline; margin-right: 12px;">📧 <a href="mailto:${contact.email}" style="color: #007bff; text-decoration: none;">${contact.email}</a></span>`;
-      if (contact.phoneNumber) contactInfo += `<span style="display: inline; margin-right: 12px;">📱 <a href="tel:${contact.phoneNumber}" style="color: #007bff; text-decoration: none;">${contact.phoneNumber}</a></span>`;
+      if (contact.phoneNumber) {
+        contactInfo += `<span style="display: inline; margin-right: 12px;">📱 <a href="tel:${contact.phoneNumber}" style="color: #007bff; text-decoration: none;">${contact.phoneNumber}</a></span>`;
+        const waLink = contact.getWhatsAppLink();
+        if (waLink) contactInfo += `<span style="display: inline; margin-right: 12px;">💬 <a href="${waLink}" style="color: #007bff; text-decoration: none;">WhatsApp</a></span>`;
+      }
       if (contact.instagramNames && contact.instagramNames.length > 0) {
         contact.instagramNames.forEach(name => {
           contactInfo += `<span style="display: inline; margin-right: 12px;">📸 <a href="https://instagram.com/${name.replace('@', '')}" style="color: #007bff; text-decoration: none;">${name}</a></span>`;
@@ -252,7 +256,11 @@ class EmailManager {
         let line = `  ${dateLabel} — ${contact.name}`;
         if (contact.hasKnownBirthYear()) line += ` (${ageTemplate.replace('{age}', contact.getAgeThisYear())})`;
         if (contact.email) line += `\n    📧 ${contact.email}`;
-        if (contact.phoneNumber) line += `\n    📱 ${contact.phoneNumber}`;
+        if (contact.phoneNumber) {
+          line += `\n    📱 ${contact.phoneNumber}`;
+          const waLink = contact.getWhatsAppLink();
+          if (waLink) line += `\n    💬 ${waLink}`;
+        }
         if (contact.instagramNames && contact.instagramNames.length > 0) {
           line += `\n    📸 ${contact.instagramNames.join(', ')}`;
         }
