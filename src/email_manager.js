@@ -145,7 +145,7 @@ class EmailManager {
    * @param {Date} date - Reference date (today)
    * @param {number} daysBefore - How many days ahead to look for birthdays
    */
-  sendBirthdayReminder(contacts, date = new Date(), daysBefore = 3) {
+  sendBirthdayReminder(contacts, date = new Date(), daysBefore = 7) {
     if (contacts.length === 0) {
       Logger.log("No contacts found. Aborting.");
       return;
@@ -317,6 +317,144 @@ class EmailManager {
     const diffMs = thisYear.getTime() - from.getTime();
     const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000));
     return diffDays >= 0 ? diffDays : diffDays + 365;
+  }
+
+
+  /**
+   * Sends a contact data quality report email.
+   * Analyzes contacts for missing data (birth year, email, phone) and reports findings.
+   * @param {BirthdayContact[]} contacts - Array of contacts to analyze
+   */
+  sendContactQualityReport(contacts) {
+    if (contacts.length === 0) {
+      Logger.log("No contacts found. Aborting.");
+      return;
+    }
+
+    Logger.log('Creating contact quality report...');
+
+    const { toEmail, fromEmail, senderName, recipientName } = this.getEmailContext();
+    const subject = this.subjects.contactQualityReport || '📋 Contact Data Quality Report';
+    const greetingTemplate = this.texts.greeting || 'Hi{name},';
+    const greeting = greetingTemplate.replace('{name}', recipientName ? ` ${recipientName}` : '');
+    const titleText = this.texts.contactQualityReportTitle || '📋 Contact Data Quality';
+    const introText = (this.texts.contactQualityReportIntro || 'Here\'s a summary of your {total} contacts\' data completeness:')
+      .replace('{total}', contacts.length);
+
+    // Analyze contacts
+    const missingBirthYear = contacts.filter(c => !c.hasKnownBirthYear());
+    const missingEmail = contacts.filter(c => !c.email);
+    const missingPhone = contacts.filter(c => !c.phoneNumber);
+    const missingLabels = contacts.filter(c => c.labels.length === 0);
+    const completeContacts = contacts.filter(c => c.hasKnownBirthYear() && c.email && c.phoneNumber);
+
+    const totalIssues = missingBirthYear.length + missingEmail.length + missingPhone.length;
+
+    const noBirthYearLabel = this.texts.contactQualityNoBirthYear || 'Missing birth year';
+    const noEmailLabel = this.texts.contactQualityNoEmail || 'Missing email';
+    const noPhoneLabel = this.texts.contactQualityNoPhone || 'Missing phone number';
+    const noLabelsLabel = this.texts.contactQualityNoLabels || 'No labels';
+    const completeLabel = this.texts.contactQualityComplete || 'Complete contacts';
+    const maxItems = typeof syncReportMaxItems !== 'undefined' ? syncReportMaxItems : 0;
+
+    // Helper to cap lists
+    const capList = (items) => {
+      if (maxItems <= 0 || items.length <= maxItems) return { shown: items, overflow: 0 };
+      return { shown: items.slice(0, maxItems), overflow: items.length - maxItems };
+    };
+
+    // Build a section for a category
+    const buildSection = (label, contactList, isHtml) => {
+      if (contactList.length === 0) return isHtml ? '' : [];
+      const { shown, overflow } = capList(contactList);
+      const names = shown.map(c => c.name);
+
+      if (isHtml) {
+        let html = `<p><strong>${label}</strong> (${contactList.length})</p>`;
+        html += `<ul style="padding-left: 20px; margin: 5px 0 15px;">`;
+        html += names.map(name => `<li>${name}</li>`).join('');
+        if (overflow > 0) html += `<li style="color: #666; font-style: italic;">...and ${overflow} more</li>`;
+        html += `</ul>`;
+        return html;
+      } else {
+        const lines = [`  ${label} (${contactList.length})`];
+        names.forEach(name => lines.push(`    • ${name}`));
+        if (overflow > 0) lines.push(`    ...and ${overflow} more`);
+        return lines;
+      }
+    };
+
+    // Build HTML
+    const statsHtml = `
+      <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 6px;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+          <tr>
+            <td style="padding: 8px 0;">📊 Total contacts</td>
+            <td style="padding: 8px 0; text-align: right; font-weight: bold;">${contacts.length}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0;">✅ ${completeLabel}</td>
+            <td style="padding: 8px 0; text-align: right; font-weight: bold; color: #28a745;">${completeContacts.length}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0;">⚠️ Total issues</td>
+            <td style="padding: 8px 0; text-align: right; font-weight: bold; color: ${totalIssues > 0 ? '#dc3545' : '#28a745'};">${totalIssues}</td>
+          </tr>
+        </table>
+      </div>
+    `;
+
+    let detailsHtml = '';
+    const sections = [
+      { label: `📅 ${noBirthYearLabel}`, list: missingBirthYear },
+      { label: `📧 ${noEmailLabel}`, list: missingEmail },
+      { label: `📱 ${noPhoneLabel}`, list: missingPhone },
+      { label: `🏷️ ${noLabelsLabel}`, list: missingLabels },
+    ];
+
+    const nonEmptySections = sections.filter(s => s.list.length > 0);
+    if (nonEmptySections.length > 0) {
+      detailsHtml = `<div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 6px;">`;
+      nonEmptySections.forEach(s => { detailsHtml += buildSection(s.label, s.list, true); });
+      detailsHtml += `</div>`;
+    }
+
+    const content = `
+      ${this.templates.header(titleText)}
+
+      <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 6px;">
+        <p>${greeting}</p>
+        <p>${introText}</p>
+      </div>
+
+      ${statsHtml}
+      ${detailsHtml}
+
+      ${this.templates.footer()}
+    `;
+
+    // Build plain text
+    const textLines = [
+      titleText,
+      '',
+      greeting,
+      introText,
+      '',
+      `📊 Total contacts: ${contacts.length}`,
+      `✅ ${completeLabel}: ${completeContacts.length}`,
+      `⚠️ Total issues: ${totalIssues}`,
+      '',
+    ];
+
+    nonEmptySections.forEach(s => {
+      textLines.push(...buildSection(s.label, s.list, false));
+      textLines.push('');
+    });
+
+    const textBody = textLines.join('\n');
+    const mailBody = this.templates.wrapEmail(content);
+    this.sendMail(toEmail, fromEmail, senderName, subject, textBody, mailBody);
+    Logger.log('Contact quality report email sent successfully!');
   }
 
 
