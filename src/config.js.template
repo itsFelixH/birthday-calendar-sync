@@ -47,6 +47,35 @@ const summaryMonthsAhead = 6;
 // Send an email after syncing with a list of created/updated events.
 const sendCalendarUpdateEmail = false;
 
+// ─── Email subjects ───────────────────────────────────────────────────────────
+
+const emailSubjects = {
+  monthlySummary: '🎂 Birthday Reminder 🎂',
+  dailyReminder: '🎁 Today\'s Birthdays 🎁',
+  calendarUpdate: '📅 Birthday Updates 📅'
+};
+
+// ─── Email texts ──────────────────────────────────────────────────────────────
+// Placeholders: {name}, {month}, {year}, {count}, {days}
+const emailTexts = {
+  greeting: 'Hi{name},',
+  monthlySummaryTitle: '🎉 {month} Birthdays',
+  monthlySummaryIntro: 'Here are your contacts\' birthdays in {month} {year}:',
+  monthlySummaryCount: '{count} birthday(s) this month:',
+  calendarUpdateTitle: '🔄 Birthday Event Updates',
+  calendarUpdateIntro: 'The following events were added to your calendar:',
+  calendarUpdateIndividualHeader: 'Individual Birthdays:',
+  calendarUpdateSummaryHeader: 'Monthly Summaries:',
+  calendarUpdateCreated: '✨ Created:',
+  calendarUpdateUpdated: '🔄 Updated:',
+  dailyReminderTitle: '🎉 Today\'s Birthdays',
+  dailyReminderIntro: '{count} of your contacts have a birthday today:',
+  dailyReminderUpcomingHeader: '📅 Upcoming Birthdays',
+  dailyReminderUpcomingIntro: '{count} birthdays in the next {days} days:',
+  viewCalendar: 'View Calendar',
+  manageContacts: 'Manage Contacts'
+};
+
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // EVENT APPEARANCE
