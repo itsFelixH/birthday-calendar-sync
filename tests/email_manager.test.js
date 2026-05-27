@@ -176,7 +176,7 @@ describe('EmailManager', () => {
   describe('sendBirthdayReminder', () => {
     const mockContacts = [
       new BirthdayContact('John Doe', new Date(1990, 0, 15)),
-      new BirthdayContact('Jane Smith', new Date(1985, 0, 20))
+      new BirthdayContact('Jane Smith', new Date(1985, 0, 18))
     ];
 
     beforeEach(() => {
@@ -187,8 +187,8 @@ describe('EmailManager', () => {
       jest.useRealTimers();
     });
 
-    it('should send daily birthday email with correct content', () => {
-      emailManager.sendBirthdayReminder(mockContacts);
+    it('should send reminder when birthdays exist in the window', () => {
+      emailManager.sendBirthdayReminder(mockContacts, new Date(2024, 0, 15), 5);
 
       expect(mockGmail.Users.Messages.send).toHaveBeenCalled();
       const sendCall = mockGmail.Users.Messages.send.mock.calls[0][0];
@@ -199,14 +199,14 @@ describe('EmailManager', () => {
       global.Utilities.base64EncodeWebSafe = jest.fn(str => str);
       global.Utilities.base64Encode = jest.fn(str => str);
 
-      emailManager.sendBirthdayReminder(mockContacts);
+      emailManager.sendBirthdayReminder(mockContacts, new Date(2024, 0, 15), 5);
 
       const rawData = global.Utilities.base64EncodeWebSafe.mock.calls[0][0];
       expect(rawData).toContain('John Doe');
-      expect(rawData).toContain('Heute');
+      expect(rawData).toContain('HEUTE');
     });
 
-    it('should include contact email, phone, and instagram in HTML when available', () => {
+    it('should include contact email, phone, and instagram when available', () => {
       const richContacts = [
         new BirthdayContact('Rich Contact', new Date(1990, 0, 15), [], 'rich@example.com', '', '+491234567890', ['@richgram'])
       ];
@@ -214,32 +214,38 @@ describe('EmailManager', () => {
       global.Utilities.base64EncodeWebSafe = jest.fn(str => str);
       global.Utilities.base64Encode = jest.fn(str => str);
 
-      emailManager.sendBirthdayReminder(richContacts);
+      emailManager.sendBirthdayReminder(richContacts, new Date(2024, 0, 15), 3);
 
       const rawData = global.Utilities.base64EncodeWebSafe.mock.calls[0][0];
-      // HTML part should contain contact actions
       expect(rawData).toContain('mailto:rich@example.com');
       expect(rawData).toContain('tel:+491234567890');
       expect(rawData).toContain('instagram.com/richgram');
-      // Plain text part should contain contact info
+      // Plain text part
       expect(rawData).toContain('rich@example.com');
       expect(rawData).toContain('+491234567890');
       expect(rawData).toContain('@richgram');
     });
 
-    it('should include upcoming birthdays section when there are upcoming contacts', () => {
-      const contacts = [
-        new BirthdayContact('Today Person', new Date(1990, 0, 15)),
-        new BirthdayContact('Upcoming Person', new Date(1992, 0, 18))
-      ];
-
+    it('should include upcoming birthdays within the window', () => {
       global.Utilities.base64EncodeWebSafe = jest.fn(str => str);
       global.Utilities.base64Encode = jest.fn(str => str);
 
-      emailManager.sendBirthdayReminder(contacts, new Date(2024, 0, 15), 5);
+      emailManager.sendBirthdayReminder(mockContacts, new Date(2024, 0, 15), 5);
 
       const rawData = global.Utilities.base64EncodeWebSafe.mock.calls[0][0];
-      expect(rawData).toContain('Upcoming Person');
+      // Jane Smith has birthday on Jan 18, within 5-day window from Jan 15
+      expect(rawData).toContain('Jane Smith');
+    });
+
+    it('should mark today birthdays with today label and different border color', () => {
+      global.Utilities.base64EncodeWebSafe = jest.fn(str => str);
+      global.Utilities.base64Encode = jest.fn(str => str);
+
+      emailManager.sendBirthdayReminder(mockContacts, new Date(2024, 0, 15), 5);
+
+      const rawData = global.Utilities.base64EncodeWebSafe.mock.calls[0][0];
+      expect(rawData).toContain('HEUTE');
+      expect(rawData).toContain('#ff6b6b'); // today's border color
     });
 
     it('should not send email if no contacts provided', () => {
@@ -247,9 +253,9 @@ describe('EmailManager', () => {
       expect(mockGmail.Users.Messages.send).not.toHaveBeenCalled();
     });
 
-    it('should not send email if no birthdays today', () => {
-      jest.setSystemTime(new Date(2024, 1, 1)); // February 1st
-      emailManager.sendBirthdayReminder(mockContacts);
+    it('should not send email if no birthdays in the window', () => {
+      // Feb 1st — no birthdays in Jan contacts within 3 days
+      emailManager.sendBirthdayReminder(mockContacts, new Date(2024, 1, 1), 3);
       expect(mockGmail.Users.Messages.send).not.toHaveBeenCalled();
     });
   });
