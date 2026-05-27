@@ -50,11 +50,15 @@ const sendSyncReport = false;
 // Send a monthly summary email listing next month's birthdays.
 const sendMonthlySummaryEmail = false;
 
-// Send a birthday reminder email for upcoming birthdays.
-const sendBirthdayReminderEmail = false;
+// Send a weekly reminder email for upcoming birthdays.
+const sendWeeklyReminderEmail = false;
 
-// How many days ahead to include in the birthday reminder email.
+// How many days ahead to include in the weekly reminder email.
 const reminderDaysBefore = 7;
+
+// Day of the week to send the weekly reminder (0=Sunday, 1=Monday, ..., 6=Saturday).
+// Set to -1 to send every day the trigger runs (ignore day check).
+const weeklyReminderDay = 1;
 
 // Maximum number of events to list in the sync report (0 = unlimited).
 const syncReportMaxItems = 0;
@@ -64,8 +68,8 @@ const syncReportMaxItems = 0;
 const emailSubjects = {
   // Monthly birthday summary email
   monthlySummary: '🎂 Birthday Reminder 🎂',
-  // Birthday reminder email
-  birthdayReminder: '🎁 Today\'s Birthdays 🎁',
+  // Weekly reminder email
+  weeklyReminder: '🎂 Weekly Birthday Reminder',
   // Calendar sync report email
   syncReport: '📅 Birthday Updates 📅',
   // Contact data quality report
@@ -89,14 +93,14 @@ const emailTexts = {
   syncReportSummaryHeader: 'Monthly Summaries:',
   syncReportCreated: '✨ Created:',
   syncReportUpdated: '🔄 Updated:',
-  // Birthday reminder email
-  birthdayReminderTitle: '🎉 Birthday Reminder',
-  birthdayReminderIntro: '{count} of your contacts have birthdays in the next {days} days:',
-  birthdayReminderIntroSingular: '{count} of your contacts have a birthday tomorrow:',
-  birthdayReminderTodayLabel: 'TODAY',
-  birthdayReminderAge: 'turns {age}',
-  birthdayReminderDaysUntil: 'in {days} days',
-  birthdayReminderTomorrow: 'tomorrow',
+  // Weekly reminder email
+  weeklyReminderTitle: '🎂 Weekly Birthday Reminder',
+  weeklyReminderIntro: '{count} of your contacts have birthdays in the next {days} days:',
+  weeklyReminderIntroSingular: '{count} of your contacts have a birthday tomorrow:',
+  weeklyReminderTodayLabel: 'TODAY',
+  weeklyReminderAge: 'turns {age}',
+  weeklyReminderDaysUntil: 'in {days} days',
+  weeklyReminderTomorrow: 'tomorrow',
   // Link labels in emails
   viewCalendar: 'View Calendar',
   manageContacts: 'Manage Contacts',
