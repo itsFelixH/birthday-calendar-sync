@@ -1,11 +1,38 @@
 /**
+ * Functions managed by setupSchedules/removeSchedules.
+ * Only triggers for these functions are touched — user-created triggers are left alone.
+ */
+const MANAGED_FUNCTIONS = [
+  'updateBirthdaysAndSummariesInCalendar',
+  'sendMonthlySummary',
+  'sendWeeklyReminder'
+];
+
+/**
  * Creates time-based triggers for all sync functions.
  * Run this once after deploying to set up automatic scheduling.
- * Safe to re-run — removes existing triggers first to avoid duplicates.
+ * Safe to re-run — removes only triggers managed by this script.
  */
 function setupSchedules() {
-  // Remove all existing project triggers
-  ScriptApp.getProjectTriggers().forEach(trigger => ScriptApp.deleteTrigger(trigger));
+  // Validate config before creating triggers that would fail on every run
+  if (typeof calendarId === 'undefined' || !calendarId || calendarId === 'your-calendar-id@group.calendar.google.com') {
+    Logger.log('❌ Cannot set up schedules: calendarId is not configured.');
+    Logger.log('   Please set your calendar ID in config.js first.');
+    return;
+  }
+
+  // Remove only triggers managed by this script
+  const existing = ScriptApp.getProjectTriggers().filter(
+    trigger => MANAGED_FUNCTIONS.includes(trigger.getHandlerFunction())
+  );
+
+  if (existing.length > 0) {
+    Logger.log(`🔄 Removing ${existing.length} existing managed trigger(s):`);
+    existing.forEach(trigger => {
+      Logger.log(`   • ${trigger.getHandlerFunction()}`);
+      ScriptApp.deleteTrigger(trigger);
+    });
+  }
 
   const syncHour = typeof scheduleSyncHour !== 'undefined' ? scheduleSyncHour : 2;
   const summaryDay = typeof scheduleMonthlySummaryDay !== 'undefined' ? scheduleMonthlySummaryDay : 28;
@@ -35,6 +62,28 @@ function setupSchedules() {
   Logger.log(`   • updateBirthdaysAndSummariesInCalendar — daily at ~${syncHour}:00`);
   Logger.log(`   • sendMonthlySummary — day ${summaryDay} of each month at ~${summaryHour}:00`);
   Logger.log(`   • sendWeeklyReminder — weekly at ~${reminderHour}:00`);
+}
+
+/**
+ * Removes all triggers managed by this script.
+ * User-created triggers for other functions are left untouched.
+ */
+function removeSchedules() {
+  const existing = ScriptApp.getProjectTriggers().filter(
+    trigger => MANAGED_FUNCTIONS.includes(trigger.getHandlerFunction())
+  );
+
+  if (existing.length === 0) {
+    Logger.log('ℹ️ No managed triggers found. Nothing to remove.');
+    return;
+  }
+
+  Logger.log(`🗑️ Removing ${existing.length} managed trigger(s):`);
+  existing.forEach(trigger => {
+    Logger.log(`   • ${trigger.getHandlerFunction()}`);
+    ScriptApp.deleteTrigger(trigger);
+  });
+  Logger.log('✅ All managed schedules removed.');
 }
 
 /**
