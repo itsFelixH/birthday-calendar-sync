@@ -97,7 +97,7 @@ const emailTexts = {
 //   {birthdate} — formatted birth date (e.g., 15.01.1990)
 //   {city}      — contact's city
 //   {email}     — contact's email address
-//   {lifespan}  — "*1990 †2022" (memorial only)
+//   {lifespan}  — "*1990 †2022" (memorial only, requires death date for full format)
 // Summary title also supports:
 //   {month}     — full month name
 //   {year}      — year
@@ -106,7 +106,7 @@ const eventTitles = {
   birthday: '🎂 {name}\'s Birthday',
   milestone: '🎂🎉 {name} turns {age}! 🎉',
   recurring: '🎂 {name}\'s Birthday',
-  memorial: '🕯️ {name} ({lifespan})',
+  memorial: '🕯️ {name}',
   summary: '🎉🎂 BIRTHDAYS 🎂🎉'
 };
 
