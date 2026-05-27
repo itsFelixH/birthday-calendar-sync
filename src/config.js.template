@@ -71,9 +71,7 @@ const emailSubjects = {
   // Weekly reminder email
   weeklyReminder: '🎂 Weekly Birthday Reminder',
   // Calendar sync report email
-  syncReport: '📅 Birthday Updates 📅',
-  // Contact data quality report
-  contactQualityReport: '📋 Contact Data Quality Report'
+  syncReport: '📅 Birthday Updates 📅'
 };
 
 // ─── Email texts ──────────────────────────────────────────────────────────────
@@ -103,15 +101,7 @@ const emailTexts = {
   weeklyReminderTomorrow: 'tomorrow',
   // Link labels in emails
   viewCalendar: 'View Calendar',
-  manageContacts: 'Manage Contacts',
-  // Contact quality report
-  contactQualityReportTitle: '📋 Contact Data Quality',
-  contactQualityReportIntro: 'Here\'s a summary of your {total} contacts\' data completeness:',
-  contactQualityNoBirthYear: 'Missing birth year',
-  contactQualityNoEmail: 'Missing email',
-  contactQualityNoPhone: 'Missing phone number',
-  contactQualityNoLabels: 'No labels',
-  contactQualityComplete: 'Complete contacts'
+  manageContacts: 'Manage Contacts'
 };
 
 
