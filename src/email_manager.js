@@ -345,123 +345,18 @@ class EmailManager {
  */
 class EmailTemplates {
   /**
-   * CSS styles for email templates
+   * CSS styles for email templates.
+   * Kept minimal as progressive enhancement — critical styles are inlined on elements.
    */
   static get styles() {
     return `
-      .email-container {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        max-width: 600px;
-        margin: 0 auto;
-        padding: 20px;
-        background-color: #ffffff;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      }
-      .header {
-        text-align: center;
-        margin-bottom: 30px;
-      }
-      .title {
-        color: #1a1a1a;
-        font-size: 24px;
-        font-weight: bold;
-        margin: 10px 0;
-      }
-      .subtitle {
-        color: #666;
-        font-size: 16px;
-        margin: 10px 0;
-      }
-      .section {
-        margin: 20px 0;
-        padding: 15px;
-        background: #f8f9fa;
-        border-radius: 6px;
-      }
-      .section-title {
-        color: #2c3e50;
-        font-size: 18px;
-        margin-bottom: 15px;
-        border-bottom: 2px solid #e9ecef;
-        padding-bottom: 5px;
-      }
-      .birthday-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-      }
-      .birthday-item {
-        padding: 10px;
-        margin: 5px 0;
-        border-left: 4px solid #007bff;
-        background: white;
-        transition: all 0.2s;
-      }
-      .birthday-item:hover {
-        transform: translateX(5px);
-      }
-      .contact-info {
-        display: grid;
-        grid-template-columns: auto 1fr;
-        gap: 10px;
-        align-items: center;
-        margin-top: 5px;
-        font-size: 14px;
-        color: #666;
-      }
-      .action-buttons {
-        margin-top: 15px;
-        text-align: center;
-      }
-      .button {
-        display: inline-block;
-        padding: 8px 16px;
-        margin: 0 5px;
-        background-color: #007bff;
-        color: white;
-        text-decoration: none;
-        border-radius: 4px;
-        font-size: 14px;
-        transition: background-color 0.2s;
-      }
-      .button:hover {
-        background-color: #0056b3;
-      }
-      .stats {
-        display: flex;
-        justify-content: space-around;
-        margin: 20px 0;
-        text-align: center;
-      }
-      .stat-item {
-        flex: 1;
-        padding: 10px;
-      }
-      .stat-number {
-        font-size: 24px;
-        font-weight: bold;
-        color: #007bff;
-      }
-      .stat-label {
-        font-size: 14px;
-        color: #666;
-      }
-      .footer {
-        margin-top: 30px;
-        padding-top: 20px;
-        border-top: 1px solid #eaeaea;
-        text-align: center;
-        font-size: 12px;
-        color: #666;
-      }
-      .footer a {
-        color: #007bff;
-        text-decoration: none;
-      }
-      .footer a:hover {
-        text-decoration: underline;
-      }
+      body { margin: 0; padding: 0; background-color: #f4f4f4; }
+      .email-container { max-width: 600px; margin: 0 auto; }
+      .section { margin: 20px 0; }
+      .birthday-list { list-style: none; padding: 0; margin: 0; }
+      .birthday-item { padding: 10px; margin: 5px 0; border-left: 4px solid #007bff; background: #ffffff; }
+      .contact-info { margin-top: 8px; font-size: 14px; color: #666666; }
+      .contact-info span { display: block; margin: 4px 0; }
     `;
   }
 
@@ -473,9 +368,9 @@ class EmailTemplates {
    */
   static header(title, subtitle = '') {
     return `
-      <div class="header">
-        <h1 class="title">${title}</h1>
-        ${subtitle ? `<p class="subtitle">${subtitle}</p>` : ''}
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="color: #1a1a1a; font-size: 24px; font-weight: bold; margin: 10px 0;">${title}</h1>
+        ${subtitle ? `<p style="color: #666666; font-size: 16px; margin: 10px 0;">${subtitle}</p>` : ''}
       </div>
     `;
   }
@@ -486,12 +381,12 @@ class EmailTemplates {
    */
   static footer() {
     return `
-      <div class="footer">
+      <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eaeaea; text-align: center; font-size: 12px; color: #666666;">
         <p>
-          Sent by Birthday Calendar Sync •
-          <a href="https://calendar.google.com/calendar/r">View Calendar</a> •
-          <a href="https://contacts.google.com">Manage Contacts</a> •
-          <a href="https://github.com/itsFelixH/birthday-calendar-sync">GitHub Repo</a>
+          Sent by Birthday Calendar Sync &#8226;
+          <a href="https://calendar.google.com/calendar/r" style="color: #007bff; text-decoration: none;">View Calendar</a> &#8226;
+          <a href="https://contacts.google.com" style="color: #007bff; text-decoration: none;">Manage Contacts</a> &#8226;
+          <a href="https://github.com/itsFelixH/birthday-calendar-sync" style="color: #007bff; text-decoration: none;">GitHub Repo</a>
         </p>
       </div>
     `;
