@@ -89,17 +89,15 @@ function sendBirthdayReminder() {
     }
 
     const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
+    const days = typeof reminderDaysBefore !== 'undefined' ? reminderDaysBefore : 3;
 
     if (isDryRun) {
-      const tomorrowContacts = getContactsByBirthday(contacts, tomorrow.getDate(), tomorrow.getMonth());
-      Logger.log(`🧪 [DRY RUN] Would send birthday reminder for ${tomorrow.toLocaleDateString()} with ${tomorrowContacts.length} birthdays`);
+      Logger.log(`🧪 [DRY RUN] Would send birthday reminder for the next ${days} days`);
       return;
     }
 
     const emailManager = new EmailManager();
-    emailManager.sendBirthdayReminder(contacts, tomorrow, 15);
+    emailManager.sendBirthdayReminder(contacts, today, days);
   } catch (error) {
     Logger.log(`💥 Error in sendBirthdayReminder: ${error.message}`);
   }
