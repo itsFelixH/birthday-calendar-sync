@@ -173,7 +173,7 @@ describe('EmailManager', () => {
     });
   });
 
-  describe('sendBirthdayReminder', () => {
+  describe('sendWeeklyReminder', () => {
     const mockContacts = [
       new BirthdayContact('John Doe', new Date(1990, 0, 15)),
       new BirthdayContact('Jane Smith', new Date(1985, 0, 18))
@@ -188,7 +188,7 @@ describe('EmailManager', () => {
     });
 
     it('should send reminder when birthdays exist in the window', () => {
-      emailManager.sendBirthdayReminder(mockContacts, new Date(2024, 0, 15), 5);
+      emailManager.sendWeeklyReminder(mockContacts, new Date(2024, 0, 15), 5);
 
       expect(mockGmail.Users.Messages.send).toHaveBeenCalled();
       const sendCall = mockGmail.Users.Messages.send.mock.calls[0][0];
@@ -199,7 +199,7 @@ describe('EmailManager', () => {
       global.Utilities.base64EncodeWebSafe = jest.fn(str => str);
       global.Utilities.base64Encode = jest.fn(str => str);
 
-      emailManager.sendBirthdayReminder(mockContacts, new Date(2024, 0, 15), 5);
+      emailManager.sendWeeklyReminder(mockContacts, new Date(2024, 0, 15), 5);
 
       const rawData = global.Utilities.base64EncodeWebSafe.mock.calls[0][0];
       expect(rawData).toContain('John Doe');
@@ -214,7 +214,7 @@ describe('EmailManager', () => {
       global.Utilities.base64EncodeWebSafe = jest.fn(str => str);
       global.Utilities.base64Encode = jest.fn(str => str);
 
-      emailManager.sendBirthdayReminder(richContacts, new Date(2024, 0, 15), 3);
+      emailManager.sendWeeklyReminder(richContacts, new Date(2024, 0, 15), 3);
 
       const rawData = global.Utilities.base64EncodeWebSafe.mock.calls[0][0];
       expect(rawData).toContain('mailto:rich@example.com');
@@ -230,7 +230,7 @@ describe('EmailManager', () => {
       global.Utilities.base64EncodeWebSafe = jest.fn(str => str);
       global.Utilities.base64Encode = jest.fn(str => str);
 
-      emailManager.sendBirthdayReminder(mockContacts, new Date(2024, 0, 15), 5);
+      emailManager.sendWeeklyReminder(mockContacts, new Date(2024, 0, 15), 5);
 
       const rawData = global.Utilities.base64EncodeWebSafe.mock.calls[0][0];
       // Jane Smith has birthday on Jan 18, within 5-day window from Jan 15
@@ -241,7 +241,7 @@ describe('EmailManager', () => {
       global.Utilities.base64EncodeWebSafe = jest.fn(str => str);
       global.Utilities.base64Encode = jest.fn(str => str);
 
-      emailManager.sendBirthdayReminder(mockContacts, new Date(2024, 0, 15), 5);
+      emailManager.sendWeeklyReminder(mockContacts, new Date(2024, 0, 15), 5);
 
       const rawData = global.Utilities.base64EncodeWebSafe.mock.calls[0][0];
       expect(rawData).toContain('TODAY');
@@ -249,13 +249,13 @@ describe('EmailManager', () => {
     });
 
     it('should not send email if no contacts provided', () => {
-      emailManager.sendBirthdayReminder([]);
+      emailManager.sendWeeklyReminder([]);
       expect(mockGmail.Users.Messages.send).not.toHaveBeenCalled();
     });
 
     it('should not send email if no birthdays in the window', () => {
       // Feb 1st — no birthdays in Jan contacts within 3 days
-      emailManager.sendBirthdayReminder(mockContacts, new Date(2024, 1, 1), 3);
+      emailManager.sendWeeklyReminder(mockContacts, new Date(2024, 1, 1), 3);
       expect(mockGmail.Users.Messages.send).not.toHaveBeenCalled();
     });
   });
@@ -338,6 +338,52 @@ describe('EmailManager', () => {
       const rawData = global.Utilities.base64EncodeWebSafe.mock.calls[0][0];
       expect(rawData).toContain('March 2024');
       expect(rawData).toContain('April 2024');
+    });
+  });
+
+  describe('sendContactQualityReport', () => {
+    const mockContacts = [
+      new BirthdayContact('Complete Contact', new Date(1990, 0, 15), ['Friends'], 'complete@example.com', '', '+491234567890'),
+      new BirthdayContact('No Email', new Date(1985, 5, 20), ['Family'], '', '', '+499876543210'),
+      new BirthdayContact('No Phone', new Date(1992, 3, 10), [], 'nophone@example.com', '', ''),
+      new BirthdayContact('No Year', new Date(new Date().getFullYear(), 8, 5), [], '', '', ''),
+    ];
+
+    it('should send quality report with correct content', () => {
+      emailManager.sendContactQualityReport(mockContacts);
+
+      expect(mockGmail.Users.Messages.send).toHaveBeenCalled();
+      const sendCall = mockGmail.Users.Messages.send.mock.calls[0][0];
+      expect(sendCall).toHaveProperty('raw');
+    });
+
+    it('should include stats and missing data details', () => {
+      global.Utilities.base64EncodeWebSafe = jest.fn(str => str);
+      global.Utilities.base64Encode = jest.fn(str => str);
+
+      emailManager.sendContactQualityReport(mockContacts);
+
+      const rawData = global.Utilities.base64EncodeWebSafe.mock.calls[0][0];
+      expect(rawData).toContain('No Email');
+      expect(rawData).toContain('No Phone');
+      expect(rawData).toContain('No Year');
+      expect(rawData).toContain('4'); // total contacts
+    });
+
+    it('should not send email if no contacts provided', () => {
+      emailManager.sendContactQualityReport([]);
+      expect(mockGmail.Users.Messages.send).not.toHaveBeenCalled();
+    });
+
+    it('should identify complete contacts', () => {
+      global.Utilities.base64EncodeWebSafe = jest.fn(str => str);
+      global.Utilities.base64Encode = jest.fn(str => str);
+
+      emailManager.sendContactQualityReport(mockContacts);
+
+      const rawData = global.Utilities.base64EncodeWebSafe.mock.calls[0][0];
+      // 1 contact has birth year + email + phone
+      expect(rawData).toContain('1');
     });
   });
 });
