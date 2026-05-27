@@ -92,10 +92,8 @@ class EmailManager {
     const greetingTemplate = this.texts.greeting || 'Hallo{name},';
     const greeting = greetingTemplate.replace('{name}', recipientName ? ` ${recipientName}` : '');
     const titleText = (this.texts.monthlySummaryTitle || '🎉 Geburtstage im {month}').replace('{month}', monthNamesLong[month]);
-    const introText = (this.texts.monthlySummaryIntro || 'Mach dich bereit zum Feiern! Hier sind die Geburtstage deiner Kontakte im {month} {year}. Vergiss nicht, ihnen zu gratulieren!')
-      .replace('{month}', monthNamesLong[month]).replace('{year}', year);
-    const countText = (this.texts.monthlySummaryCount || 'Insgesamt gibt es {count} Geburtstag(e) in diesem Monat:')
-      .replace('{count}', numBirthdays);
+    const introText = (this.texts.monthlySummaryIntro || '{count} deiner Kontakte haben im {month} {year} Geburtstag:')
+      .replace('{month}', monthNamesLong[month]).replace('{year}', year).replace('{count}', numBirthdays);
     const viewCalendarLabel = this.texts.viewCalendar || 'Google Kalender anzeigen';
 
     // Build the email content using templates
@@ -105,7 +103,6 @@ class EmailManager {
       <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 6px;">
         <p>${greeting}</p>
         <p>${introText}</p>
-        <p>${countText}</p>
       </div>
 
       <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 6px;">
@@ -126,7 +123,6 @@ class EmailManager {
       '',
       greeting,
       introText,
-      countText,
       '',
       ...monthContacts.map(contact => {
         let line = `${('0' + contact.birthday.getDate()).slice(-2)}. ${monthNamesLong[contact.birthday.getMonth()]}: ${contact.name}`;
@@ -181,9 +177,12 @@ class EmailManager {
     const greetingTemplate = this.texts.greeting || 'Hallo{name},';
     const greeting = greetingTemplate.replace('{name}', recipientName ? ` ${recipientName}` : '');
     const titleText = this.texts.birthdayReminderTitle || '🎉 Geburtstags-Reminder';
-    const introText = (this.texts.birthdayReminderIntro || '{count} deiner Kontakte haben in den nächsten {days} Tagen Geburtstag:')
-      .replace('{count}', reminderContacts.length).replace('{days}', daysBefore);
+    const introTemplate = daysBefore === 1
+      ? (this.texts.birthdayReminderIntroSingular || '{count} deiner Kontakte haben morgen Geburtstag:')
+      : (this.texts.birthdayReminderIntro || '{count} deiner Kontakte haben in den nächsten {days} Tagen Geburtstag:');
+    const introText = introTemplate.replace('{count}', reminderContacts.length).replace('{days}', daysBefore);
     const todayLabel = this.texts.birthdayReminderTodayLabel || 'HEUTE';
+    const ageTemplate = this.texts.birthdayReminderAge || 'wird {age}';
 
     // Build HTML content
     const contactListHtml = reminderContacts.map(contact => {
@@ -194,7 +193,7 @@ class EmailManager {
         : `📅 ${('0' + contact.birthday.getDate()).slice(-2)}. ${monthNamesLong[contact.birthday.getMonth()]}`;
 
       const ageText = contact.hasKnownBirthYear()
-        ? ` (wird ${contact.getAgeThisYear()}${isToday ? '!' : ''})`
+        ? ` (${ageTemplate.replace('{age}', contact.getAgeThisYear())}${isToday ? '!' : ''})`
         : '';
 
       const borderColor = isToday ? '#ff6b6b' : '#007bff';
@@ -250,7 +249,7 @@ class EmailManager {
           : `📅 ${('0' + contact.birthday.getDate()).slice(-2)}. ${monthNamesLong[contact.birthday.getMonth()]}`;
 
         let line = `  ${dateLabel} — ${contact.name}`;
-        if (contact.hasKnownBirthYear()) line += ` (wird ${contact.getAgeThisYear()})`;
+        if (contact.hasKnownBirthYear()) line += ` (${ageTemplate.replace('{age}', contact.getAgeThisYear())})`;
         if (contact.email) line += `\n    📧 ${contact.email}`;
         if (contact.phoneNumber) line += `\n    📱 ${contact.phoneNumber}`;
         if (contact.instagramNames && contact.instagramNames.length > 0) {
