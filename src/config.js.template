@@ -45,17 +45,17 @@ const summaryMonthsAhead = 6;
 // ─── Notifications ────────────────────────────────────────────────────────────
 
 // Send an email after syncing with a list of created/updated events.
-const sendCalendarUpdateEmail = false;
+const sendSyncReport = false;
 
 // ─── Email subjects ───────────────────────────────────────────────────────────
 
 const emailSubjects = {
   // Monthly birthday summary email
   monthlySummary: '🎂 Birthday Reminder 🎂',
-  // Daily birthday reminder email
-  dailyReminder: '🎁 Today\'s Birthdays 🎁',
-  // Calendar sync update notification email
-  calendarUpdate: '📅 Birthday Updates 📅'
+  // Birthday reminder email
+  birthdayReminder: '🎁 Today\'s Birthdays 🎁',
+  // Calendar sync report email
+  syncReport: '📅 Birthday Updates 📅'
 };
 
 // ─── Email texts ──────────────────────────────────────────────────────────────
@@ -68,18 +68,18 @@ const emailTexts = {
   monthlySummaryTitle: '🎉 {month} Birthdays',
   monthlySummaryIntro: 'Here are your contacts\' birthdays in {month} {year}. Don\'t forget to wish them well!',
   monthlySummaryCount: '{count} birthday(s) this month:',
-  // Calendar update email
-  calendarUpdateTitle: '🔄 Birthday Event Updates',
-  calendarUpdateIntro: 'The following birthday events were added to your calendar:',
-  calendarUpdateIndividualHeader: 'Individual Birthdays:',
-  calendarUpdateSummaryHeader: 'Monthly Summaries:',
-  calendarUpdateCreated: '✨ Created:',
-  calendarUpdateUpdated: '🔄 Updated:',
-  // Daily reminder email
-  dailyReminderTitle: '🎉 Today\'s Birthdays',
-  dailyReminderIntro: '{count} of your contacts have a birthday today. Here\'s everything you need to wish them well:',
-  dailyReminderUpcomingHeader: '📅 Upcoming Birthdays',
-  dailyReminderUpcomingIntro: '{count} birthdays in the next {days} days:',
+  // Sync report email
+  syncReportTitle: '🔄 Birthday Event Updates',
+  syncReportIntro: 'The following birthday events were added to your calendar:',
+  syncReportIndividualHeader: 'Individual Birthdays:',
+  syncReportSummaryHeader: 'Monthly Summaries:',
+  syncReportCreated: '✨ Created:',
+  syncReportUpdated: '🔄 Updated:',
+  // Birthday reminder email
+  birthdayReminderTitle: '🎉 Today\'s Birthdays',
+  birthdayReminderIntro: '{count} of your contacts have a birthday today. Here\'s everything you need to wish them well:',
+  birthdayReminderUpcomingHeader: '📅 Upcoming Birthdays',
+  birthdayReminderUpcomingIntro: '{count} birthdays in the next {days} days:',
   // Link labels in emails
   viewCalendar: 'View Calendar',
   manageContacts: 'Manage Contacts',
