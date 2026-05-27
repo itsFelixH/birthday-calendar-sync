@@ -68,7 +68,8 @@ In the Apps Script editor, create time-based triggers:
 | Function | Schedule |
 |----------|----------|
 | `updateBirthdaysAndSummariesInCalendar` | Daily (e.g., 2:00 AM) |
-| `sendSummaryMail` | Monthly (e.g., last day of month) |
+| `sendMonthlySummary` | Monthly (e.g., last day of month) |
+| `sendBirthdayReminder` | Daily (e.g., 7:00 AM) |
 
 ## Configuration
 
