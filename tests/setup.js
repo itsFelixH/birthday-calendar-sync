@@ -93,6 +93,7 @@ const path = require('path');
 const srcDir = path.join(__dirname, '..', 'src');
 const loadOrder = [
   'config.js',
+  '_setup.js',
   'birthday_contact.js',
   'label_manager.js',
   'calendar_manager.js',
