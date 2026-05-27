@@ -177,6 +177,7 @@ class BirthdayContact {
       .replace('{name}', this.name)
       .replace('{birthdate}', this.hasKnownBirthYear() ? this.getBirthdayLongFormat() : this.getBirthdayShortFormat())
       .replace('{city}', this.city || '')
+      .replace('{email}', this.email || '')
       .replace('{phone}', this.phoneNumber || '')
       .replace('{age}', extra.age !== undefined ? extra.age : '');
   }

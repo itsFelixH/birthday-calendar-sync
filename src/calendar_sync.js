@@ -315,6 +315,7 @@ function replaceTitlePlaceholders(template, contact, extra = {}) {
     .replace('{name}', contact.name)
     .replace('{birthdate}', contact.hasKnownBirthYear() ? contact.getBirthdayLongFormat() : contact.getBirthdayShortFormat())
     .replace('{city}', contact.city || '')
+    .replace('{email}', contact.email || '')
     .replace('{age}', extra.age !== undefined ? extra.age : '')
     .replace('{lifespan}', extra.lifespan || '');
 }
