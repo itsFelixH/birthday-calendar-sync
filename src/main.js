@@ -43,9 +43,9 @@ function isLabelFilterConfigured() {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 /**
- * Creates time-based triggers for all sync functions.
- * Run this once after deploying to set up automatic scheduling.
- * Safe to re-run — removes only triggers managed by this script.
+ * Creates time-based triggers based on your config.
+ * Only creates email triggers if the corresponding email setting is enabled.
+ * Run this once after deploying. Safe to re-run — removes existing managed triggers first.
  */
 function setupSchedules() {
   if (!isCalendarConfigured()) return;
@@ -65,33 +65,44 @@ function setupSchedules() {
 
   const syncDay = typeof scheduleSyncDay !== 'undefined' ? scheduleSyncDay : ScriptApp.WeekDay.MONDAY;
   const syncHour = typeof scheduleSyncHour !== 'undefined' ? scheduleSyncHour : 3;
-  const summaryDay = typeof scheduleMonthlySummaryDay !== 'undefined' ? scheduleMonthlySummaryDay : 28;
-  const summaryHour = typeof scheduleMonthlySummaryHour !== 'undefined' ? scheduleMonthlySummaryHour : 9;
-  const reminderDay = typeof scheduleWeeklyReminderDay !== 'undefined' ? scheduleWeeklyReminderDay : ScriptApp.WeekDay.MONDAY;
-  const reminderHour = typeof scheduleWeeklyReminderHour !== 'undefined' ? scheduleWeeklyReminderHour : 10;
 
+  // Calendar sync — always created
   ScriptApp.newTrigger('syncBirthdays')
     .timeBased()
     .onWeekDay(syncDay)
     .atHour(syncHour)
     .create();
+  Logger.log(`✅ syncBirthdays — weekly at ~${syncHour}:00`);
 
-  ScriptApp.newTrigger('sendMonthlySummary')
-    .timeBased()
-    .onMonthDay(summaryDay)
-    .atHour(summaryHour)
-    .create();
+  // Monthly summary email — only if enabled
+  const monthlySummaryEnabled = typeof sendMonthlySummaryEmail !== 'undefined' && sendMonthlySummaryEmail;
+  if (monthlySummaryEnabled) {
+    const summaryDay = typeof scheduleMonthlySummaryDay !== 'undefined' ? scheduleMonthlySummaryDay : 28;
+    const summaryHour = typeof scheduleMonthlySummaryHour !== 'undefined' ? scheduleMonthlySummaryHour : 9;
+    ScriptApp.newTrigger('sendMonthlySummary')
+      .timeBased()
+      .onMonthDay(summaryDay)
+      .atHour(summaryHour)
+      .create();
+    Logger.log(`✅ sendMonthlySummary — day ${summaryDay} of each month at ~${summaryHour}:00`);
+  } else {
+    Logger.log('⏭️ sendMonthlySummary — skipped (sendMonthlySummaryEmail is disabled)');
+  }
 
-  ScriptApp.newTrigger('sendWeeklyReminder')
-    .timeBased()
-    .onWeekDay(reminderDay)
-    .atHour(reminderHour)
-    .create();
-
-  Logger.log('✅ Schedules created:');
-  Logger.log(`   • syncBirthdays — weekly at ~${syncHour}:00`);
-  Logger.log(`   • sendMonthlySummary — day ${summaryDay} of each month at ~${summaryHour}:00`);
-  Logger.log(`   • sendWeeklyReminder — weekly at ~${reminderHour}:00`);
+  // Weekly reminder email — only if enabled
+  const weeklyReminderEnabled = typeof sendWeeklyReminderEmail !== 'undefined' && sendWeeklyReminderEmail;
+  if (weeklyReminderEnabled) {
+    const reminderDay = typeof scheduleWeeklyReminderDay !== 'undefined' ? scheduleWeeklyReminderDay : ScriptApp.WeekDay.MONDAY;
+    const reminderHour = typeof scheduleWeeklyReminderHour !== 'undefined' ? scheduleWeeklyReminderHour : 10;
+    ScriptApp.newTrigger('sendWeeklyReminder')
+      .timeBased()
+      .onWeekDay(reminderDay)
+      .atHour(reminderHour)
+      .create();
+    Logger.log(`✅ sendWeeklyReminder — weekly at ~${reminderHour}:00`);
+  } else {
+    Logger.log('⏭️ sendWeeklyReminder — skipped (sendWeeklyReminderEmail is disabled)');
+  }
 }
 
 /**
