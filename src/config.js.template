@@ -215,6 +215,24 @@ const deceasedDateLabel = 'Death date';
 // ADVANCED
 // ═══════════════════════════════════════════════════════════════════════════════
 
+// ─── Schedules ────────────────────────────────────────────────────────────────
+
+// Used by setupSchedules() to create time-based triggers.
+// Run setupSchedules() once after deploying to set up automatic scheduling.
+// Hours are approximate (Apps Script triggers fire within a 1-hour window).
+
+// Hour to run the daily calendar sync (0-23).
+const scheduleSyncHour = 2;
+
+// Day of the month (1-28) and hour to send the monthly summary email.
+const scheduleMonthlySummaryDay = 28;
+const scheduleMonthlySummaryHour = 8;
+
+// Day of the week and hour to send the weekly reminder email.
+// Use ScriptApp.WeekDay values: MONDAY, TUESDAY, WEDNESDAY, etc.
+const scheduleWeeklyReminderDay = ScriptApp.WeekDay.MONDAY;
+const scheduleWeeklyReminderHour = 7;
+
 // ─── Rate limiting ────────────────────────────────────────────────────────────
 
 // Pause every N events to avoid Google API rate limits.
