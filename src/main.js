@@ -97,6 +97,12 @@ function updateBirthdaysAndSummariesInCalendar() {
       return;
     }
 
+    if (useLabel && (!labelFilter || labelFilter.length === 0)) {
+      Logger.log('⚠️ useLabel is enabled but labelFilter is empty — no contacts will match.');
+      Logger.log('   Add label names to labelFilter in config.js, or set useLabel to false.');
+      return;
+    }
+
     const isDryRun = typeof dryRun !== 'undefined' && dryRun;
     if (isDryRun) Logger.log('🧪 DRY RUN MODE — no calendar or email changes will be made');
 
@@ -156,6 +162,12 @@ function sendMonthlySummary() {
       return;
     }
 
+    if (useLabel && (!labelFilter || labelFilter.length === 0)) {
+      Logger.log('⚠️ useLabel is enabled but labelFilter is empty — no contacts will match.');
+      Logger.log('   Add label names to labelFilter in config.js, or set useLabel to false.');
+      return;
+    }
+
     const contacts = fetchContactsWithBirthdays(useLabel ? labelFilter : []);
 
     if (!contacts || contacts.length === 0) {
@@ -185,6 +197,12 @@ function sendWeeklyReminder() {
 
     if (!enabled) {
       Logger.log('📧 Weekly reminder email disabled by config.');
+      return;
+    }
+
+    if (useLabel && (!labelFilter || labelFilter.length === 0)) {
+      Logger.log('⚠️ useLabel is enabled but labelFilter is empty — no contacts will match.');
+      Logger.log('   Add label names to labelFilter in config.js, or set useLabel to false.');
       return;
     }
 
@@ -221,6 +239,13 @@ function sendWeeklyReminder() {
 function sendContactQualityReport() {
   try {
     const isDryRun = typeof dryRun !== 'undefined' && dryRun;
+
+    if (useLabel && (!labelFilter || labelFilter.length === 0)) {
+      Logger.log('⚠️ useLabel is enabled but labelFilter is empty — no contacts will match.');
+      Logger.log('   Add label names to labelFilter in config.js, or set useLabel to false.');
+      return;
+    }
+
     const contacts = fetchContactsWithBirthdays(useLabel ? labelFilter : []);
 
     if (!contacts || contacts.length === 0) {
