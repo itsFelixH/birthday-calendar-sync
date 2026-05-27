@@ -78,8 +78,8 @@ const emailTexts = {
   greeting: 'Hi{name},',
   // Monthly summary email
   monthlySummaryTitle: '🎉 {month} Birthdays',
-  monthlySummaryIntro: 'Here are your contacts\' birthdays in {month} {year}. Don\'t forget to wish them well!',
-  monthlySummaryCount: '{count} birthday(s) this month:',
+  monthlySummaryIntro: '{count} of your contacts have birthdays in {month} {year}:',
+  monthlySummaryAge: 'turns {age}',
   // Sync report email
   syncReportTitle: '🔄 Birthday Event Updates',
   syncReportIntro: 'The following birthday events were added to your calendar:',
@@ -90,7 +90,9 @@ const emailTexts = {
   // Birthday reminder email
   birthdayReminderTitle: '🎉 Birthday Reminder',
   birthdayReminderIntro: '{count} of your contacts have birthdays in the next {days} days:',
+  birthdayReminderIntroSingular: '{count} of your contacts have a birthday tomorrow:',
   birthdayReminderTodayLabel: 'TODAY',
+  birthdayReminderAge: 'turns {age}',
   // Link labels in emails
   viewCalendar: 'View Calendar',
   manageContacts: 'Manage Contacts'
