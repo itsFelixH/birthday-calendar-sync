@@ -125,8 +125,9 @@ class EmailManager {
       introText,
       '',
       ...monthContacts.map(contact => {
+        const ageTemplate = this.texts.monthlySummaryAge || 'wird {age}';
         let line = `${('0' + contact.birthday.getDate()).slice(-2)}. ${monthNamesLong[contact.birthday.getMonth()]}: ${contact.name}`;
-        if (contact.hasKnownBirthYear()) line += ` (wird ${contact.getAgeThisYear()} Jahre)`;
+        if (contact.hasKnownBirthYear()) line += ` (${ageTemplate.replace('{age}', contact.getAgeThisYear())})`;
         return `  • ${line}`;
       }),
       '',
