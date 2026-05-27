@@ -47,6 +47,9 @@ const summaryMonthsAhead = 6;
 // Send an email after syncing with a list of created/updated events.
 const sendSyncReport = false;
 
+// How many days before a birthday to include it in the reminder email.
+const reminderDaysBefore = 3;
+
 // ─── Email subjects ───────────────────────────────────────────────────────────
 
 const emailSubjects = {
@@ -76,10 +79,9 @@ const emailTexts = {
   syncReportCreated: '✨ Created:',
   syncReportUpdated: '🔄 Updated:',
   // Birthday reminder email
-  birthdayReminderTitle: '🎉 Today\'s Birthdays',
-  birthdayReminderIntro: '{count} of your contacts have a birthday today. Here\'s everything you need to wish them well:',
-  birthdayReminderUpcomingHeader: '📅 Upcoming Birthdays',
-  birthdayReminderUpcomingIntro: '{count} birthdays in the next {days} days:',
+  birthdayReminderTitle: '🎉 Birthday Reminder',
+  birthdayReminderIntro: '{count} of your contacts have birthdays in the next {days} days:',
+  birthdayReminderTodayLabel: 'TODAY',
   // Link labels in emails
   viewCalendar: 'View Calendar',
   manageContacts: 'Manage Contacts'
