@@ -50,7 +50,16 @@ global.DriveApp = {
 
 // Mock ScriptApp
 global.ScriptApp = {
-  getScriptId: jest.fn().mockReturnValue('test-script-id')
+  getScriptId: jest.fn().mockReturnValue('test-script-id'),
+  WeekDay: {
+    SUNDAY: 1,
+    MONDAY: 2,
+    TUESDAY: 3,
+    WEDNESDAY: 4,
+    THURSDAY: 5,
+    FRIDAY: 6,
+    SATURDAY: 7
+  }
 };
 
 // Mock People API
