@@ -9,7 +9,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 // The ID of the Google Calendar where birthdays will be added.
-// Find it in Google Calendar → Settings → Calendar ID.
+// Find it in: Google Calendar → Settings → (your calendar) → Calendar ID.
 const calendarId = 'your-calendar-id@group.calendar.google.com';
 
 // ─── What to create ───────────────────────────────────────────────────────────
@@ -50,28 +50,37 @@ const sendCalendarUpdateEmail = false;
 // ─── Email subjects ───────────────────────────────────────────────────────────
 
 const emailSubjects = {
+  // Monthly birthday summary email
   monthlySummary: '🎂 Birthday Reminder 🎂',
+  // Daily birthday reminder email
   dailyReminder: '🎁 Today\'s Birthdays 🎁',
+  // Calendar sync update notification email
   calendarUpdate: '📅 Birthday Updates 📅'
 };
 
 // ─── Email texts ──────────────────────────────────────────────────────────────
+// Configurable text strings used in email bodies.
 // Placeholders: {name}, {month}, {year}, {count}, {days}
 const emailTexts = {
+  // Greeting (used in all emails). {name} = recipient first name (with leading space) or empty.
   greeting: 'Hi{name},',
+  // Monthly summary email
   monthlySummaryTitle: '🎉 {month} Birthdays',
-  monthlySummaryIntro: 'Here are your contacts\' birthdays in {month} {year}:',
+  monthlySummaryIntro: 'Here are your contacts\' birthdays in {month} {year}. Don\'t forget to wish them well!',
   monthlySummaryCount: '{count} birthday(s) this month:',
+  // Calendar update email
   calendarUpdateTitle: '🔄 Birthday Event Updates',
-  calendarUpdateIntro: 'The following events were added to your calendar:',
+  calendarUpdateIntro: 'The following birthday events were added to your calendar:',
   calendarUpdateIndividualHeader: 'Individual Birthdays:',
   calendarUpdateSummaryHeader: 'Monthly Summaries:',
   calendarUpdateCreated: '✨ Created:',
   calendarUpdateUpdated: '🔄 Updated:',
+  // Daily reminder email
   dailyReminderTitle: '🎉 Today\'s Birthdays',
-  dailyReminderIntro: '{count} of your contacts have a birthday today:',
+  dailyReminderIntro: '{count} of your contacts have a birthday today. Here\'s everything you need to wish them well:',
   dailyReminderUpcomingHeader: '📅 Upcoming Birthdays',
   dailyReminderUpcomingIntro: '{count} birthdays in the next {days} days:',
+  // Link labels in emails
   viewCalendar: 'View Calendar',
   manageContacts: 'Manage Contacts'
 };
