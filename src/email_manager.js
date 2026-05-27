@@ -143,114 +143,107 @@ class EmailManager {
 
 
   /**
-   * Sends daily birthday reminder emails
+   * Sends a birthday reminder email for upcoming birthdays within a configurable window.
    * @param {BirthdayContact[]} contacts - Array of contacts
-   * @param {Date} date - Date to check for birthdays
-   * @param {number} previewDays - Number of days to preview upcoming birthdays
+   * @param {Date} date - Reference date (today)
+   * @param {number} daysBefore - How many days ahead to look for birthdays
    */
-  sendBirthdayReminder(contacts, date = new Date(), previewDays = 5) {
+  sendBirthdayReminder(contacts, date = new Date(), daysBefore = 3) {
     if (contacts.length === 0) {
       Logger.log("No contacts found. Aborting.");
       return;
     }
 
-    const startDate = new Date(date);
-    startDate.setDate(date.getDate() + 1);
-    const endDate = new Date(date);
-    const millisecondsPerDay = 24 * 60 * 60 * 1000;
-    endDate.setTime(date.getTime() + (previewDays * millisecondsPerDay));
     const day = date.getDate();
     const month = date.getMonth();
+    const endDate = new Date(date);
+    endDate.setDate(date.getDate() + daysBefore);
 
-    Logger.log(`Creating daily mail`);
+    Logger.log(`Creating birthday reminder (next ${daysBefore} days)...`);
 
-    // Filter contacts with birthdays in the specified time
-    const todaysContacts = getContactsByBirthday(contacts, day, month);
-    const nextDaysContacts = getContactsByBirthdayBetweenDates(contacts, startDate, endDate);
+    // Get all contacts with birthdays in the window (today through today + daysBefore)
+    const reminderContacts = contacts.filter(contact => {
+      const bMonth = contact.birthday.getMonth();
+      const bDay = contact.birthday.getDate();
+      // Check each day in the window
+      for (let i = 0; i <= daysBefore; i++) {
+        const checkDate = new Date(date);
+        checkDate.setDate(date.getDate() + i);
+        if (bMonth === checkDate.getMonth() && bDay === checkDate.getDate()) {
+          return true;
+        }
+      }
+      return false;
+    }).sort((a, b) => {
+      // Sort by days until birthday
+      const aDays = this._daysUntil(date, a.birthday);
+      const bDays = this._daysUntil(date, b.birthday);
+      return aDays - bDays || a.name.localeCompare(b.name);
+    });
 
-    // Check if there are any birthdays in the specified timespan
-    if (todaysContacts.length === 0) {
-      Logger.log('No birthdays found for today.');
+    if (reminderContacts.length === 0) {
+      Logger.log('No birthdays in the reminder window.');
       return;
     }
 
     const { toEmail, fromEmail, senderName, recipientName } = this.getEmailContext();
-    const subject = this.subjects.birthdayReminder || '🎁 Heutige Geburtstage 🎁';
+    const subject = this.subjects.birthdayReminder || '🎂 Geburtstags-Reminder';
     const greetingTemplate = this.texts.greeting || 'Hallo{name},';
     const greeting = greetingTemplate.replace('{name}', recipientName ? ` ${recipientName}` : '');
-    const titleText = this.texts.birthdayReminderTitle || '🎉 Heutige Geburtstage';
-    const introText = (this.texts.birthdayReminderIntro || 'Heute haben {count} deiner Kontakte Geburtstag. Hier sind alle Details, die du brauchst, um zu gratulieren:')
-      .replace('{count}', todaysContacts.length);
-    const upcomingHeader = this.texts.birthdayReminderUpcomingHeader || '📅 Kommende Geburtstage';
-    const upcomingIntro = (this.texts.birthdayReminderUpcomingIntro || 'In den nächsten {days} Tagen haben {count} deiner Kontakte Geburtstag:')
-      .replace('{days}', previewDays).replace('{count}', nextDaysContacts.length);
-    const viewCalendarLabel = this.texts.viewCalendar || 'Google Kalender anzeigen';
-    const manageContactsLabel = this.texts.manageContacts || 'Kontakte verwalten';
+    const titleText = this.texts.birthdayReminderTitle || '🎉 Geburtstags-Reminder';
+    const introText = (this.texts.birthdayReminderIntro || '{count} deiner Kontakte haben in den nächsten {days} Tagen Geburtstag:')
+      .replace('{count}', reminderContacts.length).replace('{days}', daysBefore);
+    const todayLabel = this.texts.birthdayReminderTodayLabel || 'HEUTE';
 
-    // Build the email content
+    // Build HTML content
+    const contactListHtml = reminderContacts.map(contact => {
+      const daysUntil = this._daysUntil(date, contact.birthday);
+      const isToday = daysUntil === 0;
+      const dateLabel = isToday
+        ? `🎂 ${todayLabel}`
+        : `📅 ${('0' + contact.birthday.getDate()).slice(-2)}. ${monthNamesLong[contact.birthday.getMonth()]}`;
+
+      const ageText = contact.hasKnownBirthYear()
+        ? ` (wird ${contact.getAgeThisYear()}${isToday ? '!' : ''})`
+        : '';
+
+      const borderColor = isToday ? '#ff6b6b' : '#007bff';
+
+      let contactInfo = '';
+      if (contact.email) contactInfo += `<span style="display: inline; margin-right: 12px;">📧 <a href="mailto:${contact.email}" style="color: #007bff; text-decoration: none;">${contact.email}</a></span>`;
+      if (contact.phoneNumber) contactInfo += `<span style="display: inline; margin-right: 12px;">📱 <a href="tel:${contact.phoneNumber}" style="color: #007bff; text-decoration: none;">${contact.phoneNumber}</a></span>`;
+      if (contact.instagramNames && contact.instagramNames.length > 0) {
+        contact.instagramNames.forEach(name => {
+          contactInfo += `<span style="display: inline; margin-right: 12px;">📸 <a href="https://instagram.com/${name.replace('@', '')}" style="color: #007bff; text-decoration: none;">${name}</a></span>`;
+        });
+      }
+
+      return `
+        <li style="padding: 10px; margin: 5px 0; border-left: 4px solid ${borderColor}; background: #ffffff;">
+          <strong>${dateLabel} — ${contact.name}</strong>${ageText}
+          ${contactInfo ? `<div style="margin-top: 6px; font-size: 13px; color: #666666;">${contactInfo}</div>` : ''}
+        </li>
+      `;
+    }).join('');
+
     const content = `
       ${this.templates.header(titleText, `${day}. ${monthNamesLong[month]} ${date.getFullYear()}`)}
-      
+
       <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 6px;">
         <p>${greeting}</p>
         <p>${introText}</p>
       </div>
 
       <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 6px;">
-        <h3 style="color: #2c3e50; font-size: 18px; margin-bottom: 15px; border-bottom: 2px solid #e9ecef; padding-bottom: 5px;">🎂 Heute</h3>
-        <ul class="birthday-list" style="list-style: none; padding: 0; margin: 0;">
-          ${todaysContacts.map(contact => `
-            <li class="birthday-item" style="padding: 10px; margin: 5px 0; border-left: 4px solid #007bff; background: #ffffff;">
-              <strong>${contact.name}</strong>
-              ${contact.hasKnownBirthYear() ? ` - wird heute ${contact.getAgeThisYear()} Jahre alt!` : ''}
-              <div class="contact-info" style="margin-top: 8px; font-size: 14px; color: #666666;">
-                ${contact.email ? `
-                  <span style="display: block; margin: 4px 0;">📧
-                    <a href="mailto:${contact.email}"
-                      style="${this.templates.buttonSmallStyle}">Glückwunsch-Mail senden</a>
-                  </span>
-                ` : ''}
-                ${contact.phoneNumber ? `
-                  <span style="display: block; margin: 4px 0;">📱
-                    <a href="tel:${contact.phoneNumber}" style="${this.templates.buttonSmallStyle}">Anrufen</a>
-                  </span>
-                ` : ''}
-                ${contact.instagramNames && contact.instagramNames.length > 0 ? `
-                  <span style="display: block; margin: 4px 0;">📸
-                    ${contact.instagramNames.map(name =>
-      `<a href="https://instagram.com/${name.replace('@', '')}" style="${this.templates.buttonSmallStyle}">${name}</a>`
-    ).join(' ')}
-                  </span>
-                ` : ''}
-              </div>
-            </li>
-          `).join('')}
+        <ul style="list-style: none; padding: 0; margin: 0;">
+          ${contactListHtml}
         </ul>
       </div>
-
-      ${nextDaysContacts.length > 0 ? `
-        <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 6px;">
-          <h3 style="color: #2c3e50; font-size: 18px; margin-bottom: 15px; border-bottom: 2px solid #e9ecef; padding-bottom: 5px;">${upcomingHeader}</h3>
-          <p>${upcomingIntro}</p>
-          <ul class="birthday-list" style="list-style: none; padding: 0; margin: 0;">
-            ${nextDaysContacts.map(contact => `
-              <li class="birthday-item" style="padding: 10px; margin: 5px 0; border-left: 4px solid #007bff; background: #ffffff;">
-                <strong>${contact.name}</strong> - 
-                ${contact.getBirthdayLongMonthFormat()}
-                <div class="contact-info" style="margin-top: 8px; font-size: 14px; color: #666666;">
-                  ${contact.email ? `<span style="display: block; margin: 4px 0;">📧 ${contact.email}</span>` : ''}
-                  ${contact.phoneNumber ? `<span style="display: block; margin: 4px 0;">📱 ${contact.phoneNumber}</span>` : ''}
-                </div>
-              </li>
-            `).join('')}
-          </ul>
-        </div>
-      ` : ''}
 
       ${this.templates.footer()}
     `;
 
-    const mailBody = this.templates.wrapEmail(content);
+    // Build plain text
     const textLines = [
       titleText,
       `${day}. ${monthNamesLong[month]} ${date.getFullYear()}`,
@@ -258,11 +251,16 @@ class EmailManager {
       greeting,
       introText,
       '',
-      '🎂 Heute',
       '─'.repeat(30),
-      ...todaysContacts.map(contact => {
-        let line = `  • ${contact.name}`;
-        if (contact.hasKnownBirthYear()) line += ` - wird heute ${contact.getAgeThisYear()} Jahre alt`;
+      ...reminderContacts.map(contact => {
+        const daysUntil = this._daysUntil(date, contact.birthday);
+        const isToday = daysUntil === 0;
+        const dateLabel = isToday
+          ? `🎂 ${todayLabel}`
+          : `📅 ${('0' + contact.birthday.getDate()).slice(-2)}. ${monthNamesLong[contact.birthday.getMonth()]}`;
+
+        let line = `  ${dateLabel} — ${contact.name}`;
+        if (contact.hasKnownBirthYear()) line += ` (wird ${contact.getAgeThisYear()})`;
         if (contact.email) line += `\n    📧 ${contact.email}`;
         if (contact.phoneNumber) line += `\n    📱 ${contact.phoneNumber}`;
         if (contact.instagramNames && contact.instagramNames.length > 0) {
@@ -272,24 +270,25 @@ class EmailManager {
       }),
     ];
 
-    if (nextDaysContacts.length > 0) {
-      textLines.push('', upcomingHeader, '─'.repeat(30), upcomingIntro, '');
-      nextDaysContacts.forEach(contact => {
-        let line = `  • ${contact.name} - ${contact.getBirthdayLongMonthFormat()}`;
-        if (contact.email) line += ` (${contact.email})`;
-        textLines.push(line);
-      });
-    }
-
-    textLines.push(
-      '',
-      `${viewCalendarLabel}: https://calendar.google.com/calendar/r`,
-      `${manageContactsLabel}: https://contacts.google.com`
-    );
-
     const textBody = textLines.join('\n');
+    const mailBody = this.templates.wrapEmail(content);
     this.sendMail(toEmail, fromEmail, senderName, subject, textBody, mailBody);
-    Logger.log(`Daily reminder email sent successfully!`);
+    Logger.log(`Birthday reminder email sent successfully!`);
+  }
+
+
+  /**
+   * Calculates days from a reference date until a contact's next birthday occurrence.
+   * @param {Date} fromDate - Reference date
+   * @param {Date} birthday - Contact's birthday
+   * @returns {number} Days until the birthday (0 = today)
+   * @private
+   */
+  _daysUntil(fromDate, birthday) {
+    const thisYear = new Date(fromDate.getFullYear(), birthday.getMonth(), birthday.getDate());
+    const diffMs = thisYear.getTime() - fromDate.getTime();
+    const diffDays = Math.round(diffMs / (24 * 60 * 60 * 1000));
+    return diffDays >= 0 ? diffDays : diffDays + 365;
   }
 
 
