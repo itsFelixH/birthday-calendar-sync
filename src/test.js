@@ -274,8 +274,8 @@ function testEmailManager() {
   Logger.log('Testing monthly summary email...');
   emailManager.sendMonthlySummary(contacts, 0, 2024);
 
-  Logger.log('Testing birthday reminder email...');
-  emailManager.sendBirthdayReminder(contacts, new Date(2024, 0, 15), 5);
+  Logger.log('Testing weekly reminder email...');
+  emailManager.sendWeeklyReminder(contacts, new Date(2024, 0, 15), 5);
 
   Logger.log('Testing sync report email...');
   const changes = {
