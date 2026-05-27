@@ -85,34 +85,64 @@ function sendMonthlySummary() {
   }
 }
 
-function sendBirthdayReminder() {
+function sendWeeklyReminder() {
   try {
     const isDryRun = typeof dryRun !== 'undefined' && dryRun;
-    const enabled = typeof sendBirthdayReminderEmail !== 'undefined' ? sendBirthdayReminderEmail : false;
+    const enabled = typeof sendWeeklyReminderEmail !== 'undefined' ? sendWeeklyReminderEmail : false;
 
     if (!enabled) {
-      Logger.log('📧 Birthday reminder email disabled by config.');
+      Logger.log('📧 Weekly reminder email disabled by config.');
+      return;
+    }
+
+    const today = new Date();
+    const sendDay = typeof weeklyReminderDay !== 'undefined' ? weeklyReminderDay : 1;
+
+    // Check if today is the configured send day (-1 = send every day)
+    if (sendDay >= 0 && today.getDay() !== sendDay) {
+      Logger.log(`📧 Weekly reminder skipped (today is not the configured send day).`);
       return;
     }
 
     const contacts = fetchContactsWithBirthdays(useLabel ? labelFilter : []);
 
     if (!contacts || contacts.length === 0) {
-      Logger.log('⚠️ No contacts with birthdays found. Aborting birthday reminder.');
+      Logger.log('⚠️ No contacts with birthdays found. Aborting weekly reminder.');
       return;
     }
 
-    const today = new Date();
-    const days = typeof reminderDaysBefore !== 'undefined' ? reminderDaysBefore : 3;
+    const days = typeof reminderDaysBefore !== 'undefined' ? reminderDaysBefore : 7;
 
     if (isDryRun) {
-      Logger.log(`🧪 [DRY RUN] Would send birthday reminder for the next ${days} days`);
+      Logger.log(`🧪 [DRY RUN] Would send weekly reminder for the next ${days} days`);
       return;
     }
 
     const emailManager = new EmailManager();
-    emailManager.sendBirthdayReminder(contacts, today, days);
+    emailManager.sendWeeklyReminder(contacts, today, days);
   } catch (error) {
-    Logger.log(`💥 Error in sendBirthdayReminder: ${error.message}`);
+    Logger.log(`💥 Error in sendWeeklyReminder: ${error.message}`);
+  }
+}
+
+function sendContactQualityReport() {
+  try {
+    const isDryRun = typeof dryRun !== 'undefined' && dryRun;
+    const contacts = fetchContactsWithBirthdays(useLabel ? labelFilter : []);
+
+    if (!contacts || contacts.length === 0) {
+      Logger.log('⚠️ No contacts with birthdays found. Aborting quality report.');
+      return;
+    }
+
+    if (isDryRun) {
+      Logger.log(`🧪 [DRY RUN] Would send contact quality report for ${contacts.length} contacts`);
+      return;
+    }
+
+    const emailManager = new EmailManager();
+    emailManager.sendContactQualityReport(contacts);
+  } catch (error) {
+    Logger.log(`💥 Error in sendContactQualityReport: ${error.message}`);
   }
 }
