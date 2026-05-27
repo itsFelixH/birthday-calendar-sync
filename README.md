@@ -31,49 +31,36 @@ cd birthday-calendar-sync
 pnpm install
 ```
 
-### 2. Authenticate with clasp
+### 2. Authenticate and create project
 
 ```bash
 pnpx @google/clasp login
-```
-
-### 3. Create or link a Google Apps Script project
-
-```bash
 pnpx @google/clasp create --type standalone --title "Birthday Calendar Sync"
 ```
 
-Or copy `.clasp.json.example` to `.clasp.json` and set your `scriptId`.
-
-### 4. Configure
-
-Copy the template and fill in your values:
+### 3. Configure
 
 ```bash
 cp src/config.js.template src/config.js
 ```
 
-At minimum, set your `calendarId`. Everything else has sensible defaults.
+Set your `calendarId` in `src/config.js`. Optionally enable email notifications and adjust schedule times — everything else has sensible defaults.
 
-### 5. Deploy
+### 4. Deploy and schedule
 
 ```bash
-pnpm run deploy   # runs tests, then pushes to Apps Script
+pnpm run deploy
 ```
 
-### 6. Set up schedules
+Then run `setupSchedules()` once in the Apps Script editor. This creates triggers based on your config:
 
-Run `setupSchedules()` once in the Apps Script editor to create all time-based triggers automatically:
+| Function | Default Schedule | Condition |
+|----------|-----------------|-----------|
+| `syncBirthdays` | Monday ~3:00 AM | Always |
+| `sendMonthlySummary` | 28th ~9:00 AM | Only if `sendMonthlySummaryEmail = true` |
+| `sendWeeklyReminder` | Monday ~10:00 AM | Only if `sendWeeklyReminderEmail = true` |
 
-| Function | Default Schedule |
-|----------|-----------------|
-| `syncBirthdays` | Monday at ~3:00 AM |
-| `sendMonthlySummary` | 28th of each month at ~9:00 AM |
-| `sendWeeklyReminder` | Monday at ~10:00 AM |
-
-You can customize the schedule times in `config.js` before running `setupSchedules()`. Re-running it will replace existing triggers with the new settings. Only triggers managed by this script are touched — any triggers you've created manually for other functions are left alone.
-
-To remove all managed triggers (e.g., to pause the sync), run `removeSchedules()`.
+Re-running `setupSchedules()` replaces existing triggers. Run `removeSchedules()` to pause.
 
 ## Configuration
 
