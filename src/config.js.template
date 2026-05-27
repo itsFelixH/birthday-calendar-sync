@@ -82,9 +82,7 @@ const emailTexts = {
   birthdayReminderUpcomingIntro: '{count} birthdays in the next {days} days:',
   // Link labels in emails
   viewCalendar: 'View Calendar',
-  manageContacts: 'Manage Contacts',
-  // Footer
-  footerSentBy: 'Sent by Birthday Calendar Sync'
+  manageContacts: 'Manage Contacts'
 };
 
 
