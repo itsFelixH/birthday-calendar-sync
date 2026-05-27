@@ -111,7 +111,7 @@ class BirthdayContact {
   getBirthdayEventString(ageOverride) {
     const texts = typeof eventTexts !== 'undefined' ? eventTexts : {};
     const birthLabel = texts.birthDateLabel || 'Geburtstag';
-    const socialLinks = typeof showSocialLinks !== 'undefined' ? showSocialLinks : true;
+    const socialLinks = typeof showSocialLinksInEvents !== 'undefined' ? showSocialLinksInEvents : true;
 
     let string;
     if (ageOverride === null) {
