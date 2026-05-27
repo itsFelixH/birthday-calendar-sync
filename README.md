@@ -71,7 +71,9 @@ Run `setupSchedules()` once in the Apps Script editor to create all time-based t
 | `sendMonthlySummary` | 28th of each month at ~8:00 AM |
 | `sendWeeklyReminder` | Monday at ~7:00 AM |
 
-You can customize the schedule times in `config.js` before running `setupSchedules()`. Re-running it will replace existing triggers with the new settings.
+You can customize the schedule times in `config.js` before running `setupSchedules()`. Re-running it will replace existing triggers with the new settings. Only triggers managed by this script are touched — any triggers you've created manually for other functions are left alone.
+
+To remove all managed triggers (e.g., to pause the sync), run `removeSchedules()`.
 
 ## Configuration
 
