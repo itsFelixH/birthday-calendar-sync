@@ -301,6 +301,26 @@ class EmailManager {
     const createdLabel = this.texts.syncReportCreated || '✨ Neu erstellt:';
     const updatedLabel = this.texts.syncReportUpdated || '🔄 Aktualisiert:';
     const viewCalendarLabel = this.texts.viewCalendar || 'Google Kalender anzeigen';
+    const maxItems = typeof syncReportMaxItems !== 'undefined' ? syncReportMaxItems : 0;
+
+    // Helper to cap a list and add "...and X more" if needed
+    const capList = (items) => {
+      if (maxItems <= 0 || items.length <= maxItems) return { shown: items, overflow: 0 };
+      return { shown: items.slice(0, maxItems), overflow: items.length - maxItems };
+    };
+
+    const renderList = (items, isHtml) => {
+      const { shown, overflow } = capList(items);
+      if (isHtml) {
+        let html = shown.map(event => `<li>${event}</li>`).join('');
+        if (overflow > 0) html += `<li style="color: #666; font-style: italic;">...und ${overflow} weitere</li>`;
+        return html;
+      } else {
+        const lines = shown.map(event => `    • ${event}`);
+        if (overflow > 0) lines.push(`    ...und ${overflow} weitere`);
+        return lines;
+      }
+    };
 
     // Build change sections
     let changeSections = '';
@@ -312,13 +332,13 @@ class EmailManager {
           ${changes.individual.created.length > 0 ? `
             <p><strong>${createdLabel}</strong></p>
             <ul style="padding-left: 20px; margin: 5px 0 15px;">
-              ${changes.individual.created.map(event => `<li>${event}</li>`).join('')}
+              ${renderList(changes.individual.created, true)}
             </ul>
           ` : ''}
           ${changes.individual.updated.length > 0 ? `
             <p><strong>${updatedLabel}</strong></p>
             <ul style="padding-left: 20px; margin: 5px 0 15px;">
-              ${changes.individual.updated.map(event => `<li>${event}</li>`).join('')}
+              ${renderList(changes.individual.updated, true)}
             </ul>
           ` : ''}
         </div>
@@ -332,13 +352,13 @@ class EmailManager {
           ${changes.summary.created.length > 0 ? `
             <p><strong>${createdLabel}</strong></p>
             <ul style="padding-left: 20px; margin: 5px 0 15px;">
-              ${changes.summary.created.map(event => `<li>${event}</li>`).join('')}
+              ${renderList(changes.summary.created, true)}
             </ul>
           ` : ''}
           ${changes.summary.updated.length > 0 ? `
             <p><strong>${updatedLabel}</strong></p>
             <ul style="padding-left: 20px; margin: 5px 0 15px;">
-              ${changes.summary.updated.map(event => `<li>${event}</li>`).join('')}
+              ${renderList(changes.summary.updated, true)}
             </ul>
           ` : ''}
         </div>
@@ -371,11 +391,11 @@ class EmailManager {
       textLines.push('', individualHeader);
       if (changes.individual.created.length > 0) {
         textLines.push(`  ${createdLabel}`);
-        changes.individual.created.forEach(event => textLines.push(`    • ${event}`));
+        textLines.push(...renderList(changes.individual.created, false));
       }
       if (changes.individual.updated.length > 0) {
         textLines.push(`  ${updatedLabel}`);
-        changes.individual.updated.forEach(event => textLines.push(`    • ${event}`));
+        textLines.push(...renderList(changes.individual.updated, false));
       }
     }
 
@@ -383,11 +403,11 @@ class EmailManager {
       textLines.push('', summaryHeader);
       if (changes.summary.created.length > 0) {
         textLines.push(`  ${createdLabel}`);
-        changes.summary.created.forEach(event => textLines.push(`    • ${event}`));
+        textLines.push(...renderList(changes.summary.created, false));
       }
       if (changes.summary.updated.length > 0) {
         textLines.push(`  ${updatedLabel}`);
-        changes.summary.updated.forEach(event => textLines.push(`    • ${event}`));
+        textLines.push(...renderList(changes.summary.updated, false));
       }
     }
 
