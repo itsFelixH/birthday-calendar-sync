@@ -157,7 +157,8 @@ const eventColors = {
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| `showSocialLinks` | `true` | Show WhatsApp/Instagram in descriptions |
+| `showSocialLinksInEvents` | `true` | Show WhatsApp/Instagram in event descriptions |
+| `showSocialLinksInEmails` | `true` | Show WhatsApp/Instagram in reminder emails |
 | `showEventTag` | `false` | Show the `[BirthdaySync]` tag visibly |
 
 </details>
