@@ -43,7 +43,7 @@ function updateBirthdaysAndSummariesInCalendar() {
         Logger.log(`   Summary created: ${changes.summary.created.length}, updated: ${changes.summary.updated.length}`);
       } else if (shouldEmail) {
         const emailManager = new EmailManager();
-        emailManager.sendCalendarUpdateEmail(changes);
+        emailManager.sendSyncReport(changes);
       } else {
         Logger.log('📧 Calendar update email disabled by config.');
       }
@@ -53,7 +53,7 @@ function updateBirthdaysAndSummariesInCalendar() {
   }
 }
 
-function sendSummaryMail() {
+function sendMonthlySummary() {
   try {
     const isDryRun = typeof dryRun !== 'undefined' && dryRun;
     const contacts = fetchContactsWithBirthdays(useLabel ? labelFilter : []);
@@ -72,19 +72,19 @@ function sendSummaryMail() {
     }
 
     const emailManager = new EmailManager();
-    emailManager.sendMonthlyBirthdaySummaryMail(contacts, nextMonthDate.getMonth(), nextMonthDate.getFullYear());
+    emailManager.sendMonthlySummary(contacts, nextMonthDate.getMonth(), nextMonthDate.getFullYear());
   } catch (error) {
-    Logger.log(`💥 Error in sendSummaryMail: ${error.message}`);
+    Logger.log(`💥 Error in sendMonthlySummary: ${error.message}`);
   }
 }
 
-function sendDailyMail() {
+function sendBirthdayReminder() {
   try {
     const isDryRun = typeof dryRun !== 'undefined' && dryRun;
     const contacts = fetchContactsWithBirthdays(useLabel ? labelFilter : []);
 
     if (!contacts || contacts.length === 0) {
-      Logger.log('⚠️ No contacts with birthdays found. Aborting daily mail.');
+      Logger.log('⚠️ No contacts with birthdays found. Aborting birthday reminder.');
       return;
     }
 
@@ -94,13 +94,13 @@ function sendDailyMail() {
 
     if (isDryRun) {
       const tomorrowContacts = getContactsByBirthday(contacts, tomorrow.getDate(), tomorrow.getMonth());
-      Logger.log(`🧪 [DRY RUN] Would send daily birthday email for ${tomorrow.toLocaleDateString()} with ${tomorrowContacts.length} birthdays`);
+      Logger.log(`🧪 [DRY RUN] Would send birthday reminder for ${tomorrow.toLocaleDateString()} with ${tomorrowContacts.length} birthdays`);
       return;
     }
 
     const emailManager = new EmailManager();
-    emailManager.sendDailyBirthdayMail(contacts, tomorrow, 15);
+    emailManager.sendBirthdayReminder(contacts, tomorrow, 15);
   } catch (error) {
-    Logger.log(`💥 Error in sendDailyMail: ${error.message}`);
+    Logger.log(`💥 Error in sendBirthdayReminder: ${error.message}`);
   }
 }
