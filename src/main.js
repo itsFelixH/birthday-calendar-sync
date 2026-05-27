@@ -8,18 +8,47 @@ const MANAGED_FUNCTIONS = [
   'sendWeeklyReminder'
 ];
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// CONFIG VALIDATION
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Checks whether calendarId is properly configured.
+ * @returns {boolean} true if valid, false if missing/placeholder
+ */
+function isCalendarConfigured() {
+  if (typeof calendarId === 'undefined' || !calendarId || calendarId === 'your-calendar-id@group.calendar.google.com') {
+    Logger.log('❌ calendarId is not configured.');
+    Logger.log('   Please set your calendar ID in config.js first.');
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Checks whether label filtering is correctly configured.
+ * @returns {boolean} true if valid (labels provided or filtering disabled), false if misconfigured
+ */
+function isLabelFilterConfigured() {
+  if (useLabel && (!labelFilter || labelFilter.length === 0)) {
+    Logger.log('⚠️ useLabel is enabled but labelFilter is empty — no contacts will match.');
+    Logger.log('   Add label names to labelFilter in config.js, or set useLabel to false.');
+    return false;
+  }
+  return true;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SCHEDULING
+// ═══════════════════════════════════════════════════════════════════════════════
+
 /**
  * Creates time-based triggers for all sync functions.
  * Run this once after deploying to set up automatic scheduling.
  * Safe to re-run — removes only triggers managed by this script.
  */
 function setupSchedules() {
-  // Validate config before creating triggers that would fail on every run
-  if (typeof calendarId === 'undefined' || !calendarId || calendarId === 'your-calendar-id@group.calendar.google.com') {
-    Logger.log('❌ Cannot set up schedules: calendarId is not configured.');
-    Logger.log('   Please set your calendar ID in config.js first.');
-    return;
-  }
+  if (!isCalendarConfigured()) return;
 
   // Remove only triggers managed by this script
   const existing = ScriptApp.getProjectTriggers().filter(
@@ -91,17 +120,7 @@ function removeSchedules() {
  */
 function updateBirthdaysAndSummariesInCalendar() {
   try {
-    if (typeof calendarId === 'undefined' || !calendarId || calendarId === 'your-calendar-id@group.calendar.google.com') {
-      Logger.log('❌ Cannot sync birthdays: calendarId is not configured.');
-      Logger.log('   Please set your calendar ID in config.js first.');
-      return;
-    }
-
-    if (useLabel && (!labelFilter || labelFilter.length === 0)) {
-      Logger.log('⚠️ useLabel is enabled but labelFilter is empty — no contacts will match.');
-      Logger.log('   Add label names to labelFilter in config.js, or set useLabel to false.');
-      return;
-    }
+    if (!isCalendarConfigured() || !isLabelFilterConfigured()) return;
 
     const isDryRun = typeof dryRun !== 'undefined' && dryRun;
     if (isDryRun) Logger.log('🧪 DRY RUN MODE — no calendar or email changes will be made');
@@ -162,11 +181,7 @@ function sendMonthlySummary() {
       return;
     }
 
-    if (useLabel && (!labelFilter || labelFilter.length === 0)) {
-      Logger.log('⚠️ useLabel is enabled but labelFilter is empty — no contacts will match.');
-      Logger.log('   Add label names to labelFilter in config.js, or set useLabel to false.');
-      return;
-    }
+    if (!isLabelFilterConfigured()) return;
 
     const contacts = fetchContactsWithBirthdays(useLabel ? labelFilter : []);
 
@@ -200,11 +215,7 @@ function sendWeeklyReminder() {
       return;
     }
 
-    if (useLabel && (!labelFilter || labelFilter.length === 0)) {
-      Logger.log('⚠️ useLabel is enabled but labelFilter is empty — no contacts will match.');
-      Logger.log('   Add label names to labelFilter in config.js, or set useLabel to false.');
-      return;
-    }
+    if (!isLabelFilterConfigured()) return;
 
     const today = new Date();
     const sendDay = typeof weeklyReminderDay !== 'undefined' ? weeklyReminderDay : 1;
@@ -240,11 +251,7 @@ function sendContactQualityReport() {
   try {
     const isDryRun = typeof dryRun !== 'undefined' && dryRun;
 
-    if (useLabel && (!labelFilter || labelFilter.length === 0)) {
-      Logger.log('⚠️ useLabel is enabled but labelFilter is empty — no contacts will match.');
-      Logger.log('   Add label names to labelFilter in config.js, or set useLabel to false.');
-      return;
-    }
+    if (!isLabelFilterConfigured()) return;
 
     const contacts = fetchContactsWithBirthdays(useLabel ? labelFilter : []);
 
