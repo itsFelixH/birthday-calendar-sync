@@ -189,10 +189,9 @@ const emailTexts = {
   syncReportSummaryHeader: 'Monthly Summaries:',
   syncReportCreated: '✨ Created:',
   syncReportUpdated: '🔄 Updated:',
-  birthdayReminderTitle: '🎉 Today\'s Birthdays',
-  birthdayReminderIntro: '{count} of your contacts have a birthday today:',
-  birthdayReminderUpcomingHeader: '📅 Upcoming Birthdays',
-  birthdayReminderUpcomingIntro: '{count} birthdays in the next {days} days:',
+  birthdayReminderTitle: '🎉 Birthday Reminder',
+  birthdayReminderIntro: '{count} of your contacts have birthdays in the next {days} days:',
+  birthdayReminderTodayLabel: 'TODAY',
   viewCalendar: 'View Calendar',
   manageContacts: 'Manage Contacts'
 };
