@@ -91,7 +91,10 @@ const emailTexts = {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 // ─── Title templates ──────────────────────────────────────────────────────────
-// Placeholders: {name}, {age}, {birthdate}, {lifespan}
+// Placeholders: {name}, {age}, {birthdate}, {city}, {lifespan}
+// {name} = contact name, {age} = age turning, {birthdate} = formatted birth date,
+// {city} = contact's city, {lifespan} = "*1990 †2022" (memorial only)
+// Summary title also supports: {month}, {year}, {count}
 const eventTitles = {
   birthday: '🎂 {name}\'s Birthday',
   milestone: '🎂🎉 {name} turns {age}! 🎉',
@@ -103,6 +106,8 @@ const eventTitles = {
 // ─── Description texts ────────────────────────────────────────────────────────
 // Labels and section headers used in event descriptions.
 // Set a header to '' to hide it (content still appears).
+// birthdayWithAge/birthdayNoAge support: {name}, {age}, {birthdate}, {city}, {phone}
+// summaryHeader supports: {month}, {year}, {count}
 const eventTexts = {
   birthdayWithAge: '🎂 {name} turns {age}',
   birthdayNoAge: '🎂 Happy Birthday, {name}!',
