@@ -140,12 +140,12 @@ class EmailManager {
 
 
   /**
-   * Sends a birthday reminder email for upcoming birthdays within a configurable window.
+   * Sends a weekly birthday digest email for upcoming birthdays within a configurable window.
    * @param {BirthdayContact[]} contacts - Array of contacts
    * @param {Date} date - Reference date (today)
-   * @param {number} daysBefore - How many days ahead to look for birthdays
+   * @param {number} days - How many days ahead to look for birthdays
    */
-  sendBirthdayReminder(contacts, date = new Date(), daysBefore = 7) {
+  sendWeeklyDigest(contacts, date = new Date(), days = 7) {
     if (contacts.length === 0) {
       Logger.log("No contacts found. Aborting.");
       return;
@@ -154,44 +154,54 @@ class EmailManager {
     const day = date.getDate();
     const month = date.getMonth();
     const endDate = new Date(date);
-    endDate.setDate(date.getDate() + daysBefore);
+    endDate.setDate(date.getDate() + days);
 
-    Logger.log(`Creating birthday reminder (next ${daysBefore} days)...`);
+    Logger.log(`Creating weekly digest (next ${days} days)...`);
 
-    // Get all contacts with birthdays in the window (today through today + daysBefore)
-    const reminderContacts = contacts.filter(contact => {
-      return this._daysUntil(date, contact.birthday) <= daysBefore;
+    // Get all contacts with birthdays in the window (today through today + days)
+    const digestContacts = contacts.filter(contact => {
+      return this._daysUntil(date, contact.birthday) <= days;
     }).sort((a, b) => {
-      // Sort by days until birthday
       const aDays = this._daysUntil(date, a.birthday);
       const bDays = this._daysUntil(date, b.birthday);
       return aDays - bDays || a.name.localeCompare(b.name);
     });
 
-    if (reminderContacts.length === 0) {
-      Logger.log('No birthdays in the reminder window.');
+    if (digestContacts.length === 0) {
+      Logger.log('No birthdays in the digest window.');
       return;
     }
 
     const { toEmail, fromEmail, senderName, recipientName } = this.getEmailContext();
-    const subject = this.subjects.birthdayReminder || '🎂 Birthday Reminder';
+    const subject = (this.subjects.weeklyDigest || '🎂 Weekly Birthday Digest')
+      .replace('{count}', digestContacts.length);
     const greetingTemplate = this.texts.greeting || 'Hi{name},';
     const greeting = greetingTemplate.replace('{name}', recipientName ? ` ${recipientName}` : '');
-    const titleText = this.texts.birthdayReminderTitle || '🎉 Birthday Reminder';
-    const introTemplate = daysBefore === 1
-      ? (this.texts.birthdayReminderIntroSingular || '{count} of your contacts have a birthday tomorrow:')
-      : (this.texts.birthdayReminderIntro || '{count} of your contacts have birthdays in the next {days} days:');
-    const introText = introTemplate.replace('{count}', reminderContacts.length).replace('{days}', daysBefore);
-    const todayLabel = this.texts.birthdayReminderTodayLabel || 'TODAY';
-    const ageTemplate = this.texts.birthdayReminderAge || 'turns {age}';
-    const daysUntilLabel = this.texts.birthdayReminderDaysUntil || 'in {days} days';
-    const tomorrowLabel = this.texts.birthdayReminderTomorrow || 'tomorrow';
+    const titleText = this.texts.weeklyDigestTitle || '🎂 Weekly Birthday Digest';
+    const introTemplate = days === 1
+      ? (this.texts.weeklyDigestIntroSingular || '{count} of your contacts have a birthday tomorrow:')
+      : (this.texts.weeklyDigestIntro || '{count} of your contacts have birthdays in the next {days} days:');
+    const introText = introTemplate.replace('{count}', digestContacts.length).replace('{days}', days);
+    const todayLabel = this.texts.weeklyDigestTodayLabel || 'TODAY';
+    const ageTemplate = this.texts.weeklyDigestAge || 'turns {age}';
+    const daysUntilLabel = this.texts.weeklyDigestDaysUntil || 'in {days} days';
+    const tomorrowLabel = this.texts.weeklyDigestTomorrow || 'tomorrow';
     const socialLinks = typeof showSocialLinksInEmails !== 'undefined' ? showSocialLinksInEmails : true;
     const showMilestones = typeof highlightMilestones !== 'undefined' ? highlightMilestones : false;
     const milestones = typeof milestoneAges !== 'undefined' ? milestoneAges : [];
 
+    // Week range for subtitle
+    const endDay = endDate.getDate();
+    const endMonth = endDate.getMonth();
+    const subtitle = `${('0' + day).slice(-2)}. ${monthNamesLong[month]} – ${('0' + endDay).slice(-2)}. ${monthNamesLong[endMonth]} ${date.getFullYear()}`;
+
+    // Count milestones for summary
+    const milestoneCount = showMilestones ? digestContacts.filter(c =>
+      c.hasKnownBirthYear() && milestones.includes(c.getAgeThisYear())
+    ).length : 0;
+
     // Build HTML content
-    const contactListHtml = reminderContacts.map(contact => {
+    const contactListHtml = digestContacts.map(contact => {
       const daysUntil = this._daysUntil(date, contact.birthday);
       const isToday = daysUntil === 0;
       const isTomorrow = daysUntil === 1;
@@ -236,11 +246,17 @@ class EmailManager {
       `;
     }).join('');
 
+    // Summary line
+    let summaryHtml = `<p style="font-size: 15px; margin: 0;"><strong>🎂 ${digestContacts.length}</strong> birthday${digestContacts.length !== 1 ? 's' : ''} this week`;
+    if (milestoneCount > 0) summaryHtml += ` · <strong>🎉 ${milestoneCount}</strong> milestone${milestoneCount !== 1 ? 's' : ''}`;
+    summaryHtml += `</p>`;
+
     const content = `
-      ${this.templates.header(titleText, `${day}. ${monthNamesLong[month]} ${date.getFullYear()}`)}
+      ${this.templates.header(titleText, subtitle)}
 
       <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 6px;">
         <p>${greeting}</p>
+        ${summaryHtml}
         <p>${introText}</p>
       </div>
 
@@ -256,13 +272,14 @@ class EmailManager {
     // Build plain text
     const textLines = [
       titleText,
-      `${day}. ${monthNamesLong[month]} ${date.getFullYear()}`,
+      subtitle,
       '',
       greeting,
+      `🎂 ${digestContacts.length} birthday${digestContacts.length !== 1 ? 's' : ''} this week${milestoneCount > 0 ? ` · 🎉 ${milestoneCount} milestone${milestoneCount !== 1 ? 's' : ''}` : ''}`,
       introText,
       '',
       '─'.repeat(30),
-      ...reminderContacts.map(contact => {
+      ...digestContacts.map(contact => {
         const daysUntil = this._daysUntil(date, contact.birthday);
         const isToday = daysUntil === 0;
         const isTomorrow = daysUntil === 1;
@@ -299,7 +316,7 @@ class EmailManager {
     const textBody = textLines.join('\n');
     const mailBody = this.templates.wrapEmail(content);
     this.sendMail(toEmail, fromEmail, senderName, subject, textBody, mailBody);
-    Logger.log(`Birthday reminder email sent successfully!`);
+    Logger.log(`Weekly digest email sent successfully!`);
   }
 
 
