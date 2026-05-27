@@ -36,7 +36,7 @@ function updateBirthdaysAndSummariesInCalendar() {
     }
 
     if (hasChanges(changes)) {
-      const shouldEmail = typeof sendSyncReport !== 'undefined' ? sendSyncReport : true;
+      const shouldEmail = typeof sendSyncReport !== 'undefined' ? sendSyncReport : false;
       if (isDryRun) {
         Logger.log('🧪 [DRY RUN] Would send calendar update email with changes:');
         Logger.log(`   Individual created: ${changes.individual.created.length}, updated: ${changes.individual.updated.length}`);
@@ -56,6 +56,13 @@ function updateBirthdaysAndSummariesInCalendar() {
 function sendMonthlySummary() {
   try {
     const isDryRun = typeof dryRun !== 'undefined' && dryRun;
+    const enabled = typeof sendMonthlySummaryEmail !== 'undefined' ? sendMonthlySummaryEmail : false;
+
+    if (!enabled) {
+      Logger.log('📧 Monthly summary email disabled by config.');
+      return;
+    }
+
     const contacts = fetchContactsWithBirthdays(useLabel ? labelFilter : []);
 
     if (!contacts || contacts.length === 0) {
@@ -81,6 +88,13 @@ function sendMonthlySummary() {
 function sendBirthdayReminder() {
   try {
     const isDryRun = typeof dryRun !== 'undefined' && dryRun;
+    const enabled = typeof sendBirthdayReminderEmail !== 'undefined' ? sendBirthdayReminderEmail : false;
+
+    if (!enabled) {
+      Logger.log('📧 Birthday reminder email disabled by config.');
+      return;
+    }
+
     const contacts = fetchContactsWithBirthdays(useLabel ? labelFilter : []);
 
     if (!contacts || contacts.length === 0) {
