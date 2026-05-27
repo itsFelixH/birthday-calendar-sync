@@ -47,8 +47,17 @@ const summaryMonthsAhead = 6;
 // Send an email after syncing with a list of created/updated events.
 const sendSyncReport = false;
 
+// Send a monthly summary email listing next month's birthdays.
+const sendMonthlySummaryEmail = false;
+
+// Send a birthday reminder email for upcoming birthdays.
+const sendBirthdayReminderEmail = false;
+
 // How many days before a birthday to include it in the reminder email.
 const reminderDaysBefore = 3;
+
+// Maximum number of events to list in the sync report (0 = unlimited).
+const syncReportMaxItems = 0;
 
 // ─── Email subjects ───────────────────────────────────────────────────────────
 
