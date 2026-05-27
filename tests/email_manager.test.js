@@ -179,8 +179,8 @@ describe('EmailTemplates', () => {
       const styles = EmailTemplates.styles;
       expect(typeof styles).toBe('string');
       expect(styles).toContain('.email-container');
-      expect(styles).toContain('.header');
-      expect(styles).toContain('.button');
+      expect(styles).toContain('.birthday-list');
+      expect(styles).toContain('.birthday-item');
     });
   });
 
@@ -188,21 +188,21 @@ describe('EmailTemplates', () => {
     it('should generate header HTML with title', () => {
       const html = EmailTemplates.header('Test Title');
       expect(html).toContain('Test Title');
-      expect(html).toContain('class="header"');
-      expect(html).toContain('class="title"');
+      expect(html).toContain('text-align: center');
+      expect(html).toContain('font-size: 24px');
     });
 
     it('should include subtitle when provided', () => {
       const html = EmailTemplates.header('Test Title', 'Test Subtitle');
       expect(html).toContain('Test Subtitle');
-      expect(html).toContain('class="subtitle"');
+      expect(html).toContain('font-size: 16px');
     });
   });
 
   describe('footer', () => {
     it('should generate footer HTML with links', () => {
       const html = EmailTemplates.footer();
-      expect(html).toContain('class="footer"');
+      expect(html).toContain('border-top: 1px solid');
       expect(html).toContain('View Calendar');
       expect(html).toContain('Manage Contacts');
       expect(html).toContain('GitHub Repo');
