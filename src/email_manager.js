@@ -163,17 +163,7 @@ class EmailManager {
 
     // Get all contacts with birthdays in the window (today through today + daysBefore)
     const reminderContacts = contacts.filter(contact => {
-      const bMonth = contact.birthday.getMonth();
-      const bDay = contact.birthday.getDate();
-      // Check each day in the window
-      for (let i = 0; i <= daysBefore; i++) {
-        const checkDate = new Date(date);
-        checkDate.setDate(date.getDate() + i);
-        if (bMonth === checkDate.getMonth() && bDay === checkDate.getDate()) {
-          return true;
-        }
-      }
-      return false;
+      return this._daysUntil(date, contact.birthday) <= daysBefore;
     }).sort((a, b) => {
       // Sort by days until birthday
       const aDays = this._daysUntil(date, a.birthday);
@@ -285,9 +275,11 @@ class EmailManager {
    * @private
    */
   _daysUntil(fromDate, birthday) {
+    // Normalize both to midnight to avoid timezone/hour drift
+    const from = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate());
     const thisYear = new Date(fromDate.getFullYear(), birthday.getMonth(), birthday.getDate());
-    const diffMs = thisYear.getTime() - fromDate.getTime();
-    const diffDays = Math.round(diffMs / (24 * 60 * 60 * 1000));
+    const diffMs = thisYear.getTime() - from.getTime();
+    const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000));
     return diffDays >= 0 ? diffDays : diffDays + 365;
   }
 
@@ -436,13 +428,6 @@ class EmailTemplates {
    */
   static get buttonStyle() {
     return 'display: inline-block; padding: 8px 16px; margin: 4px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; font-size: 14px;';
-  }
-
-  /**
-   * Inline style for smaller action buttons within contact cards.
-   */
-  static get buttonSmallStyle() {
-    return 'display: inline-block; padding: 6px 12px; margin: 2px 4px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; font-size: 14px;';
   }
 
   /**
