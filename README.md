@@ -67,7 +67,7 @@ Run `setupSchedules()` once in the Apps Script editor to create all time-based t
 
 | Function | Default Schedule |
 |----------|-----------------|
-| `updateBirthdaysAndSummariesInCalendar` | Monday at ~3:00 AM |
+| `syncBirthdays` | Monday at ~3:00 AM |
 | `sendMonthlySummary` | 28th of each month at ~9:00 AM |
 | `sendWeeklyReminder` | Monday at ~10:00 AM |
 
