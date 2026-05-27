@@ -180,14 +180,14 @@ class EmailManager {
     }
 
     const { toEmail, fromEmail, senderName, recipientName } = this.getEmailContext();
-    const subject = this.subjects.dailyReminder || '🎁 Heutige Geburtstage 🎁';
+    const subject = this.subjects.birthdayReminder || '🎁 Heutige Geburtstage 🎁';
     const greetingTemplate = this.texts.greeting || 'Hallo{name},';
     const greeting = greetingTemplate.replace('{name}', recipientName ? ` ${recipientName}` : '');
-    const titleText = this.texts.dailyReminderTitle || '🎉 Heutige Geburtstage';
-    const introText = (this.texts.dailyReminderIntro || 'Heute haben {count} deiner Kontakte Geburtstag. Hier sind alle Details, die du brauchst, um zu gratulieren:')
+    const titleText = this.texts.birthdayReminderTitle || '🎉 Heutige Geburtstage';
+    const introText = (this.texts.birthdayReminderIntro || 'Heute haben {count} deiner Kontakte Geburtstag. Hier sind alle Details, die du brauchst, um zu gratulieren:')
       .replace('{count}', todaysContacts.length);
-    const upcomingHeader = this.texts.dailyReminderUpcomingHeader || '📅 Kommende Geburtstage';
-    const upcomingIntro = (this.texts.dailyReminderUpcomingIntro || 'In den nächsten {days} Tagen haben {count} deiner Kontakte Geburtstag:')
+    const upcomingHeader = this.texts.birthdayReminderUpcomingHeader || '📅 Kommende Geburtstage';
+    const upcomingIntro = (this.texts.birthdayReminderUpcomingIntro || 'In den nächsten {days} Tagen haben {count} deiner Kontakte Geburtstag:')
       .replace('{days}', previewDays).replace('{count}', nextDaysContacts.length);
     const viewCalendarLabel = this.texts.viewCalendar || 'Google Kalender anzeigen';
     const manageContactsLabel = this.texts.manageContacts || 'Kontakte verwalten';
@@ -311,15 +311,15 @@ class EmailManager {
   sendSyncReport(changes) {
     const { toEmail, fromEmail, senderName, recipientName } = this.getEmailContext();
 
-    const subject = this.subjects.calendarUpdate || '📅 Geburtstags Updates 📅';
+    const subject = this.subjects.syncReport || '📅 Geburtstags Updates 📅';
     const greetingTemplate = this.texts.greeting || 'Hallo{name},';
     const greeting = greetingTemplate.replace('{name}', recipientName ? ` ${recipientName}` : '');
-    const titleText = this.texts.calendarUpdateTitle || '🔄 Updates zu Geburtstags-Events';
-    const introText = this.texts.calendarUpdateIntro || 'Die folgenden Geburtstags-Events wurden deinem Kalender hinzugefügt:';
-    const individualHeader = this.texts.calendarUpdateIndividualHeader || 'Individuelle Geburtstage:';
-    const summaryHeader = this.texts.calendarUpdateSummaryHeader || 'Monatliche Geburtstagsübersichten:';
-    const createdLabel = this.texts.calendarUpdateCreated || '✨ Neu erstellt:';
-    const updatedLabel = this.texts.calendarUpdateUpdated || '🔄 Aktualisiert:';
+    const titleText = this.texts.syncReportTitle || '🔄 Updates zu Geburtstags-Events';
+    const introText = this.texts.syncReportIntro || 'Die folgenden Geburtstags-Events wurden deinem Kalender hinzugefügt:';
+    const individualHeader = this.texts.syncReportIndividualHeader || 'Individuelle Geburtstage:';
+    const summaryHeader = this.texts.syncReportSummaryHeader || 'Monatliche Geburtstagsübersichten:';
+    const createdLabel = this.texts.syncReportCreated || '✨ Neu erstellt:';
+    const updatedLabel = this.texts.syncReportUpdated || '🔄 Aktualisiert:';
     const viewCalendarLabel = this.texts.viewCalendar || 'Google Kalender anzeigen';
 
     // Build change sections
