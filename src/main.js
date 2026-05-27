@@ -36,7 +36,7 @@ function updateBirthdaysAndSummariesInCalendar() {
     }
 
     if (hasChanges(changes)) {
-      const shouldEmail = typeof sendCalendarUpdateEmail !== 'undefined' ? sendCalendarUpdateEmail : true;
+      const shouldEmail = typeof sendSyncReport !== 'undefined' ? sendSyncReport : true;
       if (isDryRun) {
         Logger.log('🧪 [DRY RUN] Would send calendar update email with changes:');
         Logger.log(`   Individual created: ${changes.individual.created.length}, updated: ${changes.individual.updated.length}`);
