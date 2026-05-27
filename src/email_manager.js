@@ -88,13 +88,13 @@ class EmailManager {
     const numBirthdays = monthContacts.length;
     const { toEmail, fromEmail, senderName, recipientName } = this.getEmailContext();
 
-    const subject = this.subjects.monthlySummary || '🎂 Geburtstags Reminder 🎂';
-    const greetingTemplate = this.texts.greeting || 'Hallo{name},';
+    const subject = this.subjects.monthlySummary || '🎂 Birthday Reminder 🎂';
+    const greetingTemplate = this.texts.greeting || 'Hi{name},';
     const greeting = greetingTemplate.replace('{name}', recipientName ? ` ${recipientName}` : '');
-    const titleText = (this.texts.monthlySummaryTitle || '🎉 Geburtstage im {month}').replace('{month}', monthNamesLong[month]);
-    const introText = (this.texts.monthlySummaryIntro || '{count} deiner Kontakte haben im {month} {year} Geburtstag:')
+    const titleText = (this.texts.monthlySummaryTitle || '🎉 {month} Birthdays').replace('{month}', monthNamesLong[month]);
+    const introText = (this.texts.monthlySummaryIntro || '{count} of your contacts have birthdays in {month} {year}:')
       .replace('{month}', monthNamesLong[month]).replace('{year}', year).replace('{count}', numBirthdays);
-    const viewCalendarLabel = this.texts.viewCalendar || 'Google Kalender anzeigen';
+    const viewCalendarLabel = this.texts.viewCalendar || 'View Calendar';
 
     // Build the email content using templates
     const content = `
@@ -125,7 +125,7 @@ class EmailManager {
       introText,
       '',
       ...monthContacts.map(contact => {
-        const ageTemplate = this.texts.monthlySummaryAge || 'wird {age}';
+        const ageTemplate = this.texts.monthlySummaryAge || 'turns {age}';
         let line = `${('0' + contact.birthday.getDate()).slice(-2)}. ${monthNamesLong[contact.birthday.getMonth()]}: ${contact.name}`;
         if (contact.hasKnownBirthYear()) line += ` (${ageTemplate.replace('{age}', contact.getAgeThisYear())})`;
         return `  • ${line}`;
@@ -174,16 +174,16 @@ class EmailManager {
     }
 
     const { toEmail, fromEmail, senderName, recipientName } = this.getEmailContext();
-    const subject = this.subjects.birthdayReminder || '🎂 Geburtstags-Reminder';
-    const greetingTemplate = this.texts.greeting || 'Hallo{name},';
+    const subject = this.subjects.birthdayReminder || '🎂 Birthday Reminder';
+    const greetingTemplate = this.texts.greeting || 'Hi{name},';
     const greeting = greetingTemplate.replace('{name}', recipientName ? ` ${recipientName}` : '');
-    const titleText = this.texts.birthdayReminderTitle || '🎉 Geburtstags-Reminder';
+    const titleText = this.texts.birthdayReminderTitle || '🎉 Birthday Reminder';
     const introTemplate = daysBefore === 1
-      ? (this.texts.birthdayReminderIntroSingular || '{count} deiner Kontakte haben morgen Geburtstag:')
-      : (this.texts.birthdayReminderIntro || '{count} deiner Kontakte haben in den nächsten {days} Tagen Geburtstag:');
+      ? (this.texts.birthdayReminderIntroSingular || '{count} of your contacts have a birthday tomorrow:')
+      : (this.texts.birthdayReminderIntro || '{count} of your contacts have birthdays in the next {days} days:');
     const introText = introTemplate.replace('{count}', reminderContacts.length).replace('{days}', daysBefore);
-    const todayLabel = this.texts.birthdayReminderTodayLabel || 'HEUTE';
-    const ageTemplate = this.texts.birthdayReminderAge || 'wird {age}';
+    const todayLabel = this.texts.birthdayReminderTodayLabel || 'TODAY';
+    const ageTemplate = this.texts.birthdayReminderAge || 'turns {age}';
 
     // Build HTML content
     const contactListHtml = reminderContacts.map(contact => {
@@ -291,16 +291,16 @@ class EmailManager {
   sendSyncReport(changes) {
     const { toEmail, fromEmail, senderName, recipientName } = this.getEmailContext();
 
-    const subject = this.subjects.syncReport || '📅 Geburtstags Updates 📅';
-    const greetingTemplate = this.texts.greeting || 'Hallo{name},';
+    const subject = this.subjects.syncReport || '📅 Birthday Updates 📅';
+    const greetingTemplate = this.texts.greeting || 'Hi{name},';
     const greeting = greetingTemplate.replace('{name}', recipientName ? ` ${recipientName}` : '');
-    const titleText = this.texts.syncReportTitle || '🔄 Updates zu Geburtstags-Events';
-    const introText = this.texts.syncReportIntro || 'Die folgenden Geburtstags-Events wurden deinem Kalender hinzugefügt:';
-    const individualHeader = this.texts.syncReportIndividualHeader || 'Individuelle Geburtstage:';
-    const summaryHeader = this.texts.syncReportSummaryHeader || 'Monatliche Geburtstagsübersichten:';
-    const createdLabel = this.texts.syncReportCreated || '✨ Neu erstellt:';
-    const updatedLabel = this.texts.syncReportUpdated || '🔄 Aktualisiert:';
-    const viewCalendarLabel = this.texts.viewCalendar || 'Google Kalender anzeigen';
+    const titleText = this.texts.syncReportTitle || '🔄 Birthday Event Updates';
+    const introText = this.texts.syncReportIntro || 'The following birthday events were added to your calendar:';
+    const individualHeader = this.texts.syncReportIndividualHeader || 'Individual Birthdays:';
+    const summaryHeader = this.texts.syncReportSummaryHeader || 'Monthly Summaries:';
+    const createdLabel = this.texts.syncReportCreated || '✨ Created:';
+    const updatedLabel = this.texts.syncReportUpdated || '🔄 Updated:';
+    const viewCalendarLabel = this.texts.viewCalendar || 'View Calendar';
     const maxItems = typeof syncReportMaxItems !== 'undefined' ? syncReportMaxItems : 0;
 
     // Helper to cap a list and add "...and X more" if needed
@@ -313,11 +313,11 @@ class EmailManager {
       const { shown, overflow } = capList(items);
       if (isHtml) {
         let html = shown.map(event => `<li>${event}</li>`).join('');
-        if (overflow > 0) html += `<li style="color: #666; font-style: italic;">...und ${overflow} weitere</li>`;
+        if (overflow > 0) html += `<li style="color: #666; font-style: italic;">...and ${overflow} more</li>`;
         return html;
       } else {
         const lines = shown.map(event => `    • ${event}`);
-        if (overflow > 0) lines.push(`    ...und ${overflow} weitere`);
+        if (overflow > 0) lines.push(`    ...and ${overflow} more`);
         return lines;
       }
     };
@@ -471,8 +471,8 @@ class EmailTemplates {
    */
   static footer() {
     const texts = typeof emailTexts !== 'undefined' ? emailTexts : {};
-    const viewCalendarLabel = texts.viewCalendar || 'Google Kalender anzeigen';
-    const manageContactsLabel = texts.manageContacts || 'Kontakte verwalten';
+    const viewCalendarLabel = texts.viewCalendar || 'View Calendar';
+    const manageContactsLabel = texts.manageContacts || 'Manage Contacts';
 
     return `
       <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eaeaea; text-align: center;">
