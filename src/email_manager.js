@@ -102,13 +102,13 @@ class EmailManager {
     const content = `
       ${this.templates.header(titleText, `${monthNamesLong[month]} ${year}`)}
 
-      <div class="section">
+      <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 6px;">
         <p>${greeting}</p>
         <p>${introText}</p>
         <p>${countText}</p>
       </div>
 
-      <div class="section">
+      <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 6px;">
         <ul style="list-style: none; padding: 0; margin: 0;">
           ${monthContacts.map(contact => `
             <li style="padding: 6px 0; border-bottom: 1px solid #eee;">${contact.getBirthdaySummaryMailString()}</li>
@@ -116,9 +116,9 @@ class EmailManager {
         </ul>
       </div>
 
-      <div class="action-buttons">
-        <a href="https://calendar.google.com/calendar/r" class="button">${viewCalendarLabel}</a>
-        <a href="https://github.com/itsFelixH/birthday-calendar-sync" class="button">Git-Repo</a>
+      <div style="margin-top: 15px; text-align: center;">
+        <a href="https://calendar.google.com/calendar/r" style="display: inline-block; padding: 8px 16px; margin: 4px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; font-size: 14px;">${viewCalendarLabel}</a>
+        <a href="https://github.com/itsFelixH/birthday-calendar-sync" style="display: inline-block; padding: 8px 16px; margin: 4px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; font-size: 14px;">Git-Repo</a>
       </div>
 
       ${this.templates.footer()}
@@ -181,35 +181,36 @@ class EmailManager {
     const content = `
       ${this.templates.header(titleText, `${day}. ${monthNamesLong[month]} ${date.getFullYear()}`)}
       
-      <div class="section">
+      <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 6px;">
         <p>${greeting}</p>
         <p>${introText}</p>
       </div>
 
-      <div class="section">
-        <h3 class="section-title">🎂 Heute</h3>
-        <ul class="birthday-list">
+      <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 6px;">
+        <h3 style="color: #2c3e50; font-size: 18px; margin-bottom: 15px; border-bottom: 2px solid #e9ecef; padding-bottom: 5px;">🎂 Heute</h3>
+        <ul class="birthday-list" style="list-style: none; padding: 0; margin: 0;">
           ${todaysContacts.map(contact => `
-            <li class="birthday-item">
+            <li class="birthday-item" style="padding: 10px; margin: 5px 0; border-left: 4px solid #007bff; background: #ffffff;">
               <strong>${contact.name}</strong>
               ${contact.hasKnownBirthYear() ? ` - wird heute ${contact.getAgeThisYear()} Jahre alt!` : ''}
-              <div class="contact-info">
+              <div class="contact-info" style="margin-top: 8px; font-size: 14px; color: #666666;">
                 ${contact.email ? `
-                  <span>📧</span>
-                  <span>
+                  <span style="display: block; margin: 4px 0;">📧
                     <a href="mailto:${contact.email}"
-                      class="button">Glückwunsch-Mail senden</a>
+                      style="display: inline-block; padding: 6px 12px; margin: 2px 4px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; font-size: 14px;">Glückwunsch-Mail senden</a>
                   </span>
                 ` : ''}
                 ${contact.phoneNumber ? `
-                  <span>📱</span>
-                  <span><a href="tel:${contact.phoneNumber}" class="button">Anrufen</a></span>
+                  <span style="display: block; margin: 4px 0;">📱
+                    <a href="tel:${contact.phoneNumber}" style="display: inline-block; padding: 6px 12px; margin: 2px 4px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; font-size: 14px;">Anrufen</a>
+                  </span>
                 ` : ''}
                 ${contact.instagramNames && contact.instagramNames.length > 0 ? `
-                  <span>📸</span>
-                  <span>${contact.instagramNames.map(name =>
-      `<a href="https://instagram.com/${name.replace('@', '')}" class="button">${name}</a>`
-    ).join(' ')}</span>
+                  <span style="display: block; margin: 4px 0;">📸
+                    ${contact.instagramNames.map(name =>
+      `<a href="https://instagram.com/${name.replace('@', '')}" style="display: inline-block; padding: 6px 12px; margin: 2px 4px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; font-size: 14px;">${name}</a>`
+    ).join(' ')}
+                  </span>
                 ` : ''}
               </div>
             </li>
@@ -218,17 +219,17 @@ class EmailManager {
       </div>
 
       ${nextDaysContacts.length > 0 ? `
-        <div class="section">
-          <h3 class="section-title">${upcomingHeader}</h3>
+        <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 6px;">
+          <h3 style="color: #2c3e50; font-size: 18px; margin-bottom: 15px; border-bottom: 2px solid #e9ecef; padding-bottom: 5px;">${upcomingHeader}</h3>
           <p>${upcomingIntro}</p>
-          <ul class="birthday-list">
+          <ul class="birthday-list" style="list-style: none; padding: 0; margin: 0;">
             ${nextDaysContacts.map(contact => `
-              <li class="birthday-item">
+              <li class="birthday-item" style="padding: 10px; margin: 5px 0; border-left: 4px solid #007bff; background: #ffffff;">
                 <strong>${contact.name}</strong> - 
                 ${contact.getBirthdayLongMonthFormat()}
-                <div class="contact-info">
-                  ${contact.email ? `<span>📧 ${contact.email}</span>` : ''}
-                  ${contact.phoneNumber ? `<span>📱 ${contact.phoneNumber}</span>` : ''}
+                <div class="contact-info" style="margin-top: 8px; font-size: 14px; color: #666666;">
+                  ${contact.email ? `<span style="display: block; margin: 4px 0;">📧 ${contact.email}</span>` : ''}
+                  ${contact.phoneNumber ? `<span style="display: block; margin: 4px 0;">📱 ${contact.phoneNumber}</span>` : ''}
                 </div>
               </li>
             `).join('')}
@@ -236,10 +237,10 @@ class EmailManager {
         </div>
       ` : ''}
 
-      <div class="action-buttons">
-        <a href="https://calendar.google.com/calendar/r" class="button">${viewCalendarLabel}</a>
-        <a href="https://contacts.google.com" class="button">${manageContactsLabel}</a>
-        <a href="https://github.com/itsFelixH/birthday-calendar-sync" class="button">Git-Repo</a>
+      <div style="margin-top: 15px; text-align: center;">
+        <a href="https://calendar.google.com/calendar/r" style="display: inline-block; padding: 8px 16px; margin: 4px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; font-size: 14px;">${viewCalendarLabel}</a>
+        <a href="https://contacts.google.com" style="display: inline-block; padding: 8px 16px; margin: 4px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; font-size: 14px;">${manageContactsLabel}</a>
+        <a href="https://github.com/itsFelixH/birthday-calendar-sync" style="display: inline-block; padding: 8px 16px; margin: 4px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; font-size: 14px;">Git-Repo</a>
       </div>
 
       ${this.templates.footer()}
@@ -276,8 +277,8 @@ class EmailManager {
 
     if (changes.individual.created.length > 0 || changes.individual.updated.length > 0) {
       changeSections += `
-        <div class="section">
-          <h3 class="section-title">${individualHeader}</h3>
+        <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 6px;">
+          <h3 style="color: #2c3e50; font-size: 18px; margin-bottom: 15px; border-bottom: 2px solid #e9ecef; padding-bottom: 5px;">${individualHeader}</h3>
           ${changes.individual.created.length > 0 ? `
             <p><strong>${createdLabel}</strong></p>
             <ul style="padding-left: 20px; margin: 5px 0 15px;">
@@ -296,8 +297,8 @@ class EmailManager {
 
     if (changes.summary.created.length > 0 || changes.summary.updated.length > 0) {
       changeSections += `
-        <div class="section">
-          <h3 class="section-title">${summaryHeader}</h3>
+        <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 6px;">
+          <h3 style="color: #2c3e50; font-size: 18px; margin-bottom: 15px; border-bottom: 2px solid #e9ecef; padding-bottom: 5px;">${summaryHeader}</h3>
           ${changes.summary.created.length > 0 ? `
             <p><strong>${createdLabel}</strong></p>
             <ul style="padding-left: 20px; margin: 5px 0 15px;">
@@ -318,16 +319,16 @@ class EmailManager {
     const content = `
       ${this.templates.header(titleText)}
 
-      <div class="section">
+      <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 6px;">
         <p>${greeting}</p>
         <p>${introText}</p>
       </div>
 
       ${changeSections}
 
-      <div class="action-buttons">
-        <a href="https://calendar.google.com/calendar/r" class="button">${viewCalendarLabel}</a>
-        <a href="https://github.com/itsFelixH/birthday-calendar-sync" class="button">Git-Repo</a>
+      <div style="margin-top: 15px; text-align: center;">
+        <a href="https://calendar.google.com/calendar/r" style="display: inline-block; padding: 8px 16px; margin: 4px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; font-size: 14px;">${viewCalendarLabel}</a>
+        <a href="https://github.com/itsFelixH/birthday-calendar-sync" style="display: inline-block; padding: 8px 16px; margin: 4px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; font-size: 14px;">Git-Repo</a>
       </div>
 
       ${this.templates.footer()}
@@ -406,8 +407,8 @@ class EmailTemplates {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>${this.styles}</style>
       </head>
-      <body>
-        <div class="email-container">
+      <body style="margin: 0; padding: 0; background-color: #f4f4f4;">
+        <div class="email-container" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff;">
           ${content}
         </div>
       </body>
