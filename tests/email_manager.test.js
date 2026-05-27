@@ -143,7 +143,7 @@ describe('EmailManager', () => {
       expect(rawData).toContain('John Doe');
       expect(rawData).toContain('Jane Smith');
       // Should contain age for contacts with known birth year
-      expect(rawData).toContain('wird');
+      expect(rawData).toContain('turns');
     });
 
     it('should handle contacts without known birth year', () => {
@@ -203,7 +203,7 @@ describe('EmailManager', () => {
 
       const rawData = global.Utilities.base64EncodeWebSafe.mock.calls[0][0];
       expect(rawData).toContain('John Doe');
-      expect(rawData).toContain('HEUTE');
+      expect(rawData).toContain('TODAY');
     });
 
     it('should include contact email, phone, and instagram when available', () => {
@@ -244,7 +244,7 @@ describe('EmailManager', () => {
       emailManager.sendBirthdayReminder(mockContacts, new Date(2024, 0, 15), 5);
 
       const rawData = global.Utilities.base64EncodeWebSafe.mock.calls[0][0];
-      expect(rawData).toContain('HEUTE');
+      expect(rawData).toContain('TODAY');
       expect(rawData).toContain('#ff6b6b'); // today's border color
     });
 
@@ -305,7 +305,7 @@ describe('EmailManager', () => {
 
       const rawData = global.Utilities.base64EncodeWebSafe.mock.calls[0][0];
       expect(rawData).toContain('New Event');
-      expect(rawData).toContain('Neu erstellt');
+      expect(rawData).toContain('Created');
     });
 
     it('should handle only updated events (no created)', () => {
@@ -321,7 +321,7 @@ describe('EmailManager', () => {
 
       const rawData = global.Utilities.base64EncodeWebSafe.mock.calls[0][0];
       expect(rawData).toContain('Updated Event');
-      expect(rawData).toContain('Aktualisiert');
+      expect(rawData).toContain('Updated');
     });
 
     it('should handle only summary changes (no individual)', () => {
@@ -385,12 +385,12 @@ describe('EmailTemplates', () => {
 
     it('should use viewCalendar label from emailTexts config', () => {
       const html = EmailTemplates.footer();
-      expect(html).toContain('Google Kalender anzeigen');
+      expect(html).toContain('View Calendar');
     });
 
     it('should use manageContacts label from emailTexts config', () => {
       const html = EmailTemplates.footer();
-      expect(html).toContain('Kontakte verwalten');
+      expect(html).toContain('Manage Contacts');
     });
 
     it('should render action buttons with button style', () => {
