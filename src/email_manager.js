@@ -66,7 +66,7 @@ class EmailManager {
    * @param {number} month - Month number (0-11)
    * @param {number} year - Year
    */
-  sendMonthlyBirthdaySummaryMail(contacts, month, year = new Date().getFullYear()) {
+  sendMonthlySummary(contacts, month, year = new Date().getFullYear()) {
     if (contacts.length === 0) {
       Logger.log("No contacts found. Aborting.");
       return;
@@ -153,7 +153,7 @@ class EmailManager {
    * @param {Date} date - Date to check for birthdays
    * @param {number} previewDays - Number of days to preview upcoming birthdays
    */
-  sendDailyBirthdayMail(contacts, date = new Date(), previewDays = 5) {
+  sendBirthdayReminder(contacts, date = new Date(), previewDays = 5) {
     if (contacts.length === 0) {
       Logger.log("No contacts found. Aborting.");
       return;
@@ -308,7 +308,7 @@ class EmailManager {
    * Sends an email with details about calendar changes
    * @param {Object} changes - Object containing calendar changes
    */
-  sendCalendarUpdateEmail(changes) {
+  sendSyncReport(changes) {
     const { toEmail, fromEmail, senderName, recipientName } = this.getEmailContext();
 
     const subject = this.subjects.calendarUpdate || '📅 Geburtstags Updates 📅';
