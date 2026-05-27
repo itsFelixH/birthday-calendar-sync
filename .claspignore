@@ -12,4 +12,4 @@ ROADMAP.md
 .claspignore
 .gitignore
 src/test.js
-src/config.js.example
+src/config.js.template
