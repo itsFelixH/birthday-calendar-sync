@@ -369,18 +369,12 @@ describe('EmailTemplates', () => {
   });
 
   describe('footer', () => {
-    it('should generate footer HTML with links', () => {
+    it('should generate footer with action buttons', () => {
       const html = EmailTemplates.footer();
       expect(html).toContain('border-top: 1px solid');
       expect(html).toContain('calendar.google.com');
       expect(html).toContain('contacts.google.com');
       expect(html).toContain('github.com/itsFelixH/birthday-calendar-sync');
-    });
-
-    it('should use footerSentBy from emailTexts config', () => {
-      const html = EmailTemplates.footer();
-      // Footer should contain the sent-by text (from config or fallback)
-      expect(html).toContain('Birthday Calendar Sync');
     });
 
     it('should use viewCalendar label from emailTexts config', () => {
@@ -391,6 +385,11 @@ describe('EmailTemplates', () => {
     it('should use manageContacts label from emailTexts config', () => {
       const html = EmailTemplates.footer();
       expect(html).toContain('Kontakte verwalten');
+    });
+
+    it('should render action buttons with button style', () => {
+      const html = EmailTemplates.footer();
+      expect(html).toContain(EmailTemplates.buttonStyle);
     });
   });
 
