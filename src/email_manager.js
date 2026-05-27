@@ -31,7 +31,7 @@ class EmailManager {
    * @param {string} htmlBody - HTML email body
    */
   sendMail(toEmail, fromEmail, senderName, subject, textBody, htmlBody) {
-    const boundary = "boundaryboundary";
+    const boundary = `boundary_${Date.now()}_${Math.random().toString(36).slice(2)}`;
     const mailData = [
       `MIME-Version: 1.0`,
       `To: ${toEmail}`,
