@@ -184,29 +184,45 @@ class EmailManager {
     const introText = introTemplate.replace('{count}', reminderContacts.length).replace('{days}', daysBefore);
     const todayLabel = this.texts.birthdayReminderTodayLabel || 'TODAY';
     const ageTemplate = this.texts.birthdayReminderAge || 'turns {age}';
+    const daysUntilLabel = this.texts.birthdayReminderDaysUntil || 'in {days} days';
+    const tomorrowLabel = this.texts.birthdayReminderTomorrow || 'tomorrow';
+    const socialLinks = typeof showSocialLinksInEmails !== 'undefined' ? showSocialLinksInEmails : true;
+    const showMilestones = typeof highlightMilestones !== 'undefined' ? highlightMilestones : false;
+    const milestones = typeof milestoneAges !== 'undefined' ? milestoneAges : [];
 
     // Build HTML content
     const contactListHtml = reminderContacts.map(contact => {
       const daysUntil = this._daysUntil(date, contact.birthday);
       const isToday = daysUntil === 0;
+      const isTomorrow = daysUntil === 1;
       const dateLabel = isToday
         ? `🎂 ${todayLabel}`
         : `📅 ${('0' + contact.birthday.getDate()).slice(-2)}. ${monthNamesLong[contact.birthday.getMonth()]}`;
 
-      const ageText = contact.hasKnownBirthYear()
-        ? ` (${ageTemplate.replace('{age}', contact.getAgeThisYear())}${isToday ? '!' : ''})`
+      const daysHint = isToday ? '' : isTomorrow
+        ? ` <span style="color: #888; font-size: 12px;">(${tomorrowLabel})</span>`
+        : ` <span style="color: #888; font-size: 12px;">(${daysUntilLabel.replace('{days}', daysUntil)})</span>`;
+
+      const age = contact.hasKnownBirthYear() ? contact.getAgeThisYear() : null;
+      const isMilestone = showMilestones && age !== null && milestones.includes(age);
+
+      const ageText = age !== null
+        ? ` (${ageTemplate.replace('{age}', age)}${isToday ? '!' : ''})`
         : '';
 
-      const borderColor = isToday ? '#ff6b6b' : '#007bff';
+      const milestoneTag = isMilestone ? ' 🎉' : '';
+      const borderColor = isToday ? '#ff6b6b' : isMilestone ? '#f59e0b' : '#007bff';
 
       let contactInfo = '';
       if (contact.email) contactInfo += `<span style="display: inline; margin-right: 12px;">📧 <a href="mailto:${contact.email}" style="color: #007bff; text-decoration: none;">${contact.email}</a></span>`;
       if (contact.phoneNumber) {
         contactInfo += `<span style="display: inline; margin-right: 12px;">📱 <a href="tel:${contact.phoneNumber}" style="color: #007bff; text-decoration: none;">${contact.phoneNumber}</a></span>`;
-        const waLink = contact.getWhatsAppLink();
-        if (waLink) contactInfo += `<span style="display: inline; margin-right: 12px;">💬 <a href="${waLink}" style="color: #007bff; text-decoration: none;">WhatsApp</a></span>`;
+        if (socialLinks) {
+          const waLink = contact.getWhatsAppLink();
+          if (waLink) contactInfo += `<span style="display: inline; margin-right: 12px;">💬 <a href="${waLink}" style="color: #007bff; text-decoration: none;">WhatsApp</a></span>`;
+        }
       }
-      if (contact.instagramNames && contact.instagramNames.length > 0) {
+      if (socialLinks && contact.instagramNames && contact.instagramNames.length > 0) {
         contact.instagramNames.forEach(name => {
           contactInfo += `<span style="display: inline; margin-right: 12px;">📸 <a href="https://instagram.com/${name.replace('@', '')}" style="color: #007bff; text-decoration: none;">${name}</a></span>`;
         });
@@ -214,7 +230,7 @@ class EmailManager {
 
       return `
         <li style="padding: 10px; margin: 5px 0; border-left: 4px solid ${borderColor}; background: #ffffff;">
-          <strong>${dateLabel} — ${contact.name}</strong>${ageText}
+          <strong>${dateLabel} — ${contact.name}</strong>${ageText}${milestoneTag}${daysHint}
           ${contactInfo ? `<div style="margin-top: 6px; font-size: 13px; color: #666666;">${contactInfo}</div>` : ''}
         </li>
       `;
@@ -249,19 +265,31 @@ class EmailManager {
       ...reminderContacts.map(contact => {
         const daysUntil = this._daysUntil(date, contact.birthday);
         const isToday = daysUntil === 0;
+        const isTomorrow = daysUntil === 1;
         const dateLabel = isToday
           ? `🎂 ${todayLabel}`
           : `📅 ${('0' + contact.birthday.getDate()).slice(-2)}. ${monthNamesLong[contact.birthday.getMonth()]}`;
 
+        const daysHint = isToday ? '' : isTomorrow
+          ? ` (${tomorrowLabel})`
+          : ` (${daysUntilLabel.replace('{days}', daysUntil)})`;
+
+        const age = contact.hasKnownBirthYear() ? contact.getAgeThisYear() : null;
+        const isMilestone = showMilestones && age !== null && milestones.includes(age);
+
         let line = `  ${dateLabel} — ${contact.name}`;
-        if (contact.hasKnownBirthYear()) line += ` (${ageTemplate.replace('{age}', contact.getAgeThisYear())})`;
+        if (age !== null) line += ` (${ageTemplate.replace('{age}', age)})`;
+        if (isMilestone) line += ' 🎉';
+        line += daysHint;
         if (contact.email) line += `\n    📧 ${contact.email}`;
         if (contact.phoneNumber) {
           line += `\n    📱 ${contact.phoneNumber}`;
-          const waLink = contact.getWhatsAppLink();
-          if (waLink) line += `\n    💬 ${waLink}`;
+          if (socialLinks) {
+            const waLink = contact.getWhatsAppLink();
+            if (waLink) line += `\n    💬 ${waLink}`;
+          }
         }
-        if (contact.instagramNames && contact.instagramNames.length > 0) {
+        if (socialLinks && contact.instagramNames && contact.instagramNames.length > 0) {
           line += `\n    📸 ${contact.instagramNames.join(', ')}`;
         }
         return line;
