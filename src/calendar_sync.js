@@ -59,8 +59,14 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, monthsAhea
 
       const summaryTag = `${eventTag}:summary:${year}-${('0' + (month + 1)).slice(-2)}`;
       const titles = typeof eventTitles !== 'undefined' ? eventTitles : {};
-      const title = titles.summary || '🎉🎂 GEBURTSTAGE 🎂🎉';
-      const headerLine = summaryHeaderTemplate.replace('{month}', monthNamesLong[month]);
+      const title = (titles.summary || '🎉🎂 GEBURTSTAGE 🎂🎉')
+        .replace('{month}', monthNamesLong[month])
+        .replace('{year}', year)
+        .replace('{count}', monthContacts.length);
+      const headerLine = summaryHeaderTemplate
+        .replace('{month}', monthNamesLong[month])
+        .replace('{year}', year)
+        .replace('{count}', monthContacts.length);
       const tagLine = tagVisible ? summaryTag : wrapInvisible(summaryTag);
       const description = `${headerLine}\n\n` +
         monthContacts.map(contact => {
@@ -209,20 +215,20 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
         const deathYear = contact.deathDate ? contact.deathDate.getFullYear() : '';
         const lifespan = deathYear ? `*${birthYear} †${deathYear}` : `*${birthYear}`;
         const template = titles.memorial || '🕯️ {name} ({lifespan})';
-        title = template.replace('{name}', contact.name).replace('{lifespan}', lifespan);
+        title = replaceTitlePlaceholders(template, contact, { lifespan });
         description = contact.getMemorialEventString() + `\n${tagLine}`;
       } else if (useRecurrence) {
         // Recurring events: static title/description without year-specific age
         const template = titles.recurring || '🎂 {name} hat Geburtstag';
-        title = template.replace('{name}', contact.name).replace('{birthdate}', contact.getBirthdayLongFormat());
+        title = replaceTitlePlaceholders(template, contact, {});
         description = contact.getBirthdayEventString(null) + `\n${tagLine}`;
       } else if (isMilestone) {
         const template = titles.milestone || '🎂🎉 {name} wird {age}! 🎉';
-        title = template.replace('{name}', contact.name).replace('{age}', ageInYear);
+        title = replaceTitlePlaceholders(template, contact, { age: ageInYear });
         description = contact.getBirthdayEventString(ageInYear) + `\n${tagLine}`;
       } else {
         const template = titles.birthday || '🎂 {name} hat Geburtstag';
-        title = template.replace('{name}', contact.name).replace('{age}', ageInYear);
+        title = replaceTitlePlaceholders(template, contact, { age: ageInYear });
         description = contact.getBirthdayEventString(ageInYear) + `\n${tagLine}`;
       }
 
@@ -293,6 +299,24 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
 
   logSyncStats('individual', stats);
   return { created: stats.created, updated: stats.updated };
+}
+
+
+/**
+ * Replaces placeholders in a title template with contact data.
+ * Available: {name}, {age}, {birthdate}, {city}, {lifespan}
+ * @param {string} template - Template string
+ * @param {BirthdayContact} contact - Contact object
+ * @param {Object} [extra] - Additional values (age, lifespan)
+ * @returns {string}
+ */
+function replaceTitlePlaceholders(template, contact, extra = {}) {
+  return template
+    .replace('{name}', contact.name)
+    .replace('{birthdate}', contact.hasKnownBirthYear() ? contact.getBirthdayLongFormat() : contact.getBirthdayShortFormat())
+    .replace('{city}', contact.city || '')
+    .replace('{age}', extra.age !== undefined ? extra.age : '')
+    .replace('{lifespan}', extra.lifespan || '');
 }
 
 

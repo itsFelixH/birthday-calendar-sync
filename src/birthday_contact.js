@@ -123,10 +123,10 @@ class BirthdayContact {
       const age = ageOverride !== undefined ? ageOverride : this.getAgeThisYear();
       if (this.hasKnownBirthYear()) {
         const withAgeTemplate = texts.birthdayWithAge || '🎂 {name} wird {age}';
-        string = withAgeTemplate.replace('{name}', this.name).replace('{age}', age) + `\n${birthLabel}: ${this.getBirthdayLongFormat()}\n`;
+        string = this._replacePlaceholders(withAgeTemplate, { age }) + `\n${birthLabel}: ${this.getBirthdayLongFormat()}\n`;
       } else {
         const noAgeTemplate = texts.birthdayNoAge || '🎂 {name} hat heute Geburtstag';
-        string = noAgeTemplate.replace('{name}', this.name) + '\n';
+        string = this._replacePlaceholders(noAgeTemplate) + '\n';
       }
     }
 
@@ -162,6 +162,23 @@ class BirthdayContact {
     }
 
     return string;
+  }
+
+
+  /**
+   * Replaces common placeholders in a template string with contact data.
+   * @param {string} template - Template with {placeholders}
+   * @param {Object} [extra] - Additional placeholder values (e.g., { age: 34 })
+   * @returns {string} The template with placeholders replaced
+   * @private
+   */
+  _replacePlaceholders(template, extra = {}) {
+    return template
+      .replace('{name}', this.name)
+      .replace('{birthdate}', this.hasKnownBirthYear() ? this.getBirthdayLongFormat() : this.getBirthdayShortFormat())
+      .replace('{city}', this.city || '')
+      .replace('{phone}', this.phoneNumber || '')
+      .replace('{age}', extra.age !== undefined ? extra.age : '');
   }
 
 
