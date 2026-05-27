@@ -1,3 +1,41 @@
+/**
+ * Creates time-based triggers for all sync functions.
+ * Run this once after deploying to set up automatic scheduling.
+ * Safe to re-run — removes existing triggers first to avoid duplicates.
+ */
+function setupSchedules() {
+  // Remove all existing project triggers
+  ScriptApp.getProjectTriggers().forEach(trigger => ScriptApp.deleteTrigger(trigger));
+
+  const syncHour = typeof scheduleSyncHour !== 'undefined' ? scheduleSyncHour : 2;
+  const summaryDay = typeof scheduleMonthlySummaryDay !== 'undefined' ? scheduleMonthlySummaryDay : 28;
+  const summaryHour = typeof scheduleMonthlySummaryHour !== 'undefined' ? scheduleMonthlySummaryHour : 8;
+  const reminderDay = typeof scheduleWeeklyReminderDay !== 'undefined' ? scheduleWeeklyReminderDay : ScriptApp.WeekDay.MONDAY;
+  const reminderHour = typeof scheduleWeeklyReminderHour !== 'undefined' ? scheduleWeeklyReminderHour : 7;
+
+  ScriptApp.newTrigger('updateBirthdaysAndSummariesInCalendar')
+    .timeBased()
+    .everyDays(1)
+    .atHour(syncHour)
+    .create();
+
+  ScriptApp.newTrigger('sendMonthlySummary')
+    .timeBased()
+    .onMonthDay(summaryDay)
+    .atHour(summaryHour)
+    .create();
+
+  ScriptApp.newTrigger('sendWeeklyReminder')
+    .timeBased()
+    .onWeekDay(reminderDay)
+    .atHour(reminderHour)
+    .create();
+
+  Logger.log('✅ Schedules created:');
+  Logger.log(`   • updateBirthdaysAndSummariesInCalendar — daily at ~${syncHour}:00`);
+  Logger.log(`   • sendMonthlySummary — day ${summaryDay} of each month at ~${summaryHour}:00`);
+  Logger.log(`   • sendWeeklyReminder — weekly at ~${reminderHour}:00`);
+}
 
 /**
  * Updates birthdays and summaries in the calendar.
