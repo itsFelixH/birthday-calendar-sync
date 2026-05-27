@@ -93,6 +93,8 @@ const emailTexts = {
   birthdayReminderIntroSingular: '{count} of your contacts have a birthday tomorrow:',
   birthdayReminderTodayLabel: 'TODAY',
   birthdayReminderAge: 'turns {age}',
+  birthdayReminderDaysUntil: 'in {days} days',
+  birthdayReminderTomorrow: 'tomorrow',
   // Link labels in emails
   viewCalendar: 'View Calendar',
   manageContacts: 'Manage Contacts'
@@ -157,7 +159,14 @@ const eventColors = {
 // ─── Description content ──────────────────────────────────────────────────────
 
 // Show WhatsApp and Instagram links in event descriptions.
-const showSocialLinks = true;
+const showSocialLinksInEvents = true;
+
+// Show WhatsApp and Instagram links in reminder emails.
+const showSocialLinksInEmails = true;
+const showSocialLinksInEvents = true;
+
+// Show WhatsApp and Instagram links in reminder emails.
+const showSocialLinksInEmails = true;
 
 // Show the [BirthdaySync] tag visibly. If false, it's hidden with zero-width characters.
 const showEventTag = false;
