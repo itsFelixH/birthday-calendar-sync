@@ -272,12 +272,12 @@ function testEmailManager() {
   ];
 
   Logger.log('Testing monthly summary email...');
-  emailManager.sendMonthlyBirthdaySummaryMail(contacts, 0, 2024);
+  emailManager.sendMonthlySummary(contacts, 0, 2024);
 
-  Logger.log('Testing daily birthday email...');
-  emailManager.sendDailyBirthdayMail(contacts, new Date(2024, 0, 15), 5);
+  Logger.log('Testing birthday reminder email...');
+  emailManager.sendBirthdayReminder(contacts, new Date(2024, 0, 15), 5);
 
-  Logger.log('Testing calendar update email...');
+  Logger.log('Testing sync report email...');
   const changes = {
     individual: {
       created: ['Test User 1 (15.01.2024)'],
@@ -288,7 +288,7 @@ function testEmailManager() {
       updated: []
     }
   };
-  emailManager.sendCalendarUpdateEmail(changes);
+  emailManager.sendSyncReport(changes);
 
   // Test email templates
   const title = "Test Title";

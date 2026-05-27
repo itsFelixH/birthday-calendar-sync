@@ -70,7 +70,7 @@ describe('EmailManager', () => {
     });
   });
 
-  describe('sendMonthlyBirthdaySummaryMail', () => {
+  describe('sendMonthlySummary', () => {
     const mockContacts = [
       new BirthdayContact('John Doe', new Date(1990, 0, 15)),
       new BirthdayContact('Jane Smith', new Date(1985, 0, 20))
@@ -99,7 +99,7 @@ describe('EmailManager', () => {
     });
 
     it('should send monthly summary email with correct content', () => {
-      emailManager.sendMonthlyBirthdaySummaryMail(mockContacts, 0, 2024);
+      emailManager.sendMonthlySummary(mockContacts, 0, 2024);
 
       expect(mockGmail.Users.Messages.send).toHaveBeenCalled();
       const sendCall = mockGmail.Users.Messages.send.mock.calls[0][0];
@@ -107,17 +107,17 @@ describe('EmailManager', () => {
     });
 
     it('should not send email if no contacts provided', () => {
-      emailManager.sendMonthlyBirthdaySummaryMail([], 0, 2024);
+      emailManager.sendMonthlySummary([], 0, 2024);
       expect(mockGmail.Users.Messages.send).not.toHaveBeenCalled();
     });
 
     it('should not send email if no birthdays in specified month', () => {
-      emailManager.sendMonthlyBirthdaySummaryMail(mockContacts, 1, 2024); // February
+      emailManager.sendMonthlySummary(mockContacts, 1, 2024); // February
       expect(mockGmail.Users.Messages.send).not.toHaveBeenCalled();
     });
   });
 
-  describe('sendDailyBirthdayMail', () => {
+  describe('sendBirthdayReminder', () => {
     const mockContacts = [
       new BirthdayContact('John Doe', new Date(1990, 0, 15)),
       new BirthdayContact('Jane Smith', new Date(1985, 0, 20))
@@ -132,7 +132,7 @@ describe('EmailManager', () => {
     });
 
     it('should send daily birthday email with correct content', () => {
-      emailManager.sendDailyBirthdayMail(mockContacts);
+      emailManager.sendBirthdayReminder(mockContacts);
 
       expect(mockGmail.Users.Messages.send).toHaveBeenCalled();
       const sendCall = mockGmail.Users.Messages.send.mock.calls[0][0];
@@ -140,18 +140,18 @@ describe('EmailManager', () => {
     });
 
     it('should not send email if no contacts provided', () => {
-      emailManager.sendDailyBirthdayMail([]);
+      emailManager.sendBirthdayReminder([]);
       expect(mockGmail.Users.Messages.send).not.toHaveBeenCalled();
     });
 
     it('should not send email if no birthdays today', () => {
       jest.setSystemTime(new Date(2024, 1, 1)); // February 1st
-      emailManager.sendDailyBirthdayMail(mockContacts);
+      emailManager.sendBirthdayReminder(mockContacts);
       expect(mockGmail.Users.Messages.send).not.toHaveBeenCalled();
     });
   });
 
-  describe('sendCalendarUpdateEmail', () => {
+  describe('sendSyncReport', () => {
     const mockChanges = {
       individual: {
         created: ['John Doe (15.01.2024)'],
@@ -164,7 +164,7 @@ describe('EmailManager', () => {
     };
 
     it('should send calendar update email with correct content', () => {
-      emailManager.sendCalendarUpdateEmail(mockChanges);
+      emailManager.sendSyncReport(mockChanges);
 
       expect(mockGmail.Users.Messages.send).toHaveBeenCalled();
       const sendCall = mockGmail.Users.Messages.send.mock.calls[0][0];
