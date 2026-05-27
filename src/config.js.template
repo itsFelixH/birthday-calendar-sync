@@ -1,126 +1,130 @@
 // ╔══════════════════════════════════════════════════════════════════════════════╗
 // ║                         BIRTHDAY CALENDAR SYNC                              ║
 // ║                         Configuration Settings                              ║
+// ╠══════════════════════════════════════════════════════════════════════════════╣
+// ║  Quick start: Set calendarId below, then run setupSchedules(). Done!        ║
+// ║  Everything else has sensible defaults — customize as needed.               ║
 // ╚══════════════════════════════════════════════════════════════════════════════╝
 
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ESSENTIAL SETTINGS
+// 1. REQUIRED — You must set this
 // ═══════════════════════════════════════════════════════════════════════════════
 
-// The ID of the Google Calendar where birthdays will be added.
-// Find it in: Google Calendar → Settings → (your calendar) → Calendar ID.
+// The Google Calendar where birthday events will be created.
+// Find it in: Google Calendar → Settings → (your calendar) → "Integrate calendar" → Calendar ID
 const calendarId = 'your-calendar-id@group.calendar.google.com';
 
-// ─── What to create ───────────────────────────────────────────────────────────
 
-// Create individual birthday events (one per contact per year).
+// ═══════════════════════════════════════════════════════════════════════════════
+// 2. FEATURES — What should the script do?
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ─── Calendar events ──────────────────────────────────────────────────────────
+
+// Create one all-day event per contact on their birthday.
 const createIndividualBirthdayEvents = true;
 
-// Create monthly summary events (one per month listing all birthdays).
+// Create one event per month listing all birthdays that month.
 const createBirthdaySummaryEvents = true;
+
+// 'single' = one event per birthday per year.
+// 'recurring' = one yearly recurring event per contact (no age in description).
+// Leap year birthdays (Feb 29) always use single events regardless of this setting.
+const eventRecurrence = 'single';
+
+// ─── Email notifications ──────────────────────────────────────────────────────
+// All emails are off by default. Enable the ones you want.
+
+// Email report after each sync listing created/updated events.
+const sendSyncReport = false;
+
+// Monthly email listing next month's birthdays.
+const sendMonthlySummaryEmail = false;
+
+// Weekly email listing upcoming birthdays.
+const sendWeeklyReminderEmail = false;
 
 // ─── Contact filtering ────────────────────────────────────────────────────────
 
-// Only sync contacts with specific label(s). Set to true + fill labelFilter.
+// Set useLabel to true and add label names to only sync specific contacts.
+// When false, all contacts with birthdays are synced.
 const useLabel = false;
 const labelFilter = []; // e.g. ['Friends', 'Family']
 
-// ─── Reminders ────────────────────────────────────────────────────────────────
 
-// Individual events: reminder type ('popup', 'email', 'none') and minutes before.
+// ═══════════════════════════════════════════════════════════════════════════════
+// 3. LOCALE — Adjust for your language
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// Month name abbreviations (used in event descriptions and formatting).
+var monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+// Full month names (used in summary headers and emails).
+var monthNamesLong = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 4. SCHEDULES — When should things run?
+// ═══════════════════════════════════════════════════════════════════════════════
+// Used by setupSchedules(). Run it once after deploying.
+// Hours are approximate — Apps Script triggers fire within a ±1 hour window.
+// Use ScriptApp.WeekDay values: MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY
+
+// Calendar sync: fetches contacts and creates/updates events.
+const scheduleSyncDay = ScriptApp.WeekDay.MONDAY;
+const scheduleSyncHour = 3; // ~3:00 AM
+
+// Monthly summary email (only sent if sendMonthlySummaryEmail = true).
+const scheduleMonthlySummaryDay = 28; // day of month (1-28)
+const scheduleMonthlySummaryHour = 9; // ~9:00 AM
+
+// Weekly reminder email (only sent if sendWeeklyReminderEmail = true).
+const scheduleWeeklyReminderDay = ScriptApp.WeekDay.MONDAY;
+const scheduleWeeklyReminderHour = 10; // ~10:00 AM
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 5. REMINDERS & TIMING — Fine-tune event behavior
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ─── Calendar reminders ───────────────────────────────────────────────────────
+// Method: 'popup', 'email', or 'none'
+
 const individualReminderMethod = 'popup';
 const individualReminderMinutes = 60 * 24; // 1 day before
 
-// Summary events: reminder type and minutes before.
 const summaryReminderMethod = 'popup';
-const summaryReminderMinutes = 5760; // 4 days before
+const summaryReminderMinutes = 5760; // 4 days before (4 × 24 × 60)
 
 // ─── Lookahead ────────────────────────────────────────────────────────────────
-
 // How many months ahead to create/update events.
+
 const individualMonthsAhead = 12;
 const summaryMonthsAhead = 6;
 
-// ─── Notifications ────────────────────────────────────────────────────────────
-
-// Send an email after syncing with a list of created/updated events.
-const sendSyncReport = false;
-
-// Send a monthly summary email listing next month's birthdays.
-const sendMonthlySummaryEmail = false;
-
-// Send a weekly reminder email for upcoming birthdays.
-const sendWeeklyReminderEmail = false;
+// ─── Weekly reminder settings ─────────────────────────────────────────────────
 
 // How many days ahead to include in the weekly reminder email.
 const reminderDaysBefore = 7;
 
-// Day of the week to send the weekly reminder (0=Sunday, 1=Monday, ..., 6=Saturday).
-// Set to -1 to send every day the trigger runs (ignore day check).
+// Day of the week to send the reminder (0=Sun, 1=Mon, ..., 6=Sat).
+// Set to -1 to send every day the trigger runs.
 const weeklyReminderDay = 1;
 
-// Maximum number of events to list in the sync report (0 = unlimited).
-const syncReportMaxItems = 0;
+// ─── Summary event placement ──────────────────────────────────────────────────
 
-// ─── Email subjects ───────────────────────────────────────────────────────────
-
-const emailSubjects = {
-  // Monthly birthday summary email
-  monthlySummary: '🎂 Birthday Reminder 🎂',
-  // Weekly reminder email
-  weeklyReminder: '🎂 Weekly Birthday Reminder',
-  // Calendar sync report email
-  syncReport: '📅 Birthday Updates 📅'
-};
-
-// ─── Email texts ──────────────────────────────────────────────────────────────
-// Configurable text strings used in email bodies.
-// Placeholders: {name}, {month}, {year}, {count}, {days}
-const emailTexts = {
-  // Greeting (used in all emails). {name} = recipient first name (with leading space) or empty.
-  greeting: 'Hi{name},',
-  // Monthly summary email
-  monthlySummaryTitle: '🎉 {month} Birthdays',
-  monthlySummaryIntro: '{count} of your contacts have birthdays in {month} {year}:',
-  monthlySummaryAge: 'turns {age}',
-  // Sync report email
-  syncReportTitle: '🔄 Birthday Event Updates',
-  syncReportIntro: 'The following birthday events were added to your calendar:',
-  syncReportIndividualHeader: 'Individual Birthdays:',
-  syncReportSummaryHeader: 'Monthly Summaries:',
-  syncReportCreated: '✨ Created:',
-  syncReportUpdated: '🔄 Updated:',
-  // Weekly reminder email
-  weeklyReminderTitle: '🎂 Weekly Birthday Reminder',
-  weeklyReminderIntro: '{count} of your contacts have birthdays in the next {days} days:',
-  weeklyReminderIntroSingular: '{count} of your contacts have a birthday tomorrow:',
-  weeklyReminderTodayLabel: 'TODAY',
-  weeklyReminderAge: 'turns {age}',
-  weeklyReminderDaysUntil: 'in {days} days',
-  weeklyReminderTomorrow: 'tomorrow',
-  // Link labels in emails
-  viewCalendar: 'View Calendar',
-  manageContacts: 'Manage Contacts'
-};
+// Day of the month for the summary calendar event (1-28).
+const summaryEventDay = 1;
 
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// EVENT APPEARANCE
+// 6. EVENT APPEARANCE — How events look in your calendar
 // ═══════════════════════════════════════════════════════════════════════════════
 
 // ─── Title templates ──────────────────────────────────────────────────────────
-// Available placeholders:
-//   {name}      — contact name
-//   {age}       — age they're turning
-//   {birthdate} — formatted birth date (e.g., 15.01.1990)
-//   {city}      — contact's city
-//   {email}     — contact's email address
-//   {lifespan}  — "*1990 †2022" (memorial only, requires death date for full format)
-// Summary title also supports:
-//   {month}     — full month name
-//   {year}      — year
-//   {count}     — number of birthdays that month
+// Placeholders: {name}, {age}, {birthdate}, {city}, {email}, {lifespan}
+// Summary also supports: {month}, {year}, {count}
 const eventTitles = {
   birthday: '🎂 {name}\'s Birthday',
   milestone: '🎂🎉 {name} turns {age}! 🎉',
@@ -130,12 +134,10 @@ const eventTitles = {
 };
 
 // ─── Description texts ────────────────────────────────────────────────────────
-// Labels and section headers used in event descriptions.
-// Set a header to '' to hide it (content still appears).
-// birthdayWithAge/birthdayNoAge support:
-//   {name}, {age}, {birthdate}, {city}, {email}, {phone}
-// summaryHeader supports:
-//   {month}, {year}, {count}
+// Section headers and labels in event descriptions.
+// Set a header to '' to hide it (content still appears without the header).
+// Placeholders for birthdayWithAge/birthdayNoAge: {name}, {age}, {birthdate}, {city}, {email}, {phone}
+// Placeholders for summaryHeader: {month}, {year}, {count}
 const eventTexts = {
   birthdayWithAge: '🎂 {name} turns {age}',
   birthdayNoAge: '🎂 Happy Birthday, {name}!',
@@ -150,17 +152,18 @@ const eventTexts = {
 };
 
 // ─── Event colors ─────────────────────────────────────────────────────────────
-// Google Calendar color IDs ('' = calendar default):
-// '1'=Lavender, '2'=Sage, '3'=Grape, '4'=Flamingo, '5'=Banana,
-// '6'=Tangerine, '7'=Peacock, '8'=Graphite, '9'=Blueberry, '10'=Basil, '11'=Tomato
+// Google Calendar color IDs. Set to '' for calendar default.
+// '1'=Lavender  '2'=Sage       '3'=Grape    '4'=Flamingo
+// '5'=Banana    '6'=Tangerine  '7'=Peacock  '8'=Graphite
+// '9'=Blueberry '10'=Basil     '11'=Tomato
 const eventColors = {
-  birthday: '',    // also used for recurring events
+  birthday: '',
   milestone: '',
   memorial: '',
   summary: ''
 };
 
-// ─── Description content ──────────────────────────────────────────────────────
+// ─── Content toggles ──────────────────────────────────────────────────────────
 
 // Show WhatsApp and Instagram links in event descriptions.
 const showSocialLinksInEvents = true;
@@ -168,40 +171,79 @@ const showSocialLinksInEvents = true;
 // Show WhatsApp and Instagram links in reminder emails.
 const showSocialLinksInEmails = true;
 
-// Show the [BirthdaySync] tag visibly. If false, it's hidden with zero-width characters.
+// Show the [BirthdaySync] tag visibly in descriptions (normally hidden).
 const showEventTag = false;
 
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// BEHAVIOR
+// 7. EMAIL APPEARANCE — How emails look
 // ═══════════════════════════════════════════════════════════════════════════════
 
-// ─── Event mode ───────────────────────────────────────────────────────────────
+// ─── Subjects ─────────────────────────────────────────────────────────────────
 
-// 'single' = one event per birthday per year (default).
-// 'recurring' = one recurring annual event per contact (static description, no age).
-// Leap year birthdays (Feb 29) always use single events.
-const eventRecurrence = 'single';
+const emailSubjects = {
+  monthlySummary: '🎂 Birthday Reminder 🎂',
+  weeklyReminder: '🎂 Weekly Birthday Reminder',
+  syncReport: '📅 Birthday Updates 📅'
+};
+
+// ─── Body texts ───────────────────────────────────────────────────────────────
+// Placeholders: {name}, {month}, {year}, {count}, {days}, {age}
+const emailTexts = {
+  // Greeting (all emails). {name} = recipient first name (with leading space) or empty.
+  greeting: 'Hi{name},',
+
+  // Monthly summary
+  monthlySummaryTitle: '🎉 {month} Birthdays',
+  monthlySummaryIntro: '{count} of your contacts have birthdays in {month} {year}:',
+  monthlySummaryAge: 'turns {age}',
+
+  // Sync report
+  syncReportTitle: '🔄 Birthday Event Updates',
+  syncReportIntro: 'The following birthday events were added to your calendar:',
+  syncReportIndividualHeader: 'Individual Birthdays:',
+  syncReportSummaryHeader: 'Monthly Summaries:',
+  syncReportCreated: '✨ Created:',
+  syncReportUpdated: '🔄 Updated:',
+
+  // Weekly reminder
+  weeklyReminderTitle: '🎂 Weekly Birthday Reminder',
+  weeklyReminderIntro: '{count} of your contacts have birthdays in the next {days} days:',
+  weeklyReminderIntroSingular: '{count} of your contacts have a birthday tomorrow:',
+  weeklyReminderTodayLabel: 'TODAY',
+  weeklyReminderAge: 'turns {age}',
+  weeklyReminderDaysUntil: 'in {days} days',
+  weeklyReminderTomorrow: 'tomorrow',
+
+  // Footer links
+  viewCalendar: 'View Calendar',
+  manageContacts: 'Manage Contacts'
+};
+
+// Maximum events to list in the sync report email (0 = unlimited).
+const syncReportMaxItems = 0;
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 8. SPECIAL HANDLING
+// ═══════════════════════════════════════════════════════════════════════════════
 
 // ─── Milestones ───────────────────────────────────────────────────────────────
 
-// Highlight milestone birthdays with a special title.
+// Use a special title (eventTitles.milestone) for round birthdays.
 const highlightMilestones = true;
 const milestoneAges = [18, 30, 40, 50, 60, 70, 75, 80, 90, 100];
 
 // ─── Leap year ────────────────────────────────────────────────────────────────
 
-// How to handle Feb 29 birthdays in non-leap years: 'feb28' or 'mar1'.
+// Where to place Feb 29 birthdays in non-leap years: 'feb28' or 'mar1'.
 const leapYearHandling = 'feb28';
-
-// ─── Summary event placement ──────────────────────────────────────────────────
-
-// Day of the month for the summary event (1-28).
-const summaryEventDay = 1;
 
 // ─── Deceased contacts ────────────────────────────────────────────────────────
 
-// 'skip' = no events, 'memorial' = memorial-style event, 'normal' = treat normally.
+// 'skip' = no events created (default).
+// 'memorial' = memorial event with 🕯️ prefix and lifespan.
+// 'normal' = treated like any other contact.
 const deceasedHandling = 'skip';
 
 // Google Contacts label that marks a contact as deceased.
@@ -212,48 +254,19 @@ const deceasedDateLabel = 'Death date';
 
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ADVANCED
+// 9. ADVANCED — You probably don't need to change these
 // ═══════════════════════════════════════════════════════════════════════════════
 
-// ─── Schedules ────────────────────────────────────────────────────────────────
-
-// Used by setupSchedules() to create time-based triggers.
-// Run setupSchedules() once after deploying to set up automatic scheduling.
-// Hours are approximate (Apps Script triggers fire within a 1-hour window).
-
-// Day of the week and hour to run the calendar sync.
-// Use ScriptApp.WeekDay values: MONDAY, TUESDAY, WEDNESDAY, etc.
-const scheduleSyncDay = ScriptApp.WeekDay.MONDAY;
-const scheduleSyncHour = 3;
-
-// Day of the month (1-28) and hour to send the monthly summary email.
-const scheduleMonthlySummaryDay = 27;
-const scheduleMonthlySummaryHour = 9;
-
-// Day of the week and hour to send the weekly reminder email.
-// Use ScriptApp.WeekDay values: MONDAY, TUESDAY, WEDNESDAY, etc.
-const scheduleWeeklyReminderDay = ScriptApp.WeekDay.MONDAY;
-const scheduleWeeklyReminderHour = 10;
-
 // ─── Rate limiting ────────────────────────────────────────────────────────────
-
-// Pause every N events to avoid Google API rate limits.
+// Pause every N calendar API calls to avoid quota errors.
 const rateLimitBatchSize = 20;
 const rateLimitDelayMs = 500;
 
 // ─── Dry run ──────────────────────────────────────────────────────────────────
-
-// Preview mode: logs all actions without making changes.
+// Set to true to preview all changes in the log without modifying anything.
 const dryRun = false;
 
 // ─── Internal ─────────────────────────────────────────────────────────────────
-
-// Tag stored in event descriptions to identify script-created events.
+// Tag embedded in event descriptions to identify script-managed events.
+// Changing this will cause the script to lose track of existing events.
 const eventTag = '[BirthdaySync]';
-
-// ─── Locale ───────────────────────────────────────────────────────────────────
-
-// Month name abbreviations (used in event descriptions).
-var monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-// Full month names (used in summary headers and formatting).
-var monthNamesLong = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
