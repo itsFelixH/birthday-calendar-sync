@@ -71,13 +71,9 @@ The config file (`src/config.js`) is organized in numbered sections by priority.
 | 2. Features | Which events to create, which emails to send, label filtering |
 | 3. Locale | Month names for your language |
 | 4. Schedules | When triggers run (used by `setupSchedules()`) |
-| 5. Reminders & Timing | Reminder methods, lookahead, weekly reminder settings |
-| 6. Event Appearance | Titles, descriptions, colors, social links |
-| 7. Email Appearance | Subjects and body texts |
-| 8. Special Handling | Milestones, leap year, deceased contacts |
-| 9. Advanced | Rate limiting, dry run, internal tag |
+| 5. Customization | Reminders, timing, titles, colors, emails, milestones, deceased |
 
-All settings are documented with inline comments in `src/config.js.template`.
+Everything after section 4 is optional — the defaults work out of the box.
 
 ## Event Description Format
 
