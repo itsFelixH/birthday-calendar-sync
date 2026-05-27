@@ -63,15 +63,16 @@ function setupSchedules() {
     });
   }
 
-  const syncHour = typeof scheduleSyncHour !== 'undefined' ? scheduleSyncHour : 2;
+  const syncDay = typeof scheduleSyncDay !== 'undefined' ? scheduleSyncDay : ScriptApp.WeekDay.MONDAY;
+  const syncHour = typeof scheduleSyncHour !== 'undefined' ? scheduleSyncHour : 3;
   const summaryDay = typeof scheduleMonthlySummaryDay !== 'undefined' ? scheduleMonthlySummaryDay : 28;
-  const summaryHour = typeof scheduleMonthlySummaryHour !== 'undefined' ? scheduleMonthlySummaryHour : 8;
+  const summaryHour = typeof scheduleMonthlySummaryHour !== 'undefined' ? scheduleMonthlySummaryHour : 9;
   const reminderDay = typeof scheduleWeeklyReminderDay !== 'undefined' ? scheduleWeeklyReminderDay : ScriptApp.WeekDay.MONDAY;
-  const reminderHour = typeof scheduleWeeklyReminderHour !== 'undefined' ? scheduleWeeklyReminderHour : 7;
+  const reminderHour = typeof scheduleWeeklyReminderHour !== 'undefined' ? scheduleWeeklyReminderHour : 10;
 
   ScriptApp.newTrigger('updateBirthdaysAndSummariesInCalendar')
     .timeBased()
-    .everyDays(1)
+    .onWeekDay(syncDay)
     .atHour(syncHour)
     .create();
 
@@ -88,7 +89,7 @@ function setupSchedules() {
     .create();
 
   Logger.log('✅ Schedules created:');
-  Logger.log(`   • updateBirthdaysAndSummariesInCalendar — daily at ~${syncHour}:00`);
+  Logger.log(`   • updateBirthdaysAndSummariesInCalendar — weekly at ~${syncHour}:00`);
   Logger.log(`   • sendMonthlySummary — day ${summaryDay} of each month at ~${summaryHour}:00`);
   Logger.log(`   • sendWeeklyReminder — weekly at ~${reminderHour}:00`);
 }
