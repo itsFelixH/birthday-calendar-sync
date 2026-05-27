@@ -98,24 +98,34 @@ class EmailManager {
       .replace('{count}', numBirthdays);
     const viewCalendarLabel = texts.viewCalendar || 'Google Kalender anzeigen';
 
-    // Build the email body with formatted birthdates
-    let mailBody = `
-      <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-        <h3>${titleText}</h3>
+    // Build the email content using templates
+    const content = `
+      ${this.templates.header(titleText, `${monthNamesLong[month]} ${year}`)}
+
+      <div class="section">
         <p>${greeting}</p>
         <p>${introText}</p>
         <p>${countText}</p>
-        <ul style="list-style-type: none; padding: 0;">
-          ${monthContacts.map(contact => `<li>${contact.getBirthdaySummaryMailString()}</li>`).join('')}
-        </ul><br>
-        <hr style="border:0; height:1px; background:#ccc;">
-        <p style="text-align: center; margin-top: 2em;">
-          <a href="https://calendar.google.com/calendar/r" style="color: #007BFF;">${viewCalendarLabel}</a><br>
-          <a href="https://github.com/itsFelixH/birthday-calendar-sync" style="color: #007BFF;">Git-Repo</a>
-        </p>
       </div>
+
+      <div class="section">
+        <h3 class="section-title">🎂 ${monthNamesLong[month]}</h3>
+        <ul class="birthday-list">
+          ${monthContacts.map(contact => `
+            <li class="birthday-item">${contact.getBirthdaySummaryMailString()}</li>
+          `).join('')}
+        </ul>
+      </div>
+
+      <div class="action-buttons">
+        <a href="https://calendar.google.com/calendar/r" class="button">${viewCalendarLabel}</a>
+        <a href="https://github.com/itsFelixH/birthday-calendar-sync" class="button">Git-Repo</a>
+      </div>
+
+      ${this.templates.footer()}
     `;
 
+    const mailBody = this.templates.wrapEmail(content);
     this.sendMail(toEmail, fromEmail, senderName, subject, '', mailBody);
     Logger.log(`Birthday summary email sent successfully!`);
   }
@@ -262,61 +272,77 @@ class EmailManager {
     const updatedLabel = texts.calendarUpdateUpdated || '🔄 Aktualisiert:';
     const viewCalendarLabel = texts.viewCalendar || 'Google Kalender anzeigen';
 
-    let mailBody = `
-      <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-        <h3>${titleText}</h3>
-        <p>${greeting}</p>
-        <p>${introText}</p>`;
+    // Build change sections
+    let changeSections = '';
 
     if (changes.individual.created.length > 0 || changes.individual.updated.length > 0) {
-      mailBody += `<h4>${individualHeader}</h4>`;
-
-      if (changes.individual.created.length > 0) {
-        mailBody += `<p>${createdLabel}</p><ul>`;
-        changes.individual.created.forEach(event => {
-          mailBody += `<li>${event}</li>`;
-        });
-        mailBody += `</ul>`;
-      }
-
-      if (changes.individual.updated.length > 0) {
-        mailBody += `<p>${updatedLabel}</p><ul>`;
-        changes.individual.updated.forEach(event => {
-          mailBody += `<li>${event}</li>`;
-        });
-        mailBody += `</ul>`;
-      }
+      changeSections += `
+        <div class="section">
+          <h3 class="section-title">${individualHeader}</h3>
+          ${changes.individual.created.length > 0 ? `
+            <p><strong>${createdLabel}</strong></p>
+            <ul class="birthday-list">
+              ${changes.individual.created.map(event => `
+                <li class="birthday-item">${event}</li>
+              `).join('')}
+            </ul>
+          ` : ''}
+          ${changes.individual.updated.length > 0 ? `
+            <p><strong>${updatedLabel}</strong></p>
+            <ul class="birthday-list">
+              ${changes.individual.updated.map(event => `
+                <li class="birthday-item">${event}</li>
+              `).join('')}
+            </ul>
+          ` : ''}
+        </div>
+      `;
     }
 
     if (changes.summary.created.length > 0 || changes.summary.updated.length > 0) {
-      mailBody += `<h4>${summaryHeader}</h4>`;
-
-      if (changes.summary.created.length > 0) {
-        mailBody += `<p>${createdLabel}</p><ul>`;
-        changes.summary.created.forEach(event => {
-          mailBody += `<li>${event}</li>`;
-        });
-        mailBody += `</ul>`;
-      }
-
-      if (changes.summary.updated.length > 0) {
-        mailBody += `<p>${updatedLabel}</p><ul>`;
-        changes.summary.updated.forEach(event => {
-          mailBody += `<li>${event}</li>`;
-        });
-        mailBody += `</ul>`;
-      }
+      changeSections += `
+        <div class="section">
+          <h3 class="section-title">${summaryHeader}</h3>
+          ${changes.summary.created.length > 0 ? `
+            <p><strong>${createdLabel}</strong></p>
+            <ul class="birthday-list">
+              ${changes.summary.created.map(event => `
+                <li class="birthday-item">${event}</li>
+              `).join('')}
+            </ul>
+          ` : ''}
+          ${changes.summary.updated.length > 0 ? `
+            <p><strong>${updatedLabel}</strong></p>
+            <ul class="birthday-list">
+              ${changes.summary.updated.map(event => `
+                <li class="birthday-item">${event}</li>
+              `).join('')}
+            </ul>
+          ` : ''}
+        </div>
+      `;
     }
 
-    mailBody += `
-        <hr style="border:0; height:1px; background:#ccc;">
-        <p style="text-align: center; margin-top: 2em;">
-          <a href="https://calendar.google.com/calendar/r" style="color: #007BFF;">${viewCalendarLabel}</a><br>
-          <a href="https://github.com/itsFelixH/birthday-calendar-sync" style="color: #007BFF;">Git-Repo</a>
-        </p>
+    // Build the email content using templates
+    const content = `
+      ${this.templates.header(titleText)}
+
+      <div class="section">
+        <p>${greeting}</p>
+        <p>${introText}</p>
       </div>
+
+      ${changeSections}
+
+      <div class="action-buttons">
+        <a href="https://calendar.google.com/calendar/r" class="button">${viewCalendarLabel}</a>
+        <a href="https://github.com/itsFelixH/birthday-calendar-sync" class="button">Git-Repo</a>
+      </div>
+
+      ${this.templates.footer()}
     `;
 
+    const mailBody = this.templates.wrapEmail(content);
     this.sendMail(toEmail, fromEmail, senderName, subject, '', mailBody);
     Logger.log('Calendar update email sent successfully!');
   }
