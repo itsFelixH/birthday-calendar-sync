@@ -61,162 +61,23 @@ Re-running `setupSchedules()` replaces existing triggers. Run `removeSchedules()
 
 ## Configuration
 
-The config file is organized in numbered sections by priority. See `src/config.js.template` for the full template with inline documentation.
+The config file (`src/config.js`) is organized in numbered sections by priority. Only `calendarId` is required — everything else has sensible defaults.
 
 > **Note:** `src/config.js` is gitignored — it contains your personal settings. Only the template is committed.
 
-<details>
-<summary><strong>1. Required</strong></summary>
-
-| Setting | Description |
+| Section | What's in it |
 |---------|-------------|
-| `calendarId` | Google Calendar ID where events are created |
+| 1. Required | `calendarId` |
+| 2. Features | Which events to create, which emails to send, label filtering |
+| 3. Locale | Month names for your language |
+| 4. Schedules | When triggers run (used by `setupSchedules()`) |
+| 5. Reminders & Timing | Reminder methods, lookahead, weekly reminder settings |
+| 6. Event Appearance | Titles, descriptions, colors, social links |
+| 7. Email Appearance | Subjects and body texts |
+| 8. Special Handling | Milestones, leap year, deceased contacts |
+| 9. Advanced | Rate limiting, dry run, internal tag |
 
-</details>
-
-<details>
-<summary><strong>2. Features</strong></summary>
-
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `createIndividualBirthdayEvents` | `true` | One event per contact per birthday |
-| `createBirthdaySummaryEvents` | `true` | One event per month listing all birthdays |
-| `eventRecurrence` | `'single'` | `'single'` (per-year) or `'recurring'` (yearly) |
-| `sendSyncReport` | `false` | Email after sync with created/updated events |
-| `sendMonthlySummaryEmail` | `false` | Monthly email with next month's birthdays |
-| `sendWeeklyReminderEmail` | `false` | Weekly email with upcoming birthdays |
-| `useLabel` / `labelFilter` | `false` / `[]` | Only sync contacts with specific labels |
-
-</details>
-
-<details>
-<summary><strong>3. Locale</strong></summary>
-
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `monthNames` | English abbreviations | Short month names for descriptions |
-| `monthNamesLong` | English full names | Full month names for headers and emails |
-
-</details>
-
-<details>
-<summary><strong>4. Schedules</strong></summary>
-
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `scheduleSyncDay` | `MONDAY` | Day of week for calendar sync |
-| `scheduleSyncHour` | `3` | Hour (~3:00 AM) |
-| `scheduleMonthlySummaryDay` | `28` | Day of month (1-28) |
-| `scheduleMonthlySummaryHour` | `9` | Hour (~9:00 AM) |
-| `scheduleWeeklyReminderDay` | `MONDAY` | Day of week |
-| `scheduleWeeklyReminderHour` | `10` | Hour (~10:00 AM) |
-
-</details>
-
-<details>
-<summary><strong>5. Reminders & Timing</strong></summary>
-
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `individualReminderMethod` | `'popup'` | `'popup'`, `'email'`, or `'none'` |
-| `individualReminderMinutes` | `1440` | Minutes before (1 day) |
-| `summaryReminderMethod` | `'popup'` | Reminder type for summary events |
-| `summaryReminderMinutes` | `5760` | Minutes before (4 days) |
-| `individualMonthsAhead` | `12` | Months to look ahead for individual events |
-| `summaryMonthsAhead` | `6` | Months to look ahead for summary events |
-| `reminderDaysBefore` | `7` | Days ahead in weekly reminder email |
-| `weeklyReminderDay` | `1` (Mon) | Day of week to send reminder (−1 = daily) |
-| `summaryEventDay` | `1` | Day of month for summary calendar event |
-
-</details>
-
-<details>
-<summary><strong>6. Event Appearance</strong></summary>
-
-**Title templates** — placeholders: `{name}`, `{age}`, `{birthdate}`, `{city}`, `{email}`, `{lifespan}`, `{month}`, `{year}`, `{count}`
-
-```js
-const eventTitles = {
-  birthday: '🎂 {name}\'s Birthday',
-  milestone: '🎂🎉 {name} turns {age}! 🎉',
-  recurring: '🎂 {name}\'s Birthday',
-  memorial: '🕯️ {name}',
-  summary: '🎉🎂 BIRTHDAYS 🎂🎉'
-};
-```
-
-**Description texts** — section headers and labels (set to `''` to hide a header)
-
-```js
-const eventTexts = {
-  birthdayWithAge: '🎂 {name} turns {age}',
-  birthdayNoAge: '🎂 Happy Birthday, {name}!',
-  birthDateLabel: 'Birthday',
-  contactSectionHeader: '── Contact ──',
-  infoSectionHeader: '── Info ──',
-  memorialPrefix: '🕯️ In memory of',
-  summaryHeader: '{month} Birthdays',
-  whatsappLabel: 'WhatsApp',
-  instagramLabel: 'Instagram',
-  contactLabel: 'Contact'
-};
-```
-
-**Event colors** — Google Calendar color IDs (`''` = calendar default)
-
-| `'1'` Lavender | `'2'` Sage | `'3'` Grape | `'4'` Flamingo |
-|---|---|---|---|
-| `'5'` Banana | `'6'` Tangerine | `'7'` Peacock | `'8'` Graphite |
-| `'9'` Blueberry | `'10'` Basil | `'11'` Tomato | |
-
-```js
-const eventColors = { birthday: '', milestone: '', memorial: '', summary: '' };
-```
-
-**Content toggles**
-
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `showSocialLinksInEvents` | `true` | WhatsApp/Instagram in event descriptions |
-| `showSocialLinksInEmails` | `true` | WhatsApp/Instagram in emails |
-| `showEventTag` | `false` | Show `[BirthdaySync]` tag visibly |
-
-</details>
-
-<details>
-<summary><strong>7. Email Appearance</strong></summary>
-
-**Subjects and body texts** — fully customizable with placeholders: `{name}`, `{month}`, `{year}`, `{count}`, `{days}`, `{age}`
-
-See `src/config.js.template` section 7 for all available keys in `emailSubjects` and `emailTexts`.
-
-</details>
-
-<details>
-<summary><strong>8. Special Handling</strong></summary>
-
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `highlightMilestones` | `true` | Special title for milestone ages |
-| `milestoneAges` | `[18, 30, 40, ...]` | Which ages count as milestones |
-| `leapYearHandling` | `'feb28'` | Feb 29 fallback: `'feb28'` or `'mar1'` |
-| `deceasedHandling` | `'skip'` | `'skip'`, `'memorial'`, or `'normal'` |
-| `deceasedLabel` | `'Deceased'` | Google Contacts label for deceased |
-| `deceasedDateLabel` | `'Death date'` | Custom date field label for death date |
-
-</details>
-
-<details>
-<summary><strong>9. Advanced</strong></summary>
-
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `rateLimitBatchSize` | `20` | API calls before pausing |
-| `rateLimitDelayMs` | `500` | Pause duration in ms |
-| `dryRun` | `false` | Preview mode — logs changes without modifying |
-| `eventTag` | `'[BirthdaySync]'` | Internal tag for duplicate prevention (don't change) |
-
-</details>
+All settings are documented with inline comments in `src/config.js.template`.
 
 ## Event Description Format
 
