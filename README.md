@@ -61,15 +61,17 @@ At minimum, set your `calendarId`. Everything else has sensible defaults.
 pnpm run deploy   # runs tests, then pushes to Apps Script
 ```
 
-### 6. Set up triggers
+### 6. Set up schedules
 
-In the Apps Script editor, create time-based triggers:
+Run `setupSchedules()` once in the Apps Script editor to create all time-based triggers automatically:
 
-| Function | Schedule |
-|----------|----------|
-| `updateBirthdaysAndSummariesInCalendar` | Daily (e.g., 2:00 AM) |
-| `sendMonthlySummary` | Monthly (e.g., last day of month) |
-| `sendWeeklyReminder` | Weekly (e.g., Monday 7:00 AM) |
+| Function | Default Schedule |
+|----------|-----------------|
+| `updateBirthdaysAndSummariesInCalendar` | Daily at ~2:00 AM |
+| `sendMonthlySummary` | 28th of each month at ~8:00 AM |
+| `sendWeeklyReminder` | Monday at ~7:00 AM |
+
+You can customize the schedule times in `config.js` before running `setupSchedules()`. Re-running it will replace existing triggers with the new settings.
 
 ## Configuration
 
@@ -221,6 +223,11 @@ const emailTexts = {
 
 | Setting | Default | Description |
 |---------|---------|-------------|
+| `scheduleSyncHour` | `2` | Hour (0-23) for daily calendar sync |
+| `scheduleMonthlySummaryDay` | `28` | Day of month (1-28) for monthly summary |
+| `scheduleMonthlySummaryHour` | `8` | Hour for monthly summary |
+| `scheduleWeeklyReminderDay` | `MONDAY` | Day of week for weekly reminder |
+| `scheduleWeeklyReminderHour` | `7` | Hour for weekly reminder |
 | `rateLimitBatchSize` | `20` | Events before pausing |
 | `rateLimitDelayMs` | `500` | Pause duration (ms) |
 | `dryRun` | `false` | Preview mode (no changes) |
