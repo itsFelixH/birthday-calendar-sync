@@ -49,7 +49,11 @@ Set your `calendarId` in `src/config.js`. Optionally enable email notifications 
 pnpm run deploy
 ```
 
-Then run `setupSchedules()` once in the Apps Script editor. This creates triggers based on your config:
+Then open your project in the Apps Script editor:
+
+> **https://script.google.com** → select "Birthday Calendar Sync"
+
+The `_setup.js` file opens by default. Select `setupSchedules` from the function dropdown and click **▶ Run**. You'll be asked to authorize permissions on first run.
 
 | Function | Default Schedule | Condition |
 |----------|-----------------|-----------|
@@ -112,8 +116,9 @@ Either one is sufficient. Modes:
 
 ```
 src/
+├── _setup.js             # Setup & scheduling (opens first in Apps Script)
 ├── config.js.template    # Configuration template (copy to config.js)
-├── main.js               # Entry points: syncBirthdays, setupSchedules, etc.
+├── main.js               # Entry points: syncBirthdays, sendMonthlySummary, etc.
 ├── birthday_contact.js   # BirthdayContact class
 ├── calendar_manager.js   # Calendar API wrapper
 ├── calendar_sync.js      # Sync logic (individual + summary events)
