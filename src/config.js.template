@@ -53,8 +53,8 @@ const sendMonthlySummaryEmail = false;
 // Send a birthday reminder email for upcoming birthdays.
 const sendBirthdayReminderEmail = false;
 
-// How many days before a birthday to include it in the reminder email.
-const reminderDaysBefore = 3;
+// How many days ahead to include in the birthday reminder email.
+const reminderDaysBefore = 7;
 
 // Maximum number of events to list in the sync report (0 = unlimited).
 const syncReportMaxItems = 0;
@@ -67,7 +67,9 @@ const emailSubjects = {
   // Birthday reminder email
   birthdayReminder: '🎁 Today\'s Birthdays 🎁',
   // Calendar sync report email
-  syncReport: '📅 Birthday Updates 📅'
+  syncReport: '📅 Birthday Updates 📅',
+  // Contact data quality report
+  contactQualityReport: '📋 Contact Data Quality Report'
 };
 
 // ─── Email texts ──────────────────────────────────────────────────────────────
@@ -97,7 +99,15 @@ const emailTexts = {
   birthdayReminderTomorrow: 'tomorrow',
   // Link labels in emails
   viewCalendar: 'View Calendar',
-  manageContacts: 'Manage Contacts'
+  manageContacts: 'Manage Contacts',
+  // Contact quality report
+  contactQualityReportTitle: '📋 Contact Data Quality',
+  contactQualityReportIntro: 'Here\'s a summary of your {total} contacts\' data completeness:',
+  contactQualityNoBirthYear: 'Missing birth year',
+  contactQualityNoEmail: 'Missing email',
+  contactQualityNoPhone: 'Missing phone number',
+  contactQualityNoLabels: 'No labels',
+  contactQualityComplete: 'Complete contacts'
 };
 
 
