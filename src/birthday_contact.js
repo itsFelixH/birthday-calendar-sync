@@ -249,9 +249,11 @@ class BirthdayContact {
    * @returns {string} The birthday summary string.
    */
   getBirthdaySummaryMailString() {
+    const texts = typeof emailTexts !== 'undefined' ? emailTexts : {};
+    const ageTemplate = texts.monthlySummaryAge || 'wird {age}';
     let string = `<b>${('0' + this.birthday.getDate()).slice(-2)}. ${monthNamesLong[this.birthday.getMonth()]}</b>: 🎂 ${this.name}`;
     if (this.hasKnownBirthYear()) {
-      string += ` (wird ${this.getAgeThisYear()} Jahre)`;
+      string += ` (${ageTemplate.replace('{age}', this.getAgeThisYear())})`;
     }
     return string;
   }
