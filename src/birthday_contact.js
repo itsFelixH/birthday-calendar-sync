@@ -250,7 +250,7 @@ class BirthdayContact {
    */
   getBirthdaySummaryMailString() {
     const texts = typeof emailTexts !== 'undefined' ? emailTexts : {};
-    const ageTemplate = texts.monthlySummaryAge || 'wird {age}';
+    const ageTemplate = texts.monthlySummaryAge || 'turns {age}';
     let string = `<b>${('0' + this.birthday.getDate()).slice(-2)}. ${monthNamesLong[this.birthday.getMonth()]}</b>: 🎂 ${this.name}`;
     if (this.hasKnownBirthYear()) {
       string += ` (${ageTemplate.replace('{age}', this.getAgeThisYear())})`;
