@@ -69,8 +69,7 @@ In the Apps Script editor, create time-based triggers:
 |----------|----------|
 | `updateBirthdaysAndSummariesInCalendar` | Daily (e.g., 2:00 AM) |
 | `sendMonthlySummary` | Monthly (e.g., last day of month) |
-| `sendBirthdayReminder` | Weekly (e.g., Monday 7:00 AM) |
-| `sendContactQualityReport` | Manual (no schedule, run when needed) |
+| `sendWeeklyReminder` | Weekly (e.g., Monday 7:00 AM) |
 
 ## Configuration
 
@@ -172,7 +171,7 @@ const eventColors = {
 ```js
 const emailSubjects = {
   monthlySummary: '🎂 Birthday Reminder 🎂',
-  birthdayReminder: '🎁 Today\'s Birthdays 🎁',
+  weeklyReminder: '🎂 Weekly Birthday Reminder',
   syncReport: '📅 Birthday Updates 📅'
 };
 ```
@@ -191,9 +190,9 @@ const emailTexts = {
   syncReportSummaryHeader: 'Monthly Summaries:',
   syncReportCreated: '✨ Created:',
   syncReportUpdated: '🔄 Updated:',
-  birthdayReminderTitle: '🎉 Birthday Reminder',
-  birthdayReminderIntro: '{count} of your contacts have birthdays in the next {days} days:',
-  birthdayReminderTodayLabel: 'TODAY',
+  weeklyReminderTitle: '🎂 Weekly Birthday Reminder',
+  weeklyReminderIntro: '{count} of your contacts have birthdays in the next {days} days:',
+  weeklyReminderTodayLabel: 'TODAY',
   viewCalendar: 'View Calendar',
   manageContacts: 'Manage Contacts'
 };
