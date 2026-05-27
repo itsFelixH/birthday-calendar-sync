@@ -92,7 +92,7 @@ The config is split into sections. See `src/config.js.template` for the full tem
 | `summaryReminderMinutes` | `5760` | 4 days before |
 | `individualMonthsAhead` | `12` | Lookahead for individual events |
 | `summaryMonthsAhead` | `6` | Lookahead for summary events |
-| `sendCalendarUpdateEmail` | `false` | Email notification after sync |
+| `sendSyncReport` | `false` | Email notification after sync |
 
 </details>
 
@@ -170,8 +170,8 @@ const eventColors = {
 ```js
 const emailSubjects = {
   monthlySummary: '🎂 Birthday Reminder 🎂',
-  dailyReminder: '🎁 Today\'s Birthdays 🎁',
-  calendarUpdate: '📅 Birthday Updates 📅'
+  birthdayReminder: '🎁 Today\'s Birthdays 🎁',
+  syncReport: '📅 Birthday Updates 📅'
 };
 ```
 
@@ -183,18 +183,19 @@ const emailTexts = {
   monthlySummaryTitle: '🎉 {month} Birthdays',
   monthlySummaryIntro: 'Here are your contacts\' birthdays in {month} {year}:',
   monthlySummaryCount: '{count} birthday(s) this month:',
-  calendarUpdateTitle: '🔄 Birthday Event Updates',
-  calendarUpdateIntro: 'The following events were added to your calendar:',
-  calendarUpdateIndividualHeader: 'Individual Birthdays:',
-  calendarUpdateSummaryHeader: 'Monthly Summaries:',
-  calendarUpdateCreated: '✨ Created:',
-  calendarUpdateUpdated: '🔄 Updated:',
-  dailyReminderTitle: '🎉 Today\'s Birthdays',
-  dailyReminderIntro: '{count} of your contacts have a birthday today:',
-  dailyReminderUpcomingHeader: '📅 Upcoming Birthdays',
-  dailyReminderUpcomingIntro: '{count} birthdays in the next {days} days:',
+  syncReportTitle: '🔄 Birthday Event Updates',
+  syncReportIntro: 'The following events were added to your calendar:',
+  syncReportIndividualHeader: 'Individual Birthdays:',
+  syncReportSummaryHeader: 'Monthly Summaries:',
+  syncReportCreated: '✨ Created:',
+  syncReportUpdated: '🔄 Updated:',
+  birthdayReminderTitle: '🎉 Today\'s Birthdays',
+  birthdayReminderIntro: '{count} of your contacts have a birthday today:',
+  birthdayReminderUpcomingHeader: '📅 Upcoming Birthdays',
+  birthdayReminderUpcomingIntro: '{count} birthdays in the next {days} days:',
   viewCalendar: 'View Calendar',
-  manageContacts: 'Manage Contacts'
+  manageContacts: 'Manage Contacts',
+  footerSentBy: 'Sent by Birthday Calendar Sync'
 };
 ```
 
