@@ -163,10 +163,6 @@ const showSocialLinksInEvents = true;
 
 // Show WhatsApp and Instagram links in reminder emails.
 const showSocialLinksInEmails = true;
-const showSocialLinksInEvents = true;
-
-// Show WhatsApp and Instagram links in reminder emails.
-const showSocialLinksInEmails = true;
 
 // Show the [BirthdaySync] tag visibly. If false, it's hidden with zero-width characters.
 const showEventTag = false;
