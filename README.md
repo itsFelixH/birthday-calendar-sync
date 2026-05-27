@@ -194,8 +194,7 @@ const emailTexts = {
   birthdayReminderUpcomingHeader: '📅 Upcoming Birthdays',
   birthdayReminderUpcomingIntro: '{count} birthdays in the next {days} days:',
   viewCalendar: 'View Calendar',
-  manageContacts: 'Manage Contacts',
-  footerSentBy: 'Sent by Birthday Calendar Sync'
+  manageContacts: 'Manage Contacts'
 };
 ```
 
