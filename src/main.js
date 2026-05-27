@@ -3,7 +3,7 @@
  * Only triggers for these functions are touched — user-created triggers are left alone.
  */
 const MANAGED_FUNCTIONS = [
-  'updateBirthdaysAndSummariesInCalendar',
+  'syncBirthdays',
   'sendMonthlySummary',
   'sendWeeklyReminder'
 ];
@@ -70,7 +70,7 @@ function setupSchedules() {
   const reminderDay = typeof scheduleWeeklyReminderDay !== 'undefined' ? scheduleWeeklyReminderDay : ScriptApp.WeekDay.MONDAY;
   const reminderHour = typeof scheduleWeeklyReminderHour !== 'undefined' ? scheduleWeeklyReminderHour : 10;
 
-  ScriptApp.newTrigger('updateBirthdaysAndSummariesInCalendar')
+  ScriptApp.newTrigger('syncBirthdays')
     .timeBased()
     .onWeekDay(syncDay)
     .atHour(syncHour)
@@ -89,7 +89,7 @@ function setupSchedules() {
     .create();
 
   Logger.log('✅ Schedules created:');
-  Logger.log(`   • updateBirthdaysAndSummariesInCalendar — weekly at ~${syncHour}:00`);
+  Logger.log(`   • syncBirthdays — weekly at ~${syncHour}:00`);
   Logger.log(`   • sendMonthlySummary — day ${summaryDay} of each month at ~${summaryHour}:00`);
   Logger.log(`   • sendWeeklyReminder — weekly at ~${reminderHour}:00`);
 }
@@ -117,9 +117,9 @@ function removeSchedules() {
 }
 
 /**
- * Updates birthdays and summaries in the calendar.
+ * Syncs birthdays from Google Contacts to the calendar.
  */
-function updateBirthdaysAndSummariesInCalendar() {
+function syncBirthdays() {
   try {
     if (!isCalendarConfigured() || !isLabelFilterConfigured()) return;
 
@@ -168,7 +168,7 @@ function updateBirthdaysAndSummariesInCalendar() {
       }
     }
   } catch (error) {
-    Logger.log(`💥 Error in updateBirthdaysAndSummariesInCalendar: ${error.message}`);
+    Logger.log(`💥 Error in syncBirthdays: ${error.message}`);
   }
 }
 
