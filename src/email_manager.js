@@ -4,6 +4,8 @@
 class EmailManager {
   constructor() {
     this.templates = EmailTemplates;
+    this.subjects = typeof emailSubjects !== 'undefined' ? emailSubjects : {};
+    this.texts = typeof emailTexts !== 'undefined' ? emailTexts : {};
   }
 
 
@@ -86,17 +88,15 @@ class EmailManager {
     const numBirthdays = monthContacts.length;
     const { toEmail, fromEmail, senderName, recipientName } = this.getEmailContext();
 
-    const subjects = typeof emailSubjects !== 'undefined' ? emailSubjects : {};
-    const texts = typeof emailTexts !== 'undefined' ? emailTexts : {};
-    const subject = subjects.monthlySummary || '🎂 Geburtstags Reminder 🎂';
-    const greetingTemplate = texts.greeting || 'Hallo{name},';
+    const subject = this.subjects.monthlySummary || '🎂 Geburtstags Reminder 🎂';
+    const greetingTemplate = this.texts.greeting || 'Hallo{name},';
     const greeting = greetingTemplate.replace('{name}', recipientName ? ` ${recipientName}` : '');
-    const titleText = (texts.monthlySummaryTitle || '🎉 Geburtstage im {month}').replace('{month}', monthNamesLong[month]);
-    const introText = (texts.monthlySummaryIntro || 'Mach dich bereit zum Feiern! Hier sind die Geburtstage deiner Kontakte im {month} {year}. Vergiss nicht, ihnen zu gratulieren!')
+    const titleText = (this.texts.monthlySummaryTitle || '🎉 Geburtstage im {month}').replace('{month}', monthNamesLong[month]);
+    const introText = (this.texts.monthlySummaryIntro || 'Mach dich bereit zum Feiern! Hier sind die Geburtstage deiner Kontakte im {month} {year}. Vergiss nicht, ihnen zu gratulieren!')
       .replace('{month}', monthNamesLong[month]).replace('{year}', year);
-    const countText = (texts.monthlySummaryCount || 'Insgesamt gibt es {count} Geburtstag(e) in diesem Monat:')
+    const countText = (this.texts.monthlySummaryCount || 'Insgesamt gibt es {count} Geburtstag(e) in diesem Monat:')
       .replace('{count}', numBirthdays);
-    const viewCalendarLabel = texts.viewCalendar || 'Google Kalender anzeigen';
+    const viewCalendarLabel = this.texts.viewCalendar || 'Google Kalender anzeigen';
 
     // Build the email content using templates
     const content = `
@@ -117,8 +117,8 @@ class EmailManager {
       </div>
 
       <div style="margin-top: 15px; text-align: center;">
-        <a href="https://calendar.google.com/calendar/r" style="display: inline-block; padding: 8px 16px; margin: 4px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; font-size: 14px;">${viewCalendarLabel}</a>
-        <a href="https://github.com/itsFelixH/birthday-calendar-sync" style="display: inline-block; padding: 8px 16px; margin: 4px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; font-size: 14px;">Git-Repo</a>
+        <a href="https://calendar.google.com/calendar/r" style="${this.templates.buttonStyle}">${viewCalendarLabel}</a>
+        <a href="https://github.com/itsFelixH/birthday-calendar-sync" style="${this.templates.buttonStyle}">Git-Repo</a>
       </div>
 
       ${this.templates.footer()}
@@ -180,19 +180,17 @@ class EmailManager {
     }
 
     const { toEmail, fromEmail, senderName, recipientName } = this.getEmailContext();
-    const subjects = typeof emailSubjects !== 'undefined' ? emailSubjects : {};
-    const texts = typeof emailTexts !== 'undefined' ? emailTexts : {};
-    const subject = subjects.dailyReminder || '🎁 Heutige Geburtstage 🎁';
-    const greetingTemplate = texts.greeting || 'Hallo{name},';
+    const subject = this.subjects.dailyReminder || '🎁 Heutige Geburtstage 🎁';
+    const greetingTemplate = this.texts.greeting || 'Hallo{name},';
     const greeting = greetingTemplate.replace('{name}', recipientName ? ` ${recipientName}` : '');
-    const titleText = texts.dailyReminderTitle || '🎉 Heutige Geburtstage';
-    const introText = (texts.dailyReminderIntro || 'Heute haben {count} deiner Kontakte Geburtstag. Hier sind alle Details, die du brauchst, um zu gratulieren:')
+    const titleText = this.texts.dailyReminderTitle || '🎉 Heutige Geburtstage';
+    const introText = (this.texts.dailyReminderIntro || 'Heute haben {count} deiner Kontakte Geburtstag. Hier sind alle Details, die du brauchst, um zu gratulieren:')
       .replace('{count}', todaysContacts.length);
-    const upcomingHeader = texts.dailyReminderUpcomingHeader || '📅 Kommende Geburtstage';
-    const upcomingIntro = (texts.dailyReminderUpcomingIntro || 'In den nächsten {days} Tagen haben {count} deiner Kontakte Geburtstag:')
+    const upcomingHeader = this.texts.dailyReminderUpcomingHeader || '📅 Kommende Geburtstage';
+    const upcomingIntro = (this.texts.dailyReminderUpcomingIntro || 'In den nächsten {days} Tagen haben {count} deiner Kontakte Geburtstag:')
       .replace('{days}', previewDays).replace('{count}', nextDaysContacts.length);
-    const viewCalendarLabel = texts.viewCalendar || 'Google Kalender anzeigen';
-    const manageContactsLabel = texts.manageContacts || 'Kontakte verwalten';
+    const viewCalendarLabel = this.texts.viewCalendar || 'Google Kalender anzeigen';
+    const manageContactsLabel = this.texts.manageContacts || 'Kontakte verwalten';
 
     // Build the email content
     const content = `
@@ -214,18 +212,18 @@ class EmailManager {
                 ${contact.email ? `
                   <span style="display: block; margin: 4px 0;">📧
                     <a href="mailto:${contact.email}"
-                      style="display: inline-block; padding: 6px 12px; margin: 2px 4px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; font-size: 14px;">Glückwunsch-Mail senden</a>
+                      style="${this.templates.buttonSmallStyle}">Glückwunsch-Mail senden</a>
                   </span>
                 ` : ''}
                 ${contact.phoneNumber ? `
                   <span style="display: block; margin: 4px 0;">📱
-                    <a href="tel:${contact.phoneNumber}" style="display: inline-block; padding: 6px 12px; margin: 2px 4px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; font-size: 14px;">Anrufen</a>
+                    <a href="tel:${contact.phoneNumber}" style="${this.templates.buttonSmallStyle}">Anrufen</a>
                   </span>
                 ` : ''}
                 ${contact.instagramNames && contact.instagramNames.length > 0 ? `
                   <span style="display: block; margin: 4px 0;">📸
                     ${contact.instagramNames.map(name =>
-      `<a href="https://instagram.com/${name.replace('@', '')}" style="display: inline-block; padding: 6px 12px; margin: 2px 4px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; font-size: 14px;">${name}</a>`
+      `<a href="https://instagram.com/${name.replace('@', '')}" style="${this.templates.buttonSmallStyle}">${name}</a>`
     ).join(' ')}
                   </span>
                 ` : ''}
@@ -255,9 +253,9 @@ class EmailManager {
       ` : ''}
 
       <div style="margin-top: 15px; text-align: center;">
-        <a href="https://calendar.google.com/calendar/r" style="display: inline-block; padding: 8px 16px; margin: 4px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; font-size: 14px;">${viewCalendarLabel}</a>
-        <a href="https://contacts.google.com" style="display: inline-block; padding: 8px 16px; margin: 4px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; font-size: 14px;">${manageContactsLabel}</a>
-        <a href="https://github.com/itsFelixH/birthday-calendar-sync" style="display: inline-block; padding: 8px 16px; margin: 4px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; font-size: 14px;">Git-Repo</a>
+        <a href="https://calendar.google.com/calendar/r" style="${this.templates.buttonStyle}">${viewCalendarLabel}</a>
+        <a href="https://contacts.google.com" style="${this.templates.buttonStyle}">${manageContactsLabel}</a>
+        <a href="https://github.com/itsFelixH/birthday-calendar-sync" style="${this.templates.buttonStyle}">Git-Repo</a>
       </div>
 
       ${this.templates.footer()}
@@ -313,18 +311,16 @@ class EmailManager {
   sendCalendarUpdateEmail(changes) {
     const { toEmail, fromEmail, senderName, recipientName } = this.getEmailContext();
 
-    const subjects = typeof emailSubjects !== 'undefined' ? emailSubjects : {};
-    const texts = typeof emailTexts !== 'undefined' ? emailTexts : {};
-    const subject = subjects.calendarUpdate || '📅 Geburtstags Updates 📅';
-    const greetingTemplate = texts.greeting || 'Hallo{name},';
+    const subject = this.subjects.calendarUpdate || '📅 Geburtstags Updates 📅';
+    const greetingTemplate = this.texts.greeting || 'Hallo{name},';
     const greeting = greetingTemplate.replace('{name}', recipientName ? ` ${recipientName}` : '');
-    const titleText = texts.calendarUpdateTitle || '🔄 Updates zu Geburtstags-Events';
-    const introText = texts.calendarUpdateIntro || 'Die folgenden Geburtstags-Events wurden deinem Kalender hinzugefügt:';
-    const individualHeader = texts.calendarUpdateIndividualHeader || 'Individuelle Geburtstage:';
-    const summaryHeader = texts.calendarUpdateSummaryHeader || 'Monatliche Geburtstagsübersichten:';
-    const createdLabel = texts.calendarUpdateCreated || '✨ Neu erstellt:';
-    const updatedLabel = texts.calendarUpdateUpdated || '🔄 Aktualisiert:';
-    const viewCalendarLabel = texts.viewCalendar || 'Google Kalender anzeigen';
+    const titleText = this.texts.calendarUpdateTitle || '🔄 Updates zu Geburtstags-Events';
+    const introText = this.texts.calendarUpdateIntro || 'Die folgenden Geburtstags-Events wurden deinem Kalender hinzugefügt:';
+    const individualHeader = this.texts.calendarUpdateIndividualHeader || 'Individuelle Geburtstage:';
+    const summaryHeader = this.texts.calendarUpdateSummaryHeader || 'Monatliche Geburtstagsübersichten:';
+    const createdLabel = this.texts.calendarUpdateCreated || '✨ Neu erstellt:';
+    const updatedLabel = this.texts.calendarUpdateUpdated || '🔄 Aktualisiert:';
+    const viewCalendarLabel = this.texts.viewCalendar || 'Google Kalender anzeigen';
 
     // Build change sections
     let changeSections = '';
@@ -381,8 +377,8 @@ class EmailManager {
       ${changeSections}
 
       <div style="margin-top: 15px; text-align: center;">
-        <a href="https://calendar.google.com/calendar/r" style="display: inline-block; padding: 8px 16px; margin: 4px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; font-size: 14px;">${viewCalendarLabel}</a>
-        <a href="https://github.com/itsFelixH/birthday-calendar-sync" style="display: inline-block; padding: 8px 16px; margin: 4px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; font-size: 14px;">Git-Repo</a>
+        <a href="https://calendar.google.com/calendar/r" style="${this.templates.buttonStyle}">${viewCalendarLabel}</a>
+        <a href="https://github.com/itsFelixH/birthday-calendar-sync" style="${this.templates.buttonStyle}">Git-Repo</a>
       </div>
 
       ${this.templates.footer()}
@@ -450,6 +446,20 @@ class EmailTemplates {
       .contact-info { margin-top: 8px; font-size: 14px; color: #666666; }
       .contact-info span { display: block; margin: 4px 0; }
     `;
+  }
+
+  /**
+   * Inline style for button links.
+   */
+  static get buttonStyle() {
+    return 'display: inline-block; padding: 8px 16px; margin: 4px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; font-size: 14px;';
+  }
+
+  /**
+   * Inline style for smaller action buttons within contact cards.
+   */
+  static get buttonSmallStyle() {
+    return 'display: inline-block; padding: 6px 12px; margin: 2px 4px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 4px; font-size: 14px;';
   }
 
   /**
