@@ -109,10 +109,9 @@ class EmailManager {
       </div>
 
       <div class="section">
-        <h3 class="section-title">🎂 ${monthNamesLong[month]}</h3>
-        <ul class="birthday-list">
+        <ul style="list-style: none; padding: 0; margin: 0;">
           ${monthContacts.map(contact => `
-            <li class="birthday-item">${contact.getBirthdaySummaryMailString()}</li>
+            <li style="padding: 6px 0; border-bottom: 1px solid #eee;">${contact.getBirthdaySummaryMailString()}</li>
           `).join('')}
         </ul>
       </div>
@@ -281,18 +280,14 @@ class EmailManager {
           <h3 class="section-title">${individualHeader}</h3>
           ${changes.individual.created.length > 0 ? `
             <p><strong>${createdLabel}</strong></p>
-            <ul class="birthday-list">
-              ${changes.individual.created.map(event => `
-                <li class="birthday-item">${event}</li>
-              `).join('')}
+            <ul style="padding-left: 20px; margin: 5px 0 15px;">
+              ${changes.individual.created.map(event => `<li>${event}</li>`).join('')}
             </ul>
           ` : ''}
           ${changes.individual.updated.length > 0 ? `
             <p><strong>${updatedLabel}</strong></p>
-            <ul class="birthday-list">
-              ${changes.individual.updated.map(event => `
-                <li class="birthday-item">${event}</li>
-              `).join('')}
+            <ul style="padding-left: 20px; margin: 5px 0 15px;">
+              ${changes.individual.updated.map(event => `<li>${event}</li>`).join('')}
             </ul>
           ` : ''}
         </div>
@@ -305,18 +300,14 @@ class EmailManager {
           <h3 class="section-title">${summaryHeader}</h3>
           ${changes.summary.created.length > 0 ? `
             <p><strong>${createdLabel}</strong></p>
-            <ul class="birthday-list">
-              ${changes.summary.created.map(event => `
-                <li class="birthday-item">${event}</li>
-              `).join('')}
+            <ul style="padding-left: 20px; margin: 5px 0 15px;">
+              ${changes.summary.created.map(event => `<li>${event}</li>`).join('')}
             </ul>
           ` : ''}
           ${changes.summary.updated.length > 0 ? `
             <p><strong>${updatedLabel}</strong></p>
-            <ul class="birthday-list">
-              ${changes.summary.updated.map(event => `
-                <li class="birthday-item">${event}</li>
-              `).join('')}
+            <ul style="padding-left: 20px; margin: 5px 0 15px;">
+              ${changes.summary.updated.map(event => `<li>${event}</li>`).join('')}
             </ul>
           ` : ''}
         </div>
