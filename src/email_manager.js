@@ -125,7 +125,24 @@ class EmailManager {
     `;
 
     const mailBody = this.templates.wrapEmail(content);
-    this.sendMail(toEmail, fromEmail, senderName, subject, '', mailBody);
+    const textBody = [
+      titleText,
+      `${monthNamesLong[month]} ${year}`,
+      '',
+      greeting,
+      introText,
+      countText,
+      '',
+      ...monthContacts.map(contact => {
+        let line = `${('0' + contact.birthday.getDate()).slice(-2)}. ${monthNamesLong[contact.birthday.getMonth()]}: ${contact.name}`;
+        if (contact.hasKnownBirthYear()) line += ` (wird ${contact.getAgeThisYear()} Jahre)`;
+        return `  • ${line}`;
+      }),
+      '',
+      `${viewCalendarLabel}: https://calendar.google.com/calendar/r`,
+    ].join('\n');
+
+    this.sendMail(toEmail, fromEmail, senderName, subject, textBody, mailBody);
     Logger.log(`Birthday summary email sent successfully!`);
   }
 
@@ -247,7 +264,44 @@ class EmailManager {
     `;
 
     const mailBody = this.templates.wrapEmail(content);
-    this.sendMail(toEmail, fromEmail, senderName, subject, '', mailBody);
+    const textLines = [
+      titleText,
+      `${day}. ${monthNamesLong[month]} ${date.getFullYear()}`,
+      '',
+      greeting,
+      introText,
+      '',
+      '🎂 Heute',
+      '─'.repeat(30),
+      ...todaysContacts.map(contact => {
+        let line = `  • ${contact.name}`;
+        if (contact.hasKnownBirthYear()) line += ` - wird heute ${contact.getAgeThisYear()} Jahre alt`;
+        if (contact.email) line += `\n    📧 ${contact.email}`;
+        if (contact.phoneNumber) line += `\n    📱 ${contact.phoneNumber}`;
+        if (contact.instagramNames && contact.instagramNames.length > 0) {
+          line += `\n    📸 ${contact.instagramNames.join(', ')}`;
+        }
+        return line;
+      }),
+    ];
+
+    if (nextDaysContacts.length > 0) {
+      textLines.push('', upcomingHeader, '─'.repeat(30), upcomingIntro, '');
+      nextDaysContacts.forEach(contact => {
+        let line = `  • ${contact.name} - ${contact.getBirthdayLongMonthFormat()}`;
+        if (contact.email) line += ` (${contact.email})`;
+        textLines.push(line);
+      });
+    }
+
+    textLines.push(
+      '',
+      `${viewCalendarLabel}: https://calendar.google.com/calendar/r`,
+      `${manageContactsLabel}: https://contacts.google.com`
+    );
+
+    const textBody = textLines.join('\n');
+    this.sendMail(toEmail, fromEmail, senderName, subject, textBody, mailBody);
     Logger.log(`Daily reminder email sent successfully!`);
   }
 
@@ -335,7 +389,44 @@ class EmailManager {
     `;
 
     const mailBody = this.templates.wrapEmail(content);
-    this.sendMail(toEmail, fromEmail, senderName, subject, '', mailBody);
+    const textLines = [
+      titleText,
+      '',
+      greeting,
+      introText,
+    ];
+
+    if (changes.individual.created.length > 0 || changes.individual.updated.length > 0) {
+      textLines.push('', individualHeader);
+      if (changes.individual.created.length > 0) {
+        textLines.push(`  ${createdLabel}`);
+        changes.individual.created.forEach(event => textLines.push(`    • ${event}`));
+      }
+      if (changes.individual.updated.length > 0) {
+        textLines.push(`  ${updatedLabel}`);
+        changes.individual.updated.forEach(event => textLines.push(`    • ${event}`));
+      }
+    }
+
+    if (changes.summary.created.length > 0 || changes.summary.updated.length > 0) {
+      textLines.push('', summaryHeader);
+      if (changes.summary.created.length > 0) {
+        textLines.push(`  ${createdLabel}`);
+        changes.summary.created.forEach(event => textLines.push(`    • ${event}`));
+      }
+      if (changes.summary.updated.length > 0) {
+        textLines.push(`  ${updatedLabel}`);
+        changes.summary.updated.forEach(event => textLines.push(`    • ${event}`));
+      }
+    }
+
+    textLines.push(
+      '',
+      `${viewCalendarLabel}: https://calendar.google.com/calendar/r`
+    );
+
+    const textBody = textLines.join('\n');
+    this.sendMail(toEmail, fromEmail, senderName, subject, textBody, mailBody);
     Logger.log('Calendar update email sent successfully!');
   }
 }
