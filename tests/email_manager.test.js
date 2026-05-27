@@ -203,9 +203,9 @@ describe('EmailTemplates', () => {
     it('should generate footer HTML with links', () => {
       const html = EmailTemplates.footer();
       expect(html).toContain('border-top: 1px solid');
-      expect(html).toContain('View Calendar');
-      expect(html).toContain('Manage Contacts');
-      expect(html).toContain('GitHub Repo');
+      expect(html).toContain('calendar.google.com');
+      expect(html).toContain('contacts.google.com');
+      expect(html).toContain('github.com/itsFelixH/birthday-calendar-sync');
     });
   });
 

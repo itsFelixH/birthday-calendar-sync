@@ -472,13 +472,18 @@ class EmailTemplates {
    * @returns {string} HTML for the footer section
    */
   static footer() {
+    const texts = typeof emailTexts !== 'undefined' ? emailTexts : {};
+    const footerLabel = texts.footerSentBy || 'Sent by Birthday Calendar Sync';
+    const viewCalendarLabel = texts.viewCalendar || 'Google Kalender anzeigen';
+    const manageContactsLabel = texts.manageContacts || 'Kontakte verwalten';
+
     return `
       <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eaeaea; text-align: center; font-size: 12px; color: #666666;">
         <p>
-          Sent by Birthday Calendar Sync &#8226;
-          <a href="https://calendar.google.com/calendar/r" style="color: #007bff; text-decoration: none;">View Calendar</a> &#8226;
-          <a href="https://contacts.google.com" style="color: #007bff; text-decoration: none;">Manage Contacts</a> &#8226;
-          <a href="https://github.com/itsFelixH/birthday-calendar-sync" style="color: #007bff; text-decoration: none;">GitHub Repo</a>
+          ${footerLabel} &#8226;
+          <a href="https://calendar.google.com/calendar/r" style="color: #007bff; text-decoration: none;">${viewCalendarLabel}</a> &#8226;
+          <a href="https://contacts.google.com" style="color: #007bff; text-decoration: none;">${manageContactsLabel}</a> &#8226;
+          <a href="https://github.com/itsFelixH/birthday-calendar-sync" style="color: #007bff; text-decoration: none;">GitHub</a>
         </p>
       </div>
     `;
