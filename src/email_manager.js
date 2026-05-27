@@ -116,11 +116,6 @@ class EmailManager {
         </ul>
       </div>
 
-      <div style="margin-top: 15px; text-align: center;">
-        <a href="https://calendar.google.com/calendar/r" style="${this.templates.buttonStyle}">${viewCalendarLabel}</a>
-        <a href="https://github.com/itsFelixH/birthday-calendar-sync" style="${this.templates.buttonStyle}">Git-Repo</a>
-      </div>
-
       ${this.templates.footer()}
     `;
 
@@ -252,12 +247,6 @@ class EmailManager {
         </div>
       ` : ''}
 
-      <div style="margin-top: 15px; text-align: center;">
-        <a href="https://calendar.google.com/calendar/r" style="${this.templates.buttonStyle}">${viewCalendarLabel}</a>
-        <a href="https://contacts.google.com" style="${this.templates.buttonStyle}">${manageContactsLabel}</a>
-        <a href="https://github.com/itsFelixH/birthday-calendar-sync" style="${this.templates.buttonStyle}">Git-Repo</a>
-      </div>
-
       ${this.templates.footer()}
     `;
 
@@ -376,11 +365,6 @@ class EmailManager {
 
       ${changeSections}
 
-      <div style="margin-top: 15px; text-align: center;">
-        <a href="https://calendar.google.com/calendar/r" style="${this.templates.buttonStyle}">${viewCalendarLabel}</a>
-        <a href="https://github.com/itsFelixH/birthday-calendar-sync" style="${this.templates.buttonStyle}">Git-Repo</a>
-      </div>
-
       ${this.templates.footer()}
     `;
 
@@ -478,23 +462,19 @@ class EmailTemplates {
   }
 
   /**
-   * Creates a footer section for the email
+   * Creates a footer section with action buttons and attribution
    * @returns {string} HTML for the footer section
    */
   static footer() {
     const texts = typeof emailTexts !== 'undefined' ? emailTexts : {};
-    const footerLabel = texts.footerSentBy || 'Sent by Birthday Calendar Sync';
     const viewCalendarLabel = texts.viewCalendar || 'Google Kalender anzeigen';
     const manageContactsLabel = texts.manageContacts || 'Kontakte verwalten';
 
     return `
-      <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eaeaea; text-align: center; font-size: 12px; color: #666666;">
-        <p>
-          ${footerLabel} &#8226;
-          <a href="https://calendar.google.com/calendar/r" style="color: #007bff; text-decoration: none;">${viewCalendarLabel}</a> &#8226;
-          <a href="https://contacts.google.com" style="color: #007bff; text-decoration: none;">${manageContactsLabel}</a> &#8226;
-          <a href="https://github.com/itsFelixH/birthday-calendar-sync" style="color: #007bff; text-decoration: none;">GitHub</a>
-        </p>
+      <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eaeaea; text-align: center;">
+        <a href="https://calendar.google.com/calendar/r" style="${this.buttonStyle}">${viewCalendarLabel}</a>
+        <a href="https://contacts.google.com" style="${this.buttonStyle}">${manageContactsLabel}</a>
+        <a href="https://github.com/itsFelixH/birthday-calendar-sync" style="${this.buttonStyle}">GitHub</a>
       </div>
     `;
   }
