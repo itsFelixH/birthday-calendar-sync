@@ -91,6 +91,12 @@ function removeSchedules() {
  */
 function updateBirthdaysAndSummariesInCalendar() {
   try {
+    if (typeof calendarId === 'undefined' || !calendarId || calendarId === 'your-calendar-id@group.calendar.google.com') {
+      Logger.log('❌ Cannot sync birthdays: calendarId is not configured.');
+      Logger.log('   Please set your calendar ID in config.js first.');
+      return;
+    }
+
     const isDryRun = typeof dryRun !== 'undefined' && dryRun;
     if (isDryRun) Logger.log('🧪 DRY RUN MODE — no calendar or email changes will be made');
 
