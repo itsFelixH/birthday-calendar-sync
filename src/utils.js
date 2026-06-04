@@ -54,6 +54,94 @@ function extractInstagramNamesFromNotes(notes) {
 
 
 /**
+ * Extracts Instagram usernames from website URL objects.
+ * Matches URLs where the domain is instagram.com.
+ *
+ * @param {Object[]} urls Array of URL objects from People API ({ value, type, formattedType })
+ * @returns {string[]} Array of Instagram usernames (with @ prefix), or empty array if none found.
+ */
+function extractInstagramNamesFromUrls(urls) {
+  if (!urls || !Array.isArray(urls)) return [];
+
+  const instagramNames = [];
+  const pattern = /^https?:\/\/(www\.)?instagram\.com\/([a-zA-Z0-9_.]+)/i;
+
+  urls.forEach(urlObj => {
+    const url = urlObj.value || '';
+    const match = url.match(pattern);
+    if (match) {
+      const username = '@' + match[2];
+      if (!instagramNames.includes(username)) {
+        instagramNames.push(username);
+      }
+    }
+  });
+
+  return instagramNames;
+}
+
+
+/**
+ * Extracts Messenger/Facebook usernames from notes and website URLs.
+ * Notes patterns: "FB: username", "Messenger: username", "Facebook: username"
+ * URL patterns: m.me/username, facebook.com/username, messenger.com/t/username
+ *
+ * @param {string} notes The biography/notes text from the contact.
+ * @param {Object[]} urls Array of URL objects from People API ({ value, type, formattedType })
+ * @returns {string[]} Deduplicated Messenger usernames, or empty array if none found.
+ */
+function extractMessengerNames(notes, urls) {
+  const names = [];
+
+  // Extract from notes
+  if (notes) {
+    const pattern = /(?:fb|messenger|facebook):\s*([a-zA-Z0-9_.]+)/gi;
+    let match;
+    while ((match = pattern.exec(notes)) !== null) {
+      const username = match[1];
+      if (!names.includes(username)) names.push(username);
+    }
+  }
+
+  // Extract from URLs
+  if (urls && Array.isArray(urls)) {
+    const excludedPaths = [
+      'profile.php', 'home.php', 'groups', 'pages', 'events',
+      'marketplace', 'watch', 'stories', 'reels', 'gaming',
+      'fundraisers', 'bookmarks', 'memories', 'notifications',
+      'messages', 'settings', 'help', 'login', 'recover'
+    ];
+
+    urls.forEach(urlObj => {
+      const url = urlObj.value || '';
+
+      // m.me/username
+      let match = url.match(/^https?:\/\/m\.me\/([a-zA-Z0-9_.]+)/i);
+      if (match) {
+        if (!names.includes(match[1])) names.push(match[1]);
+        return;
+      }
+
+      // messenger.com/t/username
+      match = url.match(/^https?:\/\/(www\.)?messenger\.com\/t\/([a-zA-Z0-9_.]+)/i);
+      if (match) {
+        if (!names.includes(match[2])) names.push(match[2]);
+        return;
+      }
+
+      // facebook.com/username (excluding reserved paths)
+      match = url.match(/^https?:\/\/(www\.)?facebook\.com\/([a-zA-Z0-9_.]+)\/?$/i);
+      if (match && !excludedPaths.includes(match[2])) {
+        if (!names.includes(match[2])) names.push(match[2]);
+      }
+    });
+  }
+
+  return names;
+}
+
+
+/**
  * Calculates the date for the beginning of the next month.
  *
  * @returns {Date} The first day of the next month.
