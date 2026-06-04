@@ -15,8 +15,10 @@ class BirthdayContact {
    * @param {Array<string>} instagramNames The Instagram usernames for the contact.
    * @param {Date|null} deathDate The date of death, or null if alive.
    * @param {string} resourceName The Google Contacts resource name (e.g., 'people/c12345').
+   * @param {string} notes The biography/notes text from the contact.
+   * @param {Object[]} urls Website URL objects from People API.
    */
-  constructor(name, birthday, labels = [], email = '', city = '', phoneNumber = '', instagramNames = [], deathDate = null, resourceName = '') {
+  constructor(name, birthday, labels = [], email = '', city = '', phoneNumber = '', instagramNames = [], deathDate = null, resourceName = '', notes = '', urls = []) {
     if (!name || !birthday) {
       throw new Error('Name and birthday are required.');
     }
@@ -29,6 +31,14 @@ class BirthdayContact {
     this.instagramNames = Array.isArray(instagramNames) ? instagramNames : [instagramNames].filter(name => name !== '');
     this.deathDate = deathDate ? new Date(deathDate) : null;
     this.resourceName = resourceName || '';
+    this.notes = (notes || '').toString();
+    this.urls = Array.isArray(urls) ? urls : [];
+
+    /** @type {boolean} Whether notes mention Messenger/FB without a specific username */
+    this.hasMessengerTag = /\b(fb|messenger|facebook)\b/i.test(this.notes);
+
+    /** @type {string[]} Messenger/Facebook usernames extracted from notes and URLs */
+    this.messengerNames = extractMessengerNames(this.notes, this.urls);
   }
 
   /**
@@ -133,12 +143,14 @@ class BirthdayContact {
     const contactLink = this.getContactLink();
     const whatsappLabel = texts.whatsappLabel || 'WhatsApp';
     const instagramLabel = texts.instagramLabel || 'Instagram';
+    const messengerLabel = texts.messengerLabel || 'Messenger';
     const contactLinkLabel = texts.contactLabel || 'Kontakt';
     const contactHeader = texts.contactSectionHeader || '── Kontakt ──';
 
     const hasWhatsApp = socialLinks && this.phoneNumber;
     const hasInstagram = socialLinks && this.instagramNames.length > 0;
-    const hasContactSection = hasWhatsApp || hasInstagram || contactLink;
+    const hasMessenger = socialLinks && this.messengerNames.length > 0;
+    const hasContactSection = hasWhatsApp || hasInstagram || hasMessenger || contactLink;
 
     if (hasContactSection) {
       if (contactHeader) string += `\n${contactHeader}\n`;
@@ -147,6 +159,11 @@ class BirthdayContact {
       if (hasInstagram) {
         this.instagramNames.forEach(name => {
           string += `${instagramLabel}: ${this.getInstagramLink(name)}\n`;
+        });
+      }
+      if (hasMessenger) {
+        this.messengerNames.forEach(name => {
+          string += `${messengerLabel}: ${this.getMessengerLink(name)}\n`;
         });
       }
       if (contactLink) string += `${contactLinkLabel}: ${contactLink}\n`;
@@ -275,6 +292,11 @@ class BirthdayContact {
     if (this.instagramNames.length > 0) {
       this.instagramNames.forEach(name => {
         string += `<li>📷 <a href="${this.getInstagramLink(name)}">${name}</a></li>`;
+      });
+    }
+    if (this.messengerNames.length > 0) {
+      this.messengerNames.forEach(name => {
+        string += `<li>💬 <a href="${this.getMessengerLink(name)}">${name}</a></li>`;
       });
     }
     if (this.labels.length > 0) {
@@ -523,6 +545,28 @@ class BirthdayContact {
 
 
   /**
+   * Generates a Messenger link for a given username.
+   *
+   * @param {string} username The Messenger/Facebook username.
+   * @returns {string} The Messenger link, or empty string if no username.
+   */
+  getMessengerLink(username) {
+    if (!username || typeof username !== 'string') return '';
+    const clean = username.trim();
+    return clean ? `https://m.me/${clean}` : '';
+  }
+
+  /**
+   * Gets all Messenger links for this contact.
+   *
+   * @returns {Array<string>} Array of Messenger links.
+   */
+  getAllMessengerLinks() {
+    return this.messengerNames.map(name => this.getMessengerLink(name));
+  }
+
+
+  /**
    * Gets the Google Contacts link for this contact.
    * Converts resourceName (e.g., 'people/c12345') to the correct Contacts URL.
    *
@@ -564,6 +608,11 @@ class BirthdayContact {
     if (this.instagramNames.length > 0) {
       this.instagramNames.forEach(name => {
         Logger.log(`Instagram: ${this.getInstagramLink(name)}`);
+      });
+    }
+    if (this.messengerNames.length > 0) {
+      this.messengerNames.forEach(name => {
+        Logger.log(`Messenger: ${this.getMessengerLink(name)}`);
       });
     }
     if (this.labels.length > 0) Logger.log(`Labels: ${this.labels.join(', ')}`);
