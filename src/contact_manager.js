@@ -24,7 +24,7 @@ function fetchContactsWithBirthdays(labelFilter = [], maxRetries = 3) {
       try {
         const response = peopleService.Connections.list('people/me', {
           pageSize: 100,
-          personFields: 'names,birthdays,memberships,emailAddresses,phoneNumbers,addresses,biographies,events',
+          personFields: 'names,birthdays,memberships,emailAddresses,phoneNumbers,addresses,biographies,events,urls',
           pageToken: pageToken
         });
 
@@ -76,6 +76,18 @@ function createBirthdayContact(person, birthdayData, labelNames) {
     // Extract death date from contact events (custom date labeled "gestorben")
     const deathDate = extractDeathDate(person.events);
 
+    // Extract notes and urls for Instagram/Messenger extraction
+    const notes = (person.biographies || []).map(bio => bio.value).join('. ');
+    const urls = person.urls || [];
+
+    // Merge Instagram names from both notes and website URLs
+    const instagramFromNotes = extractInstagramNamesFromNotes(notes);
+    const instagramFromUrls = extractInstagramNamesFromUrls(urls);
+    const instagramNames = [...instagramFromNotes];
+    instagramFromUrls.forEach(name => {
+      if (!instagramNames.includes(name)) instagramNames.push(name);
+    });
+
     return new BirthdayContact(
       person.names?.[0]?.displayName || 'Unnamed Contact',
       birthday,
@@ -83,9 +95,11 @@ function createBirthdayContact(person, birthdayData, labelNames) {
       person.emailAddresses?.[0]?.value,
       (person.addresses || []).map(address => address.city).filter(Boolean).join(', '),
       person.phoneNumbers?.[0]?.value || '',
-      extractInstagramNamesFromNotes((person.biographies || []).map(bio => bio.value).join('. ')),
+      instagramNames,
       deathDate,
-      person.resourceName || ''
+      person.resourceName || '',
+      notes,
+      urls
     );
   } catch (error) {
     Logger.log(`⚠️ Error creating contact: ${error.message}`);
