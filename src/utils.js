@@ -97,7 +97,7 @@ function extractMessengerNames(notes, urls) {
 
   // Extract from notes
   if (notes) {
-    const pattern = /(?:fb|messenger|facebook):\s*([a-zA-Z0-9_.]+)/gi;
+    const pattern = /(?:fb|messenger|facebook):\s*@?([a-zA-Z0-9_.]+)/gi;
     let match;
     while ((match = pattern.exec(notes)) !== null) {
       const username = match[1];
