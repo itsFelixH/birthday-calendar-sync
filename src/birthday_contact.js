@@ -34,9 +34,6 @@ class BirthdayContact {
     this.notes = (notes || '').toString();
     this.urls = Array.isArray(urls) ? urls : [];
 
-    /** @type {boolean} Whether notes mention Messenger/FB without a specific username */
-    this.hasMessengerTag = /\b(fb|messenger|facebook)\b/i.test(this.notes);
-
     /** @type {string[]} Messenger/Facebook usernames extracted from notes and URLs */
     this.messengerNames = extractMessengerNames(this.notes, this.urls);
   }
