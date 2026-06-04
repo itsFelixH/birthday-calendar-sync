@@ -237,6 +237,11 @@ class EmailManager {
           contactInfo += `<span style="display: inline; margin-right: 12px;">📸 <a href="https://instagram.com/${name.replace('@', '')}" style="color: #007bff; text-decoration: none;">${name}</a></span>`;
         });
       }
+      if (socialLinks && contact.messengerNames && contact.messengerNames.length > 0) {
+        contact.messengerNames.forEach(name => {
+          contactInfo += `<span style="display: inline; margin-right: 12px;">💬 <a href="https://m.me/${name}" style="color: #007bff; text-decoration: none;">${name}</a></span>`;
+        });
+      }
 
       return `
         <li style="padding: 10px; margin: 5px 0; border-left: 4px solid ${borderColor}; background: #ffffff;">
@@ -308,6 +313,9 @@ class EmailManager {
         }
         if (socialLinks && contact.instagramNames && contact.instagramNames.length > 0) {
           line += `\n    📸 ${contact.instagramNames.join(', ')}`;
+        }
+        if (socialLinks && contact.messengerNames && contact.messengerNames.length > 0) {
+          line += `\n    💬 Messenger: ${contact.messengerNames.join(', ')}`;
         }
         return line;
       }),
