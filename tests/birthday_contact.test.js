@@ -150,6 +150,47 @@ describe('BirthdayContact', () => {
       ];
       expect(contact.getAllInstagramLinks()).toEqual(expected);
     });
+
+    it('getMessengerLink should return correct Messenger link', () => {
+      expect(contact.getMessengerLink('fbuser')).toBe('https://m.me/fbuser');
+    });
+
+    it('getMessengerLink should return empty string for empty input', () => {
+      expect(contact.getMessengerLink('')).toBe('');
+      expect(contact.getMessengerLink(null)).toBe('');
+      expect(contact.getMessengerLink(undefined)).toBe('');
+    });
+
+    it('getAllMessengerLinks should return all Messenger links', () => {
+      const contactWithMessenger = new BirthdayContact(
+        testName, testBirthday, [], '', '', '', [], null, '', 'FB: user1\nMessenger: user2', []
+      );
+      const links = contactWithMessenger.getAllMessengerLinks();
+      expect(links).toContain('https://m.me/user1');
+      expect(links).toContain('https://m.me/user2');
+    });
+  });
+
+  describe('messenger extraction in constructor', () => {
+    it('should extract messengerNames from notes', () => {
+      const contactWithNotes = new BirthdayContact(
+        testName, testBirthday, [], '', '', '', [], null, '', 'FB: myuser', []
+      );
+      expect(contactWithNotes.messengerNames).toEqual(['myuser']);
+    });
+
+    it('should extract messengerNames from urls', () => {
+      const urls = [{ value: 'https://m.me/urluser' }];
+      const contactWithUrls = new BirthdayContact(
+        testName, testBirthday, [], '', '', '', [], null, '', '', urls
+      );
+      expect(contactWithUrls.messengerNames).toEqual(['urluser']);
+    });
+
+    it('should have empty messengerNames when no messenger data', () => {
+      const basicContact = new BirthdayContact(testName, testBirthday);
+      expect(basicContact.messengerNames).toEqual([]);
+    });
   });
 
   describe('getContactLink', () => {

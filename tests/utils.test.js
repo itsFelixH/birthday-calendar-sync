@@ -218,6 +218,168 @@ describe('Utility Functions', () => {
       expect(extractInstagramNamesFromNotes(null)).toEqual([]);
       expect(extractInstagramNamesFromNotes(undefined)).toEqual([]);
     });
+
+    it('should not extract @username preceded by FB:', () => {
+      const notes = 'FB: @fbuser';
+      expect(extractInstagramNamesFromNotes(notes)).toEqual([]);
+    });
+
+    it('should not extract @username preceded by Messenger:', () => {
+      const notes = 'Messenger: @msguser';
+      expect(extractInstagramNamesFromNotes(notes)).toEqual([]);
+    });
+
+    it('should not extract @username preceded by Facebook:', () => {
+      const notes = 'Facebook: @someone';
+      expect(extractInstagramNamesFromNotes(notes)).toEqual([]);
+    });
+
+    it('should extract Instagram but skip FB usernames in mixed notes', () => {
+      const notes = 'FB: @fbuser\n@realinsta';
+      const result = extractInstagramNamesFromNotes(notes);
+      expect(result).toContain('@realinsta');
+      expect(result).not.toContain('@fbuser');
+    });
+  });
+
+  describe('extractInstagramNamesFromUrls', () => {
+    it('should extract username from Instagram URL', () => {
+      const urls = [{ value: 'https://www.instagram.com/johndoe' }];
+      expect(extractInstagramNamesFromUrls(urls)).toEqual(['@johndoe']);
+    });
+
+    it('should extract username without www', () => {
+      const urls = [{ value: 'https://instagram.com/janedoe' }];
+      expect(extractInstagramNamesFromUrls(urls)).toEqual(['@janedoe']);
+    });
+
+    it('should extract multiple usernames', () => {
+      const urls = [
+        { value: 'https://instagram.com/user1' },
+        { value: 'https://www.instagram.com/user2' }
+      ];
+      const result = extractInstagramNamesFromUrls(urls);
+      expect(result).toContain('@user1');
+      expect(result).toContain('@user2');
+    });
+
+    it('should deduplicate usernames', () => {
+      const urls = [
+        { value: 'https://instagram.com/same' },
+        { value: 'https://www.instagram.com/same' }
+      ];
+      expect(extractInstagramNamesFromUrls(urls)).toEqual(['@same']);
+    });
+
+    it('should ignore non-Instagram URLs', () => {
+      const urls = [
+        { value: 'https://facebook.com/someone' },
+        { value: 'https://twitter.com/someone' }
+      ];
+      expect(extractInstagramNamesFromUrls(urls)).toEqual([]);
+    });
+
+    it('should return empty array for null or invalid input', () => {
+      expect(extractInstagramNamesFromUrls(null)).toEqual([]);
+      expect(extractInstagramNamesFromUrls(undefined)).toEqual([]);
+      expect(extractInstagramNamesFromUrls([])).toEqual([]);
+    });
+
+    it('should handle URL objects with missing value', () => {
+      const urls = [{ type: 'profile' }];
+      expect(extractInstagramNamesFromUrls(urls)).toEqual([]);
+    });
+  });
+
+  describe('extractMessengerNames', () => {
+    describe('from notes', () => {
+      it('should extract FB: username', () => {
+        expect(extractMessengerNames('FB: johndoe', [])).toEqual(['johndoe']);
+      });
+
+      it('should extract Messenger: username', () => {
+        expect(extractMessengerNames('Messenger: janedoe', [])).toEqual(['janedoe']);
+      });
+
+      it('should extract Facebook: username', () => {
+        expect(extractMessengerNames('Facebook: someone', [])).toEqual(['someone']);
+      });
+
+      it('should extract FB: @username (with @ prefix)', () => {
+        expect(extractMessengerNames('FB: @fbuser', [])).toEqual(['fbuser']);
+      });
+
+      it('should extract multiple messenger names', () => {
+        const notes = 'FB: user1\nMessenger: user2';
+        const result = extractMessengerNames(notes, []);
+        expect(result).toContain('user1');
+        expect(result).toContain('user2');
+      });
+
+      it('should deduplicate names', () => {
+        const notes = 'FB: same\nMessenger: same';
+        expect(extractMessengerNames(notes, [])).toEqual(['same']);
+      });
+
+      it('should be case insensitive for prefix', () => {
+        expect(extractMessengerNames('fb: lower', [])).toEqual(['lower']);
+        expect(extractMessengerNames('MESSENGER: upper', [])).toEqual(['upper']);
+      });
+
+      it('should return empty array for no matches', () => {
+        expect(extractMessengerNames('just some notes', [])).toEqual([]);
+        expect(extractMessengerNames('', [])).toEqual([]);
+        expect(extractMessengerNames(null, [])).toEqual([]);
+      });
+    });
+
+    describe('from URLs', () => {
+      it('should extract from m.me URLs', () => {
+        const urls = [{ value: 'https://m.me/johndoe' }];
+        expect(extractMessengerNames('', urls)).toEqual(['johndoe']);
+      });
+
+      it('should extract from messenger.com/t/ URLs', () => {
+        const urls = [{ value: 'https://www.messenger.com/t/janedoe' }];
+        expect(extractMessengerNames('', urls)).toEqual(['janedoe']);
+      });
+
+      it('should extract from facebook.com URLs', () => {
+        const urls = [{ value: 'https://www.facebook.com/someone' }];
+        expect(extractMessengerNames('', urls)).toEqual(['someone']);
+      });
+
+      it('should exclude reserved Facebook paths', () => {
+        const reservedPaths = ['profile.php', 'groups', 'pages', 'events', 'marketplace',
+          'watch', 'stories', 'settings', 'help', 'login'];
+        reservedPaths.forEach(path => {
+          const urls = [{ value: `https://www.facebook.com/${path}` }];
+          expect(extractMessengerNames('', urls)).toEqual([]);
+        });
+      });
+
+      it('should deduplicate across notes and URLs', () => {
+        const notes = 'FB: johndoe';
+        const urls = [{ value: 'https://m.me/johndoe' }];
+        expect(extractMessengerNames(notes, urls)).toEqual(['johndoe']);
+      });
+
+      it('should handle null or empty URLs', () => {
+        expect(extractMessengerNames('', null)).toEqual([]);
+        expect(extractMessengerNames('', undefined)).toEqual([]);
+        expect(extractMessengerNames('', [])).toEqual([]);
+      });
+    });
+
+    describe('combined notes and URLs', () => {
+      it('should merge names from both sources', () => {
+        const notes = 'FB: noteuser';
+        const urls = [{ value: 'https://m.me/urluser' }];
+        const result = extractMessengerNames(notes, urls);
+        expect(result).toContain('noteuser');
+        expect(result).toContain('urluser');
+      });
+    });
   });
 
   describe('getNextMonth', () => {
