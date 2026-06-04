@@ -19,6 +19,7 @@ function hasChanges(changes) {
 /**
  * Extracts Instagram usernames from the given notes.
  * Supports @username patterns and "Instagram: username" format.
+ * Excludes @usernames that follow a FB/Messenger/Facebook prefix.
  *
  * @param {string} notes The notes containing Instagram usernames.
  * @returns {string[]} Array of Instagram usernames (with @ prefix), or empty array if none found.
@@ -28,8 +29,9 @@ function extractInstagramNamesFromNotes(notes) {
 
   const instagramNames = [];
 
-  // Match all @username patterns in the notes
-  const atMatches = notes.match(/@[\w.]+/g);
+  // Match @username patterns that are NOT preceded by a FB/Messenger/Facebook prefix
+  const atPattern = /(?<!\b(?:fb|messenger|facebook):\s*)@[\w.]+/gi;
+  const atMatches = notes.match(atPattern);
   if (atMatches) {
     atMatches.forEach(match => {
       const username = match.startsWith('@') ? match : '@' + match;
