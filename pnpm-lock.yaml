@@ -10,7 +10,7 @@ importers:
     dependencies:
       '@google/clasp':
         specifier: ^3.3.0
-        version: 3.4.0(@types/node@25.9.1)(supports-color@8.1.1)
+        version: 3.4.1(@types/node@25.9.1)(supports-color@8.1.1)
       '@types/google-apps-script':
         specifier: ^2.0.8
         version: 2.0.12
@@ -215,8 +215,8 @@ packages:
   '@formatjs/intl@4.1.19':
     resolution: {integrity: sha512-bZMROATl+rzfL8wsDZ53i8XWHx5e6rVr8QlGT5GDvHImEUro4WE9pxUd2dobzmI3CtD+zkt/wkEdqcb+3CK8Fg==}
 
-  '@google/clasp@3.4.0':
-    resolution: {integrity: sha512-R1F+LL+nuVuGayj/Qob5E9Eiu1UI1w0DQiB+Rl302wpdungJ5NXOIBoD1DkyI324C4nWs3KhHGJXRCpuOpuS1g==}
+  '@google/clasp@3.4.1':
+    resolution: {integrity: sha512-92wlpu0loC9t4oADuTyJOxQm6T4H2dOD9oQ+BvdFJuzM2uP7cK5dGrrJQhb/m/HLbaR0UOsBXBqRlYbfyR9jbA==}
     engines: {node: ' >=20.0.0'}
     hasBin: true
 
@@ -1825,10 +1825,6 @@ packages:
     resolution: {integrity: sha512-V7+vQEJ06Z+c5tSye8S+nHUfI51xoXIXjHQ99cQtKUkQqqO1kO/KCJUfZXuB47h/YBlDhah2H3hdUGXn8ie0oA==}
     engines: {node: '>=8.6'}
 
-  picomatch@4.0.4:
-    resolution: {integrity: sha512-QP88BAKvMam/3NxH6vj2o21R6MjxZUAd6nlwAS/pnGvN9IVLocLHxGYIzFhg6fUQ+5th6P4dv4eW9jX3DSIj7A==}
-    engines: {node: '>=12'}
-
   picomatch@4.0.5:
     resolution: {integrity: sha512-RvwwcruNjI1ncT5xRakeyS9Lf8lcItv34KD+aif+VH9kduAyfYBipGh12274xtenIPZ119/R9BdTBa8gAwSh0A==}
     engines: {node: '>=12'}
@@ -2251,7 +2247,7 @@ snapshots:
 
   '@babel/core@7.29.0(supports-color@8.1.1)':
     dependencies:
-      '@babel/code-frame': 7.29.0
+      '@babel/code-frame': 7.29.7
       '@babel/generator': 7.29.1
       '@babel/helper-compilation-targets': 7.28.6
       '@babel/helper-module-transforms': 7.28.6(@babel/core@7.29.0(supports-color@8.1.1))(supports-color@8.1.1)
@@ -2298,7 +2294,7 @@ snapshots:
     dependencies:
       '@babel/core': 7.29.0(supports-color@8.1.1)
       '@babel/helper-module-imports': 7.28.6(supports-color@8.1.1)
-      '@babel/helper-validator-identifier': 7.28.5
+      '@babel/helper-validator-identifier': 7.29.7
       '@babel/traverse': 7.29.0(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
@@ -2409,13 +2405,13 @@ snapshots:
 
   '@babel/template@7.28.6':
     dependencies:
-      '@babel/code-frame': 7.29.0
+      '@babel/code-frame': 7.29.7
       '@babel/parser': 7.29.3
       '@babel/types': 7.29.0
 
   '@babel/traverse@7.29.0(supports-color@8.1.1)':
     dependencies:
-      '@babel/code-frame': 7.29.0
+      '@babel/code-frame': 7.29.7
       '@babel/generator': 7.29.1
       '@babel/helper-globals': 7.28.0
       '@babel/parser': 7.29.3
@@ -2428,7 +2424,7 @@ snapshots:
   '@babel/types@7.29.0':
     dependencies:
       '@babel/helper-string-parser': 7.27.1
-      '@babel/helper-validator-identifier': 7.28.5
+      '@babel/helper-validator-identifier': 7.29.7
 
   '@bcoe/v8-coverage@0.2.3': {}
 
@@ -2462,7 +2458,7 @@ snapshots:
       '@formatjs/icu-messageformat-parser': 3.5.17
       intl-messageformat: 11.2.14
 
-  '@google/clasp@3.4.0(@types/node@25.9.1)(supports-color@8.1.1)':
+  '@google/clasp@3.4.1(@types/node@25.9.1)(supports-color@8.1.1)':
     dependencies:
       '@formatjs/intl': 4.1.19
       '@modelcontextprotocol/sdk': 1.30.0(supports-color@8.1.1)(zod@3.25.76)
@@ -2947,7 +2943,7 @@ snapshots:
 
   '@types/mute-stream@0.0.1':
     dependencies:
-      '@types/node': 20.19.43
+      '@types/node': 25.9.1
 
   '@types/node@20.19.43':
     dependencies:
@@ -3908,7 +3904,7 @@ snapshots:
       jest-regex-util: 30.4.0
       jest-util: 30.4.1
       jest-worker: 30.4.1
-      picomatch: 4.0.4
+      picomatch: 4.0.5
       walker: 1.0.8
     optionalDependencies:
       fsevents: 2.3.3
@@ -3933,7 +3929,7 @@ snapshots:
       chalk: 4.1.2
       graceful-fs: 4.2.11
       jest-util: 30.4.1
-      picomatch: 4.0.4
+      picomatch: 4.0.5
       pretty-format: 30.4.1
       slash: 3.0.0
       stack-utils: 2.0.6
@@ -4055,7 +4051,7 @@ snapshots:
       chalk: 4.1.2
       ci-info: 4.4.0
       graceful-fs: 4.2.11
-      picomatch: 4.0.4
+      picomatch: 4.0.5
 
   jest-validate@30.4.1:
     dependencies:
@@ -4335,8 +4331,6 @@ snapshots:
   picocolors@1.1.1: {}
 
   picomatch@2.3.2: {}
-
-  picomatch@4.0.4: {}
 
   picomatch@4.0.5: {}
 
