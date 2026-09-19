@@ -112,12 +112,9 @@ describe('Calendar Sync', () => {
     it('should update existing event when description changes', () => {
       const contact = new BirthdayContact('Update Person', new Date(1990, 0, 15), [], '', '', '', [], null, 'people/111');
 
-      // The tag that would be generated for this contact
-      const expectedTag = '[BirthdaySync]:1-15:Update Person';
-
       const mockExistingEvent = {
-        getDescription: jest.fn().mockReturnValue(`old content\n\u200B${expectedTag}\u200B`),
-        getTitle: jest.fn().mockReturnValue('old title'),
+        getDescription: jest.fn().mockReturnValue('old content'),
+        getTitle: jest.fn().mockReturnValue('🎂 Update Person hat Geburtstag'),
         setDescription: jest.fn(),
         setTitle: jest.fn()
       };
@@ -276,13 +273,9 @@ describe('Calendar Sync', () => {
       const now = new Date();
       const contact = new BirthdayContact('Update Summary', new Date(1990, now.getMonth(), 15), [], '', '', '', [], null, 'people/104');
 
-      const month = now.getMonth();
-      const year = now.getFullYear();
-      const expectedTag = `[BirthdaySync]:summary:${year}-${('0' + (month + 1)).slice(-2)}`;
-
       const mockExistingEvent = {
-        getDescription: jest.fn().mockReturnValue(`old summary\n\u200B${expectedTag}\u200B`),
-        getTitle: jest.fn().mockReturnValue('old title'),
+        getDescription: jest.fn().mockReturnValue('old summary'),
+        getTitle: jest.fn().mockReturnValue('🎉🎂 BIRTHDAYS 🎂🎉'),
         setDescription: jest.fn(),
         setTitle: jest.fn()
       };
