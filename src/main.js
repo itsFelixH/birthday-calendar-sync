@@ -95,7 +95,7 @@ function sendMonthlySummary() {
     }
 
     if (typeof filterContactsForFeature === 'function') {
-      contacts = filterContactsForFeature(contacts, 'monthlyEmail');
+      contacts = filterContactsForFeature(contacts, 'emails');
     }
 
     const nextMonthDate = getNextMonth();
@@ -140,7 +140,7 @@ function sendWeeklyReminder() {
     }
 
     if (typeof filterContactsForFeature === 'function') {
-      contacts = filterContactsForFeature(contacts, 'weeklyEmail');
+      contacts = filterContactsForFeature(contacts, 'emails');
     }
 
     const days = typeof reminderDaysBefore !== 'undefined' ? reminderDaysBefore : 7;
