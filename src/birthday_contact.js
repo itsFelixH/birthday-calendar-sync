@@ -139,20 +139,23 @@ class BirthdayContact {
 
     const contactLink = this.getContactLink();
     const whatsappLabel = texts.whatsappLabel || 'WhatsApp';
+    const signalLabel = texts.signalLabel || 'Signal';
     const instagramLabel = texts.instagramLabel || 'Instagram';
     const messengerLabel = texts.messengerLabel || 'Messenger';
     const contactLinkLabel = texts.contactLabel || 'Kontakt';
     const contactHeader = texts.contactSectionHeader || '── Kontakt ──';
 
     const hasWhatsApp = socialLinks && this.phoneNumber;
+    const hasSignal = socialLinks && this.phoneNumber;
     const hasInstagram = socialLinks && this.instagramNames.length > 0;
     const hasMessenger = socialLinks && this.messengerNames.length > 0;
-    const hasContactSection = hasWhatsApp || hasInstagram || hasMessenger || contactLink;
+    const hasContactSection = hasWhatsApp || hasSignal || hasInstagram || hasMessenger || contactLink;
 
     if (hasContactSection) {
       if (contactHeader) string += `\n${contactHeader}\n`;
       else string += '\n';
       if (hasWhatsApp) string += `${whatsappLabel}: ${this.getWhatsAppLink()}\n`;
+      if (hasSignal) string += `${signalLabel}: ${this.getSignalLink()}\n`;
       if (hasInstagram) {
         this.instagramNames.forEach(name => {
           string += `${instagramLabel}: ${this.getInstagramLink(name)}\n`;
@@ -167,11 +170,13 @@ class BirthdayContact {
     }
 
     const infoHeader = texts.infoSectionHeader || '── Info ──';
-    const hasInfoSection = this.city || this.labels.length > 0;
+    const showZodiacBadge = typeof showZodiac !== 'undefined' && showZodiac;
+    const hasInfoSection = this.city || this.labels.length > 0 || showZodiacBadge;
     if (hasInfoSection) {
       if (infoHeader) string += `\n${infoHeader}\n`;
       else string += '\n';
       if (this.city) string += `📍 ${this.city}\n`;
+      if (showZodiacBadge) string += `✨ ${this.getZodiacSign().full}\n`;
       if (this.labels.length > 0) string += `${this.labels}\n`;
     }
 
@@ -187,13 +192,19 @@ class BirthdayContact {
    * @private
    */
   _replacePlaceholders(template, extra = {}) {
+    const zodiac = this.getZodiacSign();
+    const targetYear = extra.year !== undefined ? extra.year : (extra.age !== undefined && this.hasKnownBirthYear() ? this.birthday.getFullYear() + extra.age : new Date().getFullYear());
     return template
       .replace('{name}', this.name)
       .replace('{birthdate}', this.hasKnownBirthYear() ? this.getBirthdayLongFormat() : this.getBirthdayShortFormat())
       .replace('{city}', this.city || '')
       .replace('{email}', this.email || '')
       .replace('{phone}', this.phoneNumber || '')
-      .replace('{age}', extra.age !== undefined ? extra.age : '');
+      .replace('{age}', extra.age !== undefined ? extra.age : '')
+      .replace('{weekday}', this.getWeekdayName(targetYear))
+      .replace('{zodiac}', zodiac.full)
+      .replace('{zodiacSymbol}', zodiac.symbol)
+      .replace('{zodiacName}', zodiac.name);
   }
 
 
@@ -287,7 +298,10 @@ class BirthdayContact {
       string += `<li>wird ${this.getAgeThisYear()} Jahre</li>`;
     }
 
-    if (this.phoneNumber) string += `<li>💬 <a href="${this.getWhatsAppLink()}">${this.phoneNumber}</a></li>`;
+    if (this.phoneNumber) {
+      string += `<li>💬 <a href="${this.getWhatsAppLink()}">${this.phoneNumber} (WhatsApp)</a></li>`;
+      string += `<li>💬 <a href="${this.getSignalLink()}">Signal</a></li>`;
+    }
     if (this.instagramNames.length > 0) {
       this.instagramNames.forEach(name => {
         string += `<li>📷 <a href="${this.getInstagramLink(name)}">${name}</a></li>`;
@@ -537,7 +551,78 @@ class BirthdayContact {
       const cleanedPhoneNumber = this.phoneNumber.replace(/\D/g, '');
       return cleanedPhoneNumber ? `https://wa.me/${cleanedPhoneNumber}` : '';
     }
-    return ''
+    return '';
+  }
+
+  /**
+   * Generates a Signal direct link using a phone number.
+   *
+   * @returns {string} The Signal link, or an empty string if no valid phone number.
+   */
+  getSignalLink() {
+    if (this.phoneNumber) {
+      const cleanedPhoneNumber = this.phoneNumber.replace(/\D/g, '');
+      return cleanedPhoneNumber ? `https://signal.me/#p/+${cleanedPhoneNumber}` : '';
+    }
+    return '';
+  }
+
+  /**
+   * Gets the weekday name for this contact's birthday in a specific year.
+   *
+   * @param {number} [year=new Date().getFullYear()] The year of the birthday occurrence.
+   * @returns {string} Full weekday name (e.g. 'Montag', 'Samstag').
+   */
+  getWeekdayName(year = new Date().getFullYear()) {
+    const bdayDate = new Date(year, this.birthday.getMonth(), this.birthday.getDate());
+    const names = typeof dayNames !== 'undefined' ? dayNames : ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
+    return names[bdayDate.getDay()];
+  }
+
+  /**
+   * Calculates the Western Zodiac sign for this contact's birthday.
+   *
+   * @returns {{symbol: string, name: string, full: string}} Zodiac info object.
+   */
+  getZodiacSign() {
+    const month = this.birthday.getMonth() + 1; // 1-12
+    const day = this.birthday.getDate();
+
+    if ((month === 1 && day >= 20) || (month === 2 && day <= 18)) {
+      return { symbol: '♒', name: 'Wassermann', full: '♒ Wassermann' };
+    }
+    if ((month === 2 && day >= 19) || (month === 3 && day <= 20)) {
+      return { symbol: '♓', name: 'Fische', full: '♓ Fische' };
+    }
+    if ((month === 3 && day >= 21) || (month === 4 && day <= 19)) {
+      return { symbol: '♈', name: 'Widder', full: '♈ Widder' };
+    }
+    if ((month === 4 && day >= 20) || (month === 5 && day <= 20)) {
+      return { symbol: '♉', name: 'Stier', full: '♉ Stier' };
+    }
+    if ((month === 5 && day >= 21) || (month === 6 && day <= 20)) {
+      return { symbol: '♊', name: 'Zwillinge', full: '♊ Zwillinge' };
+    }
+    if ((month === 6 && day >= 21) || (month === 7 && day <= 22)) {
+      return { symbol: '♋', name: 'Krebs', full: '♋ Krebs' };
+    }
+    if ((month === 7 && day >= 23) || (month === 8 && day <= 22)) {
+      return { symbol: '♌', name: 'Löwe', full: '♌ Löwe' };
+    }
+    if ((month === 8 && day >= 23) || (month === 9 && day <= 22)) {
+      return { symbol: '♍', name: 'Jungfrau', full: '♍ Jungfrau' };
+    }
+    if ((month === 9 && day >= 23) || (month === 10 && day <= 22)) {
+      return { symbol: '♎', name: 'Waage', full: '♎ Waage' };
+    }
+    if ((month === 10 && day >= 23) || (month === 11 && day <= 21)) {
+      return { symbol: '♏', name: 'Skorpion', full: '♏ Skorpion' };
+    }
+    if ((month === 11 && day >= 22) || (month === 12 && day <= 21)) {
+      return { symbol: '♐', name: 'Schütze', full: '♐ Schütze' };
+    }
+    // Dec 22 - Jan 19
+    return { symbol: '♑', name: 'Steinbock', full: '♑ Steinbock' };
   }
 
 
