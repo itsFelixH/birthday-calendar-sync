@@ -218,23 +218,24 @@ class EmailManager {
 
     // Build HTML content
     const contactListHtml = reminderContacts.map(contact => {
-      const daysUntil = this._daysUntil(date, contact.birthday);
-      const isToday = daysUntil === 0;
-      const isTomorrow = daysUntil === 1;
-      const dateLabel = isToday
-        ? `🎂 ${todayLabel}`
-        : `📅 ${('0' + contact.birthday.getDate()).slice(-2)}. ${monthNamesLong[contact.birthday.getMonth()]}`;
-
-      const daysHint = isToday ? '' : isTomorrow
-        ? ` <span style="color: #888; font-size: 12px;">(${tomorrowLabel})</span>`
-        : ` <span style="color: #888; font-size: 12px;">(${daysUntilLabel.replace('{days}', daysUntil)})</span>`;
-
       const fromMidnight = new Date(date.getFullYear(), date.getMonth(), date.getDate());
       const nextBdayDate = new Date(fromMidnight.getFullYear(), contact.birthday.getMonth(), contact.birthday.getDate());
       if (nextBdayDate < fromMidnight) {
         nextBdayDate.setFullYear(fromMidnight.getFullYear() + 1);
       }
       const bdayYear = nextBdayDate.getFullYear();
+      const weekdayName = contact.getWeekdayName ? contact.getWeekdayName(bdayYear) : '';
+
+      const daysUntil = this._daysUntil(date, contact.birthday);
+      const isToday = daysUntil === 0;
+      const isTomorrow = daysUntil === 1;
+      const dateLabel = isToday
+        ? `🎂 ${todayLabel}`
+        : `📅 ${weekdayName ? `${weekdayName}, ` : ''}${('0' + contact.birthday.getDate()).slice(-2)}. ${monthNamesLong[contact.birthday.getMonth()]}`;
+
+      const daysHint = isToday ? '' : isTomorrow
+        ? ` <span style="color: #888; font-size: 12px;">(${tomorrowLabel})</span>`
+        : ` <span style="color: #888; font-size: 12px;">(${daysUntilLabel.replace('{days}', daysUntil)})</span>`;
 
       const age = contact.hasKnownBirthYear() ? contact.getAgeInYear(bdayYear) : null;
       const isMilestone = showMilestones && age !== null && milestones.includes(age);
@@ -253,6 +254,8 @@ class EmailManager {
         if (socialLinks) {
           const waLink = contact.getWhatsAppLink();
           if (waLink) contactInfo += `<span style="display: inline; margin-right: 12px;">💬 <a href="${waLink}" style="color: #007bff; text-decoration: none;">WhatsApp</a></span>`;
+          const sigLink = contact.getSignalLink ? contact.getSignalLink() : '';
+          if (sigLink) contactInfo += `<span style="display: inline; margin-right: 12px;">💬 <a href="${sigLink}" style="color: #007bff; text-decoration: none;">Signal</a></span>`;
         }
       }
       if (socialLinks && contact.instagramNames && contact.instagramNames.length > 0) {
@@ -308,23 +311,24 @@ class EmailManager {
       '',
       '─'.repeat(30),
       ...reminderContacts.map(contact => {
-        const daysUntil = this._daysUntil(date, contact.birthday);
-        const isToday = daysUntil === 0;
-        const isTomorrow = daysUntil === 1;
-        const dateLabel = isToday
-          ? `🎂 ${todayLabel}`
-          : `📅 ${('0' + contact.birthday.getDate()).slice(-2)}. ${monthNamesLong[contact.birthday.getMonth()]}`;
-
-        const daysHint = isToday ? '' : isTomorrow
-          ? ` (${tomorrowLabel})`
-          : ` (${daysUntilLabel.replace('{days}', daysUntil)})`;
-
         const fromMidnight = new Date(date.getFullYear(), date.getMonth(), date.getDate());
         const nextBdayDate = new Date(fromMidnight.getFullYear(), contact.birthday.getMonth(), contact.birthday.getDate());
         if (nextBdayDate < fromMidnight) {
           nextBdayDate.setFullYear(fromMidnight.getFullYear() + 1);
         }
         const bdayYear = nextBdayDate.getFullYear();
+        const weekdayName = contact.getWeekdayName ? contact.getWeekdayName(bdayYear) : '';
+
+        const daysUntil = this._daysUntil(date, contact.birthday);
+        const isToday = daysUntil === 0;
+        const isTomorrow = daysUntil === 1;
+        const dateLabel = isToday
+          ? `🎂 ${todayLabel}`
+          : `📅 ${weekdayName ? `${weekdayName}, ` : ''}${('0' + contact.birthday.getDate()).slice(-2)}. ${monthNamesLong[contact.birthday.getMonth()]}`;
+
+        const daysHint = isToday ? '' : isTomorrow
+          ? ` (${tomorrowLabel})`
+          : ` (${daysUntilLabel.replace('{days}', daysUntil)})`;
 
         const age = contact.hasKnownBirthYear() ? contact.getAgeInYear(bdayYear) : null;
         const isMilestone = showMilestones && age !== null && milestones.includes(age);
@@ -339,6 +343,8 @@ class EmailManager {
           if (socialLinks) {
             const waLink = contact.getWhatsAppLink();
             if (waLink) line += `\n    💬 ${waLink}`;
+            const sigLink = contact.getSignalLink ? contact.getSignalLink() : '';
+            if (sigLink) line += `\n    💬 Signal: ${sigLink}`;
           }
         }
         if (socialLinks && contact.instagramNames && contact.instagramNames.length > 0) {
