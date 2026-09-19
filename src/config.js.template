@@ -46,6 +46,39 @@ const sendWeeklyReminderEmail = false;
 
 // ─── Contact filtering ────────────────────────────────────────────────────────
 
+// Feature-specific contact filters:
+// Control which contacts are included for each feature using whitelist/blacklist rules.
+// You can specify label names (includeLabels, excludeLabels) and contact names (includeNames, excludeNames).
+// Alternatively, provide a simple array of label names (e.g. `individualEvents: ['Friends', 'Family']`).
+// Leave arrays empty `[]` to include all contacts with birthdays for that feature.
+const contactFilters = {
+  individualEvents: {
+    includeLabels: [], // e.g. ['Family', 'Friends', 'VIP']
+    excludeLabels: [], // e.g. ['Archive']
+    includeNames: [],  // e.g. ['John Doe']
+    excludeNames: []
+  },
+  summaryEvents: {
+    includeLabels: [],
+    excludeLabels: [],
+    includeNames: [],
+    excludeNames: []
+  },
+  monthlyEmail: {
+    includeLabels: [],
+    excludeLabels: [],
+    includeNames: [],
+    excludeNames: []
+  },
+  weeklyEmail: {
+    includeLabels: [],
+    excludeLabels: [],
+    includeNames: [],
+    excludeNames: []
+  }
+};
+
+// Legacy global label filter (optional, kept for backwards compatibility)
 // Set useLabel to true and add label names to only sync specific contacts.
 // When false, all contacts with birthdays are synced.
 const useLabel = false;
