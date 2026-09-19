@@ -16,29 +16,16 @@ function isCalendarConfigured() {
 }
 
 /**
- * Checks whether label filtering is correctly configured.
- * @returns {boolean} true if valid (labels provided or filtering disabled), false if misconfigured
- */
-function isLabelFilterConfigured() {
-  if (useLabel && (!labelFilter || labelFilter.length === 0)) {
-    Logger.log('⚠️ useLabel is enabled but labelFilter is empty — no contacts will match.');
-    Logger.log('   Add label names to labelFilter in config.js, or set useLabel to false.');
-    return false;
-  }
-  return true;
-}
-
-/**
  * Syncs birthdays from Google Contacts to the calendar.
  */
 function syncBirthdays() {
   try {
-    if (!isCalendarConfigured() || !isLabelFilterConfigured()) return;
+    if (!isCalendarConfigured()) return;
 
     const isDryRun = typeof dryRun !== 'undefined' && dryRun;
     if (isDryRun) Logger.log('🧪 DRY RUN MODE — no calendar or email changes will be made');
 
-    const contacts = fetchContactsWithBirthdays(useLabel ? labelFilter : []);
+    const contacts = fetchContactsWithBirthdays();
 
     if (!contacts || contacts.length === 0) {
       Logger.log('⚠️ No contacts with birthdays found. Aborting calendar update.');
@@ -100,9 +87,7 @@ function sendMonthlySummary() {
       return;
     }
 
-    if (!isLabelFilterConfigured()) return;
-
-    let contacts = fetchContactsWithBirthdays(useLabel ? labelFilter : []);
+    let contacts = fetchContactsWithBirthdays();
 
     if (!contacts || contacts.length === 0) {
       Logger.log('⚠️ No contacts with birthdays found. Aborting summary mail.');
@@ -138,8 +123,6 @@ function sendWeeklyReminder() {
       return;
     }
 
-    if (!isLabelFilterConfigured()) return;
-
     const today = new Date();
     const sendDay = typeof weeklyReminderDay !== 'undefined' ? weeklyReminderDay : 1;
 
@@ -149,7 +132,7 @@ function sendWeeklyReminder() {
       return;
     }
 
-    let contacts = fetchContactsWithBirthdays(useLabel ? labelFilter : []);
+    let contacts = fetchContactsWithBirthdays();
 
     if (!contacts || contacts.length === 0) {
       Logger.log('⚠️ No contacts with birthdays found. Aborting weekly reminder.');
@@ -178,9 +161,7 @@ function sendContactQualityReport() {
   try {
     const isDryRun = typeof dryRun !== 'undefined' && dryRun;
 
-    if (!isLabelFilterConfigured()) return;
-
-    const contacts = fetchContactsWithBirthdays(useLabel ? labelFilter : []);
+    const contacts = fetchContactsWithBirthdays();
 
     if (!contacts || contacts.length === 0) {
       Logger.log('⚠️ No contacts with birthdays found. Aborting quality report.');
