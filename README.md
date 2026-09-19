@@ -7,15 +7,16 @@ Synchronizes birthdays from Google Contacts to a dedicated Google Calendar. Buil
 - **Individual birthday events** — one all-day event per contact on their birthday
 - **Monthly summary events** — a single event listing all birthdays that month
 - **Recurring or single events** — yearly recurring or individual per-year events
-- **Structured descriptions** — contact links, social media, labels, and location
+- **Structured descriptions** — Signal, WhatsApp, Instagram, Google Contact links, labels, and location
+- **Template placeholders** — dynamic `{weekday}`, `{zodiac}`, `{age}`, `{name}`, `{birthdate}`, and more
+- **Feature-specific contact filtering** — fine-grained allowlist (`includeLabels`/`includeNames`) and blocklist (`excludeLabels`/`excludeNames`) for individual events, summary events, and emails
+- **Clean descriptions** — clean, human-readable calendar entries with zero watermark clutter + historical cleanup tool
 - **Configurable everything** — titles, descriptions, colors, email texts, locale
-- **Email notifications** — sync reports, monthly summaries, weekly reminders (all optional)
-- **Label filtering** — sync only contacts with specific Google Contacts labels
-- **Milestone highlighting** — special titles for round birthdays (30, 40, 50, etc.)
+- **Email notifications** — sync reports, monthly summaries, weekly reminders with weekday names and quick contact actions (all optional)
+- **Milestone highlighting** — special titles for round birthdays (18, 30, 40, 50, etc.)
 - **Deceased contact handling** — skip or create memorial events
 - **Leap year handling** — configurable fallback for Feb 29 birthdays
 - **Dry-run mode** — preview all changes without modifying anything
-- **Duplicate prevention** — tagged events prevent duplicates even when names change
 - **Rate limiting** — configurable API throttling to avoid quota issues
 
 ## Setup
@@ -41,7 +42,7 @@ npx clasp create --type standalone --title "Birthday Calendar Sync"
 cp src/config.js.template src/config.js
 ```
 
-Set your `calendarId` in `src/config.js`. Optionally enable email notifications and adjust schedule times — everything else has sensible defaults.
+Set your `calendarId` in `src/config.js`. Optionally enable email notifications, customize contact filters, and adjust schedule times — everything else has sensible defaults.
 
 ### 4. Deploy and schedule
 
@@ -55,11 +56,12 @@ Then open your project in the Apps Script editor:
 
 The `_setup.js` file opens by default. Select `setupSchedules` from the function dropdown and click **▶ Run**. You'll be asked to authorize permissions on first run.
 
-| Function | Default Schedule | Condition |
-|----------|-----------------|-----------|
-| `syncBirthdays` | Monday ~3:00 AM | Always |
+| Function | Default Schedule / Purpose | Condition |
+|----------|---------------------------|-----------|
+| `syncBirthdays` | Monday ~3:00 AM | Always (fetches contacts and syncs events) |
 | `sendMonthlySummary` | 28th ~9:00 AM | Only if `sendMonthlySummaryEmail = true` |
 | `sendWeeklyReminder` | Monday ~10:00 AM | Only if `sendWeeklyReminderEmail = true` |
+| `cleanCalendarWatermarks` | Manual one-off run | Cleans watermarks from legacy synced events |
 
 Re-running `setupSchedules()` replaces existing triggers. Run `removeSchedules()` to pause.
 
@@ -72,22 +74,59 @@ The config file (`src/config.js`) is organized in numbered sections by priority.
 | Section | What's in it |
 |---------|-------------|
 | 1. Required | `calendarId` |
-| 2. Features | Which events to create, which emails to send, label filtering |
-| 3. Locale | Month names for your language |
+| 2. Features | Event toggles, email notification toggles, and `contactFilters` (whitelist & blacklist) |
+| 3. Locale | Month and day names for your language |
 | 4. Schedules | When triggers run (used by `setupSchedules()`) |
-| 5. Customization | Reminders, timing, titles, colors, emails, milestones, deceased |
+| 5. Customization | Reminders, timing, titles, texts, colors, social links, emails, milestones, leap year, deceased contacts, dry run |
 
 Everything after section 4 is optional — the defaults work out of the box.
 
+### Contact Filtering
+
+Control exactly which contacts appear in which feature via `contactFilters`:
+
+```javascript
+const contactFilters = {
+  // Contacts that get individual all-day calendar events:
+  individualEvents: {
+    includeLabels: ['Friends', 'Family', 'VIP'], // Whitelist: ONLY these contacts get events
+    excludeLabels: ['Archive'],                  // Blacklist: Never create events for these (takes precedence)
+    includeNames: [],
+    excludeNames: []
+  },
+
+  // Contacts listed in monthly summary calendar events:
+  summaryEvents: {
+    includeLabels: [],
+    excludeLabels: [],
+    includeNames: [],
+    excludeNames: []
+  },
+
+  // Contacts included in email notifications:
+  emails: {
+    includeLabels: [],
+    excludeLabels: ['Work'],
+    includeNames: [],
+    excludeNames: []
+  }
+};
+```
+
+- **Whitelist (`includeLabels`, `includeNames`)**: If populated, **only** matching contacts are included. If empty (`[]`), all contacts are included.
+- **Blacklist (`excludeLabels`, `excludeNames`)**: Matching contacts are always excluded, even if they match an include rule.
+- **Shorthand syntax**: e.g. `individualEvents: ['Friends', 'Family']` is shorthand for `includeLabels`.
+
 ## Event Description Format
 
-Events use a structured description with sections:
+Events use a structured, clean description with quick messaging links:
 
 ```
-🎂 Max turns 34
+🎂 Max turns 34 (♒ Aquarius)
 Birthday: 15.01.1990
 
 ── Contact ──
+Signal: https://signal.me/#p/+491234567
 WhatsApp: https://wa.me/491234567
 Instagram: https://instagram.com/max/
 Contact: https://contacts.google.com/person/c123
@@ -122,7 +161,7 @@ src/
 ├── birthday_contact.js   # BirthdayContact class
 ├── calendar_manager.js   # Calendar API wrapper
 ├── calendar_sync.js      # Sync logic (individual + summary events)
-├── contact_manager.js    # Google Contacts API fetching
+├── contact_manager.js    # Google Contacts API fetching & filtering
 ├── email_manager.js      # Email notifications
 ├── label_manager.js      # Contact label/group management
 └── utils.js              # Utility helpers
