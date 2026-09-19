@@ -31,8 +31,8 @@ pnpm install
 ### 2. Authenticate and create project
 
 ```bash
-pnpx @google/clasp login
-pnpx @google/clasp create --type standalone --title "Birthday Calendar Sync"
+npx clasp login
+npx clasp create --type standalone --title "Birthday Calendar Sync"
 ```
 
 ### 3. Configure
