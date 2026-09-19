@@ -244,13 +244,14 @@ class BirthdayContact {
   /**
    * Gets the string representation for the birthday summary.
    * 
+   * @param {number} [year=new Date().getFullYear()] - Year to calculate age and milestones for.
    * @returns {string} The birthday summary string.
    */
-  getBirthdaySummaryEventString() {
+  getBirthdaySummaryEventString(year = new Date().getFullYear()) {
     let string = `${this.getBirthdayLongMonthFormat()}: ${this.name}`;
     if (this.hasKnownBirthYear()) {
-      const age = this.getAgeThisYear();
-      const isMilestone = typeof highlightMilestones !== 'undefined' && highlightMilestones && this.isMilestoneBirthday(new Date().getFullYear());
+      const age = this.getAgeInYear(year);
+      const isMilestone = typeof highlightMilestones !== 'undefined' && highlightMilestones && this.isMilestoneBirthday(year);
       string += isMilestone ? ` (🎉 ${age}!)` : ` (${age})`;
     }
     return string;
@@ -260,14 +261,15 @@ class BirthdayContact {
   /**
    * Gets the string for the birthday summary mail.
    * 
+   * @param {number} [year=new Date().getFullYear()] - Year to calculate age for.
    * @returns {string} The birthday summary string.
    */
-  getBirthdaySummaryMailString() {
+  getBirthdaySummaryMailString(year = new Date().getFullYear()) {
     const texts = typeof emailTexts !== 'undefined' ? emailTexts : {};
     const ageTemplate = texts.monthlySummaryAge || 'turns {age}';
     let string = `<b>${('0' + this.birthday.getDate()).slice(-2)}. ${monthNamesLong[this.birthday.getMonth()]}</b>: 🎂 ${this.name}`;
     if (this.hasKnownBirthYear()) {
-      string += ` (${ageTemplate.replace('{age}', this.getAgeThisYear())})`;
+      string += ` (${ageTemplate.replace('{age}', this.getAgeInYear(year))})`;
     }
     return string;
   }
@@ -396,14 +398,37 @@ class BirthdayContact {
    */
   daysToNextBirthday() {
     const today = new Date();
-    const nextBirthday = new Date(today.getFullYear(), this.birthday.getMonth(), this.birthday.getDate());
+    const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const year = today.getFullYear();
+    let nextBirthday;
 
-    if (today > nextBirthday) {
-      nextBirthday.setFullYear(today.getFullYear() + 1);
+    if (this.isLeapYearBirthday()) {
+      const isLeap = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+      if (isLeap) {
+        nextBirthday = new Date(year, 1, 29);
+      } else {
+        nextBirthday = (typeof leapYearHandling !== 'undefined' && leapYearHandling === 'mar1')
+          ? new Date(year, 2, 1)
+          : new Date(year, 1, 28);
+      }
+      if (todayMidnight > nextBirthday) {
+        const nextYear = year + 1;
+        const nextIsLeap = (nextYear % 4 === 0 && nextYear % 100 !== 0) || nextYear % 400 === 0;
+        nextBirthday = nextIsLeap
+          ? new Date(nextYear, 1, 29)
+          : ((typeof leapYearHandling !== 'undefined' && leapYearHandling === 'mar1')
+            ? new Date(nextYear, 2, 1)
+            : new Date(nextYear, 1, 28));
+      }
+    } else {
+      nextBirthday = new Date(year, this.birthday.getMonth(), this.birthday.getDate());
+      if (todayMidnight > nextBirthday) {
+        nextBirthday.setFullYear(year + 1);
+      }
     }
 
     const oneDay = 24 * 60 * 60 * 1000; // One day in milliseconds
-    return Math.round((nextBirthday - today) / oneDay);
+    return Math.round((nextBirthday - todayMidnight) / oneDay);
   }
 
   /**
@@ -448,13 +473,12 @@ class BirthdayContact {
    * @returns {Date|null} The next birthday that falls within the range, or null.
    */
   getNextBirthdayInRange(startDate, endDate) {
-    const currentYear = startDate.getFullYear();
+    const startYear = startDate.getFullYear();
+    const endYear = endDate.getFullYear();
     const bdayMonth = this.birthday.getMonth();
     const bdayDate = this.birthday.getDate();
 
-    const years = [currentYear, currentYear + 1];
-
-    for (const year of years) {
+    for (let year = startYear; year <= endYear; year++) {
       let candidateDate;
 
       if (this.isLeapYearBirthday()) {
@@ -714,13 +738,12 @@ function sortContactsByBirthdate(contacts) {
  */
 function getUpcomingBirthdays(contacts, days) {
   const today = new Date();
+  const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const endDate = new Date(todayMidnight);
+  endDate.setDate(endDate.getDate() + days);
+
   const filtered = contacts.filter(contact => {
-    const nextBirthday = new Date(today.getFullYear(), contact.birthday.getMonth(), contact.birthday.getDate());
-    if (today > nextBirthday) {
-      nextBirthday.setFullYear(today.getFullYear() + 1);
-    }
-    const diffDays = Math.round((nextBirthday - today) / (1000 * 60 * 60 * 24));
-    return diffDays <= days;
+    return contact.getNextBirthdayInRange(todayMidnight, endDate) !== null;
   });
   return sortContactsByBirthdate(filtered);
 }
@@ -752,13 +775,7 @@ function getContactsByBirthdayDate(contacts, date) {
  */
 function getContactsByBirthdayBetweenDates(contacts, startDate, endDate) {
   const filtered = contacts.filter(contact => {
-    const contactBirthdayMonth = contact.birthday.getMonth();
-    const contactBirthdayDay = contact.birthday.getDate();
-
-    return contactBirthdayMonth >= startDate.getMonth() &&
-      contactBirthdayMonth <= endDate.getMonth() &&
-      contactBirthdayDay >= startDate.getDate() &&
-      contactBirthdayDay <= endDate.getDate();
+    return contact.getNextBirthdayInRange(startDate, endDate) !== null;
   });
   return sortContactsByBirthdate(filtered);
 }

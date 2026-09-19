@@ -15,13 +15,19 @@ class LabelManager {
   fetchLabels() {
     try {
       var groupsResponse = People.ContactGroups.list();
-      var groupResourceNames = groupsResponse.contactGroups.map(group => group.resourceName);
+      var groups = (groupsResponse && groupsResponse.contactGroups) || [];
+      if (groups.length === 0) {
+        return [];
+      }
+
+      var groupResourceNames = groups.map(group => group.resourceName);
 
       var batchGetResponse = People.ContactGroups.batchGet({
         resourceNames: groupResourceNames
       });
 
-      var labels = batchGetResponse.responses.map(response => {
+      var responses = (batchGetResponse && batchGetResponse.responses) || [];
+      var labels = responses.map(response => {
         return {
           id: response.contactGroup.resourceName,
           name: response.contactGroup.name

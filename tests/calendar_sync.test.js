@@ -389,4 +389,24 @@ describe('Calendar Sync', () => {
       expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('Updated: 1'));
     });
   });
+
+  describe('execution quota protection', () => {
+    it('should halt individual birthday sync gracefully when execution exceeds 5 minutes', () => {
+      const contact1 = new BirthdayContact('Contact 1', new Date(1990, 0, 15));
+      const contact2 = new BirthdayContact('Contact 2', new Date(1990, 0, 16));
+      
+      const realDateNow = Date.now;
+      let callCount = 0;
+      // First call is startTime, subsequent calls simulate elapsed > 5 mins
+      Date.now = jest.fn(() => {
+        callCount++;
+        return callCount === 1 ? 1000 : 1000 + (6 * 60 * 1000);
+      });
+
+      const result = createOrUpdateIndividualBirthdays('cal-id', [contact1, contact2], 12);
+      expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('5-minute quota threshold'));
+
+      Date.now = realDateNow;
+    });
+  });
 });

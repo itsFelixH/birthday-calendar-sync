@@ -51,6 +51,18 @@ global.DriveApp = {
 // Mock ScriptApp
 global.ScriptApp = {
   getScriptId: jest.fn().mockReturnValue('test-script-id'),
+  getProjectTriggers: jest.fn().mockReturnValue([]),
+  deleteTrigger: jest.fn(),
+  newTrigger: jest.fn().mockImplementation(() => {
+    const builder = {
+      timeBased: jest.fn().mockReturnThis(),
+      onWeekDay: jest.fn().mockReturnThis(),
+      onMonthDay: jest.fn().mockReturnThis(),
+      atHour: jest.fn().mockReturnThis(),
+      create: jest.fn().mockReturnValue({})
+    };
+    return builder;
+  }),
   WeekDay: {
     SUNDAY: 1,
     MONDAY: 2,

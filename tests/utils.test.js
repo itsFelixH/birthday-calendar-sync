@@ -406,4 +406,18 @@ describe('Utility Functions', () => {
       expect(nextMonth.getDate()).toBe(1);
     });
   });
+
+  describe('logConfiguration', () => {
+    it('should execute without error and log configuration properties', () => {
+      global.Logger = { log: jest.fn() };
+      global.CalendarApp = {
+        getCalendarById: jest.fn().mockReturnValue({
+          getName: jest.fn().mockReturnValue('Birthday Calendar')
+        })
+      };
+
+      expect(() => logConfiguration()).not.toThrow();
+      expect(global.Logger.log).toHaveBeenCalledWith('Configuration from config.js:');
+    });
+  });
 });

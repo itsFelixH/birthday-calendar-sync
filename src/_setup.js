@@ -15,7 +15,8 @@
 const MANAGED_FUNCTIONS = [
   'syncBirthdays',
   'sendMonthlySummary',
-  'sendWeeklyReminder'
+  'sendWeeklyReminder',
+  'sendContactQualityReport'
 ];
 
 /**
@@ -78,6 +79,19 @@ function setupSchedules() {
     Logger.log(`✅ sendWeeklyReminder — weekly at ~${reminderHour}:00`);
   } else {
     Logger.log('⏭️ sendWeeklyReminder — skipped (sendWeeklyReminderEmail is disabled)');
+  }
+
+  // Contact quality report email — only if enabled
+  const qualityReportEnabled = typeof sendQualityReportEmail !== 'undefined' && sendQualityReportEmail;
+  if (qualityReportEnabled) {
+    const qualityDay = typeof scheduleQualityReportDay !== 'undefined' ? scheduleQualityReportDay : 1;
+    const qualityHour = typeof scheduleQualityReportHour !== 'undefined' ? scheduleQualityReportHour : 8;
+    ScriptApp.newTrigger('sendContactQualityReport')
+      .timeBased()
+      .onMonthDay(qualityDay)
+      .atHour(qualityHour)
+      .create();
+    Logger.log(`✅ sendContactQualityReport — day ${qualityDay} of each month at ~${qualityHour}:00`);
   }
 }
 

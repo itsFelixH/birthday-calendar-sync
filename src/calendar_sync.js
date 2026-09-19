@@ -28,11 +28,17 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, monthsAhea
   const summaryHeaderTemplate = texts.summaryHeader || 'Geburtstage im {month}';
 
   const stats = { processed: 0, created: [], updated: [], skipped: 0, errors: 0 };
+  const startTime = Date.now();
+  const maxExecutionMs = 5 * 60 * 1000;
 
   Logger.log(`📅 Creating/updating birthday summaries for ${monthsAhead} months...`);
 
   let current = new Date(startDate);
   while (current <= endDate) {
+    if (Date.now() - startTime > maxExecutionMs) {
+      Logger.log('⏳ Monthly summary sync reached 5-minute quota threshold. Halting gracefully.');
+      break;
+    }
     const year = current.getFullYear();
     const month = current.getMonth();
     const monthEventStart = new Date(year, month, eventDay);
@@ -80,7 +86,7 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, monthsAhea
             const lifespan = [birthYear, deathYear].filter(Boolean).join(' ');
             return lifespan ? `${base} (${lifespan})` : base;
           }
-          return contact.getBirthdaySummaryEventString();
+          return contact.getBirthdaySummaryEventString(year);
         }).join('\n') +
         `\n\n${tagLine}`;
 
@@ -166,10 +172,17 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
     : calendarManager.getDateRange(monthsAhead);
 
   const stats = { processed: 0, created: [], updated: [], skipped: 0, errors: 0 };
+  const startTime = Date.now();
+  const maxExecutionMs = 5 * 60 * 1000;
 
   Logger.log(`📅 Creating/updating birthday events for the next ${monthsAhead} months (mode: ${useRecurrence ? 'recurring' : 'single'})`);
 
-  contacts.forEach((contact, index) => {
+  for (let index = 0; index < contacts.length; index++) {
+    const contact = contacts[index];
+    if (Date.now() - startTime > maxExecutionMs) {
+      Logger.log('⏳ Individual birthday sync reached 5-minute quota threshold. Halting gracefully.');
+      break;
+    }
     try {
       stats.processed++;
 
@@ -178,7 +191,7 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
       if (contact.isDeceased()) {
         if (handling === 'skip') {
           stats.skipped++;
-          return;
+          continue;
         }
         // 'memorial' and 'normal' continue below
       }
@@ -187,7 +200,7 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
 
       if (!nextBirthday) {
         stats.skipped++;
-        return;
+        continue;
       }
 
       const eventDate = new Date(nextBirthday);
@@ -240,7 +253,7 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
         const recurrenceInfo = useRecurrence ? ' [🔁 recurring]' : '';
         stats.created.push(`${contact.name} (${eventDate.toLocaleDateString()})${suffix}`);
         Logger.log(`🧪 [DRY RUN] Would create/update event: ${title} on ${eventDate.toLocaleDateString()}${recurrenceInfo}`);
-        return;
+        continue;
       }
 
       // For recurring events with leap year birthdays, skip recurrence (use single instead)
@@ -298,7 +311,7 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
       stats.errors++;
       Logger.log(`❌ Failed to process ${contact.name}: ${error.message}`);
     }
-  });
+  }
 
   logSyncStats('individual', stats);
   return { created: stats.created, updated: stats.updated };

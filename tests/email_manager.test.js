@@ -248,6 +248,24 @@ describe('EmailManager', () => {
       expect(rawData).toContain('#ff6b6b'); // today's border color
     });
 
+    it('should calculate correct target-year age and milestone for cross-year January birthdays in late December', () => {
+      global.highlightMilestones = true;
+      global.milestoneAges = [30];
+      const decContacts = [
+        new BirthdayContact('Milestone Jan', new Date(1995, 0, 2)) // Born Jan 2, 1995 -> turns 30 in 2025
+      ];
+      global.Utilities.base64EncodeWebSafe = jest.fn(str => str);
+      global.Utilities.base64Encode = jest.fn(str => str);
+
+      emailManager.sendWeeklyReminder(decContacts, new Date(2024, 11, 28), 7);
+
+      const rawData = global.Utilities.base64EncodeWebSafe.mock.calls[0][0];
+      expect(rawData).toContain('turns 30');
+      expect(rawData).toContain('1 milestone');
+      delete global.highlightMilestones;
+      delete global.milestoneAges;
+    });
+
     it('should not send email if no contacts provided', () => {
       emailManager.sendWeeklyReminder([]);
       expect(mockGmail.Users.Messages.send).not.toHaveBeenCalled();
@@ -384,6 +402,65 @@ describe('EmailManager', () => {
       const rawData = global.Utilities.base64EncodeWebSafe.mock.calls[0][0];
       // 1 contact has birth year + email + phone
       expect(rawData).toContain('1');
+    });
+  });
+
+  describe('getEmailContext fallback', () => {
+    it('should fallback to default senderName when DriveApp fails', () => {
+      global.Session = {
+        getActiveUser: jest.fn().mockReturnValue({
+          getEmail: jest.fn().mockReturnValue('user@example.com')
+        })
+      };
+      global.DriveApp = {
+        getFileById: jest.fn().mockImplementation(() => {
+          throw new Error('Drive API unauthorized');
+        })
+      };
+      global.ScriptApp = {
+        getScriptId: jest.fn().mockReturnValue('script-id')
+      };
+
+      const ctx = emailManager.getEmailContext();
+      expect(ctx.senderName).toBe('Birthday Calendar Sync');
+      expect(ctx.toEmail).toBe('user@example.com');
+    });
+  });
+
+  describe('_daysUntil', () => {
+    it('should return 0 when fromDate is the birthday', () => {
+      const fromDate = new Date(2024, 0, 15);
+      const bday = new Date(1990, 0, 15);
+      expect(emailManager._daysUntil(fromDate, bday)).toBe(0);
+    });
+
+    it('should return correct difference in the same year', () => {
+      const fromDate = new Date(2024, 0, 10);
+      const bday = new Date(1990, 0, 15);
+      expect(emailManager._daysUntil(fromDate, bday)).toBe(5);
+    });
+
+    it('should calculate correct difference across year boundary in a leap year', () => {
+      // Dec 28, 2024 (leap year) to Jan 2 (2025) is 5 days
+      const fromDate = new Date(2024, 11, 28);
+      const bday = new Date(1990, 0, 2);
+      expect(emailManager._daysUntil(fromDate, bday)).toBe(5);
+    });
+
+    it('should calculate correct difference for Feb 29 birthday in non-leap year (feb28)', () => {
+      global.leapYearHandling = 'feb28';
+      const fromDate = new Date(2025, 1, 20); // Feb 20, 2025
+      const bday = new Date(2000, 1, 29);
+      expect(emailManager._daysUntil(fromDate, bday)).toBe(8); // Feb 20 to Feb 28 = 8 days
+      delete global.leapYearHandling;
+    });
+
+    it('should calculate correct difference for Feb 29 birthday in non-leap year (mar1)', () => {
+      global.leapYearHandling = 'mar1';
+      const fromDate = new Date(2025, 1, 20); // Feb 20, 2025
+      const bday = new Date(2000, 1, 29);
+      expect(emailManager._daysUntil(fromDate, bday)).toBe(9); // Feb 20 to Mar 1 = 9 days
+      delete global.leapYearHandling;
     });
   });
 });

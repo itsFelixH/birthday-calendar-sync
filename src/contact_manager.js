@@ -167,13 +167,19 @@ function getContactLabels(person, labelManager) {
  */
 function contactMatchesLabelFilter(labelFilter, contactLabels) {
   try {
-    if (labelFilter.length === 0) {
+    if (!labelFilter || labelFilter.length === 0) {
       return true;
     }
 
-    return contactLabels.some(label =>
-      labelFilter.includes(label.trim())
-    );
+    if (!Array.isArray(contactLabels)) {
+      return false;
+    }
+
+    const normalizedFilter = labelFilter.map(l => (typeof l === 'string' ? l.trim().toLowerCase() : ''));
+    return contactLabels.some(label => {
+      const normalizedLabel = typeof label === 'string' ? label.trim().toLowerCase() : '';
+      return normalizedFilter.includes(normalizedLabel);
+    });
   } catch (error) {
     Logger.log(`❌ Label matching failed: ${error.message}`);
     return false;
