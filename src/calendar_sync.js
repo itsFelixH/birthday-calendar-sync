@@ -66,7 +66,6 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, monthsAhea
         continue;
       }
 
-      const summaryTag = `${EVENT_TAG}:summary:${year}-${('0' + (month + 1)).slice(-2)}`;
       const titles = typeof eventTitles !== 'undefined' ? eventTitles : {};
       const title = (titles.summary || '🎉🎂 GEBURTSTAGE 🎂🎉')
         .replace('{month}', monthNamesLong[month])
@@ -76,7 +75,6 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, monthsAhea
         .replace('{month}', monthNamesLong[month])
         .replace('{year}', year)
         .replace('{count}', monthContacts.length);
-      const tagLine = tagVisible ? summaryTag : wrapInvisible(summaryTag);
       const description = `${headerLine}\n\n` +
         monthContacts.map(contact => {
           if (contact.isDeceased() && handling === 'memorial') {
@@ -87,8 +85,7 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, monthsAhea
             return lifespan ? `${base} (${lifespan})` : base;
           }
           return contact.getBirthdaySummaryEventString(year);
-        }).join('\n') +
-        `\n\n${tagLine}`;
+        }).join('\n');
 
       if (isDryRun) {
         stats.created.push(`${monthName} ${year}`);
@@ -98,10 +95,9 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, monthsAhea
       }
 
       const events = calendarManager.getEventsInRange(monthEventStart, monthEventEnd);
-      // Match by tag in description (prevents duplicates if title format changes)
       const existingEvent = events.find(e =>
-        e.getDescription() && e.getDescription().includes(summaryTag)
-      ) || events.find(e => e.getTitle() === title);
+        e.getTitle() === title || (e.getDescription() && e.getDescription().includes(headerLine))
+      );
 
       if (!existingEvent) {
         calendarManager.createAllDayEvent({
@@ -115,7 +111,9 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, monthsAhea
         const summaryColor = colors.summary || '';
         if (summaryColor) {
           const createdEvents = calendarManager.getEventsInRange(monthEventStart, monthEventEnd);
-          const newEvent = createdEvents.find(e => e.getDescription() && e.getDescription().includes(summaryTag));
+          const newEvent = createdEvents.find(e =>
+            e.getTitle() === title || (e.getDescription() && e.getDescription().includes(headerLine))
+          );
           if (newEvent && newEvent.setColor) newEvent.setColor(summaryColor);
         }
         stats.created.push(`${monthName} ${year}`);
@@ -208,10 +206,6 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
       const eventEnd = new Date(eventDate);
       eventEnd.setDate(eventEnd.getDate() + 1);
 
-      // Unique tag per contact based on birthday (stable even if name changes)
-      const contactTag = `${EVENT_TAG}:${contact.birthday.getMonth() + 1}-${contact.birthday.getDate()}:${contact.name.replace(/[^a-zA-ZäöüÄÖÜß ]/g, '').trim()}`;
-      const tagLine = tagVisible ? contactTag : wrapInvisible(contactTag);
-
       // Determine title and description based on deceased/milestone status
       const isMemorial = contact.isDeceased() && handling === 'memorial';
       const eventYear = eventDate.getFullYear();
@@ -232,20 +226,20 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
         const lifespan = deathYear ? `*${birthYear} †${deathYear}` : `*${birthYear}`;
         const template = titles.memorial || '🕯️ {name} ({lifespan})';
         title = replaceTitlePlaceholders(template, contact, { lifespan });
-        description = contact.getMemorialEventString() + `\n${tagLine}`;
+        description = contact.getMemorialEventString();
       } else if (useRecurrence) {
         // Recurring events: static title/description without year-specific age
         const template = titles.recurring || '🎂 {name} hat Geburtstag';
         title = replaceTitlePlaceholders(template, contact, {});
-        description = contact.getBirthdayEventString(null) + `\n${tagLine}`;
+        description = contact.getBirthdayEventString(null);
       } else if (isMilestone) {
         const template = titles.milestone || '🎂🎉 {name} wird {age}! 🎉';
         title = replaceTitlePlaceholders(template, contact, { age: ageInYear });
-        description = contact.getBirthdayEventString(ageInYear) + `\n${tagLine}`;
+        description = contact.getBirthdayEventString(ageInYear);
       } else {
         const template = titles.birthday || '🎂 {name} hat Geburtstag';
         title = replaceTitlePlaceholders(template, contact, { age: ageInYear });
-        description = contact.getBirthdayEventString(ageInYear) + `\n${tagLine}`;
+        description = contact.getBirthdayEventString(ageInYear);
       }
 
       if (isDryRun) {
@@ -261,10 +255,9 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
       const shouldRecur = useRecurrence && !isMemorial && !contact.isLeapYearBirthday();
 
       const existingEvents = calendarManager.getEventsInRange(eventDate, eventEnd);
-      // Match by tag first (handles name changes), fall back to title match
       const existingEvent = existingEvents.find(e =>
-        e.getDescription() && e.getDescription().includes(contactTag)
-      ) || existingEvents.find(e => e.getTitle() === title);
+        e.getTitle() === title || (contact.name && e.getTitle().includes(contact.name))
+      );
 
       if (!existingEvent) {
         calendarManager.createAllDayEvent({
@@ -282,7 +275,9 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
         else eventColor = colors.birthday || '';
         if (eventColor) {
           const createdEvents = calendarManager.getEventsInRange(eventDate, eventEnd);
-          const newEvent = createdEvents.find(e => e.getDescription() && e.getDescription().includes(contactTag));
+          const newEvent = createdEvents.find(e =>
+            e.getTitle() === title || (contact.name && e.getTitle().includes(contact.name))
+          );
           if (newEvent && newEvent.setColor) newEvent.setColor(eventColor);
         }
         stats.created.push(`${contact.name} (${calendarManager.formatDate(eventDate)})`);
