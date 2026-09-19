@@ -251,12 +251,18 @@ describe('Contact Manager', () => {
       expect(contactMatchesLabelFilter(['Friends'], ['Friends', 'Family'])).toBe(true);
     });
 
+    it('should match case-insensitively and ignore whitespace', () => {
+      expect(contactMatchesLabelFilter(['friends'], [' Friends '])).toBe(true);
+      expect(contactMatchesLabelFilter(['FAMILY '], ['family'])).toBe(true);
+    });
+
     it('should return false when contact has no matching label', () => {
       expect(contactMatchesLabelFilter(['Work'], ['Friends', 'Family'])).toBe(false);
     });
 
-    it('should handle empty contact labels', () => {
+    it('should handle empty or malformed contact labels', () => {
       expect(contactMatchesLabelFilter(['Friends'], [])).toBe(false);
+      expect(contactMatchesLabelFilter(['Friends'], null)).toBe(false);
     });
   });
 
