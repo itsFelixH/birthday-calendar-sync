@@ -80,7 +80,7 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, monthsAhea
             const lifespan = [birthYear, deathYear].filter(Boolean).join(' ');
             return lifespan ? `${base} (${lifespan})` : base;
           }
-          return contact.getBirthdaySummaryEventString();
+          return contact.getBirthdaySummaryEventString(year);
         }).join('\n') +
         `\n\n${tagLine}`;
 

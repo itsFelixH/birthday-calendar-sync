@@ -14,10 +14,20 @@ class EmailManager {
    * @returns {{toEmail: string, fromEmail: string, senderName: string, recipientName: string}}
    */
   getEmailContext() {
+    let senderName = 'Birthday Calendar Sync';
+    try {
+      if (typeof DriveApp !== 'undefined' && typeof ScriptApp !== 'undefined') {
+        const file = DriveApp.getFileById(ScriptApp.getScriptId());
+        if (file && file.getName) senderName = file.getName();
+      }
+    } catch (e) {
+      Logger.log('Could not retrieve script name from DriveApp: ' + e.message);
+    }
+
     return {
       toEmail: Session.getActiveUser().getEmail(),
       fromEmail: Session.getActiveUser().getEmail(),
-      senderName: DriveApp.getFileById(ScriptApp.getScriptId()).getName(),
+      senderName: senderName,
       recipientName: getCurrentUserFirstName()
     };
   }
@@ -108,7 +118,7 @@ class EmailManager {
       <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 6px;">
         <ul style="list-style: none; padding: 0; margin: 0;">
           ${monthContacts.map(contact => `
-            <li style="padding: 6px 0; border-bottom: 1px solid #eee;">${contact.getBirthdaySummaryMailString()}</li>
+            <li style="padding: 6px 0; border-bottom: 1px solid #eee;">${contact.getBirthdaySummaryMailString(year)}</li>
           `).join('')}
         </ul>
       </div>
@@ -127,7 +137,7 @@ class EmailManager {
       ...monthContacts.map(contact => {
         const ageTemplate = this.texts.monthlySummaryAge || 'turns {age}';
         let line = `${('0' + contact.birthday.getDate()).slice(-2)}. ${monthNamesLong[contact.birthday.getMonth()]}: ${contact.name}`;
-        if (contact.hasKnownBirthYear()) line += ` (${ageTemplate.replace('{age}', contact.getAgeThisYear())})`;
+        if (contact.hasKnownBirthYear()) line += ` (${ageTemplate.replace('{age}', contact.getAgeInYear(year))})`;
         return `  • ${line}`;
       }),
       '',
@@ -338,10 +348,12 @@ class EmailManager {
   _daysUntil(fromDate, birthday) {
     // Normalize both to midnight to avoid timezone/hour drift
     const from = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate());
-    const thisYear = new Date(fromDate.getFullYear(), birthday.getMonth(), birthday.getDate());
-    const diffMs = thisYear.getTime() - from.getTime();
-    const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000));
-    return diffDays >= 0 ? diffDays : diffDays + 365;
+    const nextBday = new Date(fromDate.getFullYear(), birthday.getMonth(), birthday.getDate());
+    if (nextBday < from) {
+      nextBday.setFullYear(fromDate.getFullYear() + 1);
+    }
+    const diffMs = nextBday.getTime() - from.getTime();
+    return Math.round(diffMs / (24 * 60 * 60 * 1000));
   }
 
 

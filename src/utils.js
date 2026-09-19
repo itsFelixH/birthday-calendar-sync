@@ -215,61 +215,26 @@ function adjustForLeapYear(month, day, year, handling) {
 
 
 /**
- * Generates a unique event identifier for a contact's birthday event.
- * Used to match existing events to contacts regardless of name changes.
- *
- * @param {string} resourceId The contact's unique resource identifier
- * @param {string} type Event type ('individual' or 'summary')
- * @returns {string} A unique event tag string
- */
-function buildEventTag(resourceId, type) {
-  return `[bcs:${type}:${resourceId}]`;
-}
-
-
-/**
- * Extracts the event tag from an event description.
- *
- * @param {string} description The event description
- * @returns {string|null} The event tag if found, or null
- */
-function extractEventTag(description) {
-  if (!description) return null;
-  const match = description.match(/\[bcs:(individual|summary):([^\]]+)\]/);
-  return match ? match[0] : null;
-}
-
-
-/**
- * Extracts the resource ID from an event tag in a description.
- *
- * @param {string} description The event description
- * @returns {string|null} The resource ID if found, or null
- */
-function extractResourceIdFromTag(description) {
-  if (!description) return null;
-  const match = description.match(/\[bcs:(?:individual|summary):([^\]]+)\]/);
-  return match ? match[1] : null;
-}
-
-
-/**
  * Logs the current configuration from config.js.
  */
 function logConfiguration() {
   Logger.log("Configuration from config.js:");
 
-  let calendar = CalendarApp.getCalendarById(calendarId);
-  if (calendar) {
-    Logger.log("Calendar Name: " + calendar.getName());
-  } else {
-    Logger.log("Calendar with ID " + calendarId + " not found.");
+  if (typeof calendarId !== 'undefined') {
+    let calendar = CalendarApp.getCalendarById(calendarId);
+    if (calendar) {
+      Logger.log("Calendar Name: " + calendar.getName());
+    } else {
+      Logger.log("Calendar with ID " + calendarId + " not found.");
+    }
   }
-  Logger.log("useLabel: " + useLabel);
-  Logger.log("labelFilter: " + labelFilter.join(", "));
-  Logger.log("reminderMethod: " + reminderMethod);
-  Logger.log("reminderInMinutes: " + reminderInMinutes);
-  Logger.log("createIndividualBirthdayEvents: " + createIndividualBirthdayEvents);
-  Logger.log("createBirthdaySummaryEvents: " + createBirthdaySummaryEvents);
-  Logger.log("monthsAhead: " + monthsAhead);
+  Logger.log("useLabel: " + (typeof useLabel !== 'undefined' ? useLabel : false));
+  Logger.log("labelFilter: " + (typeof labelFilter !== 'undefined' ? labelFilter.join(", ") : "[]"));
+  Logger.log("createIndividualBirthdayEvents: " + (typeof createIndividualBirthdayEvents !== 'undefined' ? createIndividualBirthdayEvents : false));
+  Logger.log("createBirthdaySummaryEvents: " + (typeof createBirthdaySummaryEvents !== 'undefined' ? createBirthdaySummaryEvents : false));
+  Logger.log("eventRecurrence: " + (typeof eventRecurrence !== 'undefined' ? eventRecurrence : 'single'));
+  Logger.log("individualMonthsAhead: " + (typeof individualMonthsAhead !== 'undefined' ? individualMonthsAhead : 12));
+  Logger.log("summaryMonthsAhead: " + (typeof summaryMonthsAhead !== 'undefined' ? summaryMonthsAhead : 6));
+  Logger.log("individualReminderMethod: " + (typeof individualReminderMethod !== 'undefined' ? individualReminderMethod : 'popup'));
+  Logger.log("individualReminderMinutes: " + (typeof individualReminderMinutes !== 'undefined' ? individualReminderMinutes : 1440));
 }

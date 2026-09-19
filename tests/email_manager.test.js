@@ -386,6 +386,49 @@ describe('EmailManager', () => {
       expect(rawData).toContain('1');
     });
   });
+
+  describe('getEmailContext fallback', () => {
+    it('should fallback to default senderName when DriveApp fails', () => {
+      global.Session = {
+        getActiveUser: jest.fn().mockReturnValue({
+          getEmail: jest.fn().mockReturnValue('user@example.com')
+        })
+      };
+      global.DriveApp = {
+        getFileById: jest.fn().mockImplementation(() => {
+          throw new Error('Drive API unauthorized');
+        })
+      };
+      global.ScriptApp = {
+        getScriptId: jest.fn().mockReturnValue('script-id')
+      };
+
+      const ctx = emailManager.getEmailContext();
+      expect(ctx.senderName).toBe('Birthday Calendar Sync');
+      expect(ctx.toEmail).toBe('user@example.com');
+    });
+  });
+
+  describe('_daysUntil', () => {
+    it('should return 0 when fromDate is the birthday', () => {
+      const fromDate = new Date(2024, 0, 15);
+      const bday = new Date(1990, 0, 15);
+      expect(emailManager._daysUntil(fromDate, bday)).toBe(0);
+    });
+
+    it('should return correct difference in the same year', () => {
+      const fromDate = new Date(2024, 0, 10);
+      const bday = new Date(1990, 0, 15);
+      expect(emailManager._daysUntil(fromDate, bday)).toBe(5);
+    });
+
+    it('should calculate correct difference across year boundary in a leap year', () => {
+      // Dec 28, 2024 (leap year) to Jan 2 (2025) is 5 days
+      const fromDate = new Date(2024, 11, 28);
+      const bday = new Date(1990, 0, 2);
+      expect(emailManager._daysUntil(fromDate, bday)).toBe(5);
+    });
+  });
 });
 
 describe('EmailTemplates', () => {

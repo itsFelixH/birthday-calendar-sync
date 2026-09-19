@@ -63,6 +63,22 @@ describe('LabelManager', () => {
         expect.stringContaining('API Error')
       );
     });
+
+    it('should handle undefined contactGroups safely', () => {
+      mockPeople.ContactGroups.batchGet.mockClear();
+      mockPeople.ContactGroups.list.mockReturnValue({});
+      const emptyLabelManager = new LabelManager();
+      expect(emptyLabelManager.labels).toEqual([]);
+      expect(mockPeople.ContactGroups.batchGet).not.toHaveBeenCalled();
+    });
+
+    it('should handle empty array contactGroups safely', () => {
+      mockPeople.ContactGroups.batchGet.mockClear();
+      mockPeople.ContactGroups.list.mockReturnValue({ contactGroups: [] });
+      const emptyLabelManager = new LabelManager();
+      expect(emptyLabelManager.labels).toEqual([]);
+      expect(mockPeople.ContactGroups.batchGet).not.toHaveBeenCalled();
+    });
   });
 
   describe('getLabelNameById', () => {

@@ -108,6 +108,19 @@ describe('BirthdayContact', () => {
     it('getAgeThisYear should return age in current year', () => {
       expect(contact.getAgeThisYear()).toBe(34);
     });
+
+    it('daysToNextBirthday should return 0 on birthday regardless of hour', () => {
+      jest.setSystemTime(new Date(2024, 0, 15, 10, 15, 0));
+      expect(contact.daysToNextBirthday()).toBe(0);
+    });
+
+    it('getBirthdaySummaryEventString should calculate age for given target year', () => {
+      expect(contact.getBirthdaySummaryEventString(2025)).toContain('35');
+    });
+
+    it('getBirthdaySummaryMailString should calculate age for given target year', () => {
+      expect(contact.getBirthdaySummaryMailString(2025)).toContain('35');
+    });
   });
 
   describe('birthday checks', () => {

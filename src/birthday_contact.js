@@ -244,13 +244,14 @@ class BirthdayContact {
   /**
    * Gets the string representation for the birthday summary.
    * 
+   * @param {number} [year=new Date().getFullYear()] - Year to calculate age and milestones for.
    * @returns {string} The birthday summary string.
    */
-  getBirthdaySummaryEventString() {
+  getBirthdaySummaryEventString(year = new Date().getFullYear()) {
     let string = `${this.getBirthdayLongMonthFormat()}: ${this.name}`;
     if (this.hasKnownBirthYear()) {
-      const age = this.getAgeThisYear();
-      const isMilestone = typeof highlightMilestones !== 'undefined' && highlightMilestones && this.isMilestoneBirthday(new Date().getFullYear());
+      const age = this.getAgeInYear(year);
+      const isMilestone = typeof highlightMilestones !== 'undefined' && highlightMilestones && this.isMilestoneBirthday(year);
       string += isMilestone ? ` (🎉 ${age}!)` : ` (${age})`;
     }
     return string;
@@ -260,14 +261,15 @@ class BirthdayContact {
   /**
    * Gets the string for the birthday summary mail.
    * 
+   * @param {number} [year=new Date().getFullYear()] - Year to calculate age for.
    * @returns {string} The birthday summary string.
    */
-  getBirthdaySummaryMailString() {
+  getBirthdaySummaryMailString(year = new Date().getFullYear()) {
     const texts = typeof emailTexts !== 'undefined' ? emailTexts : {};
     const ageTemplate = texts.monthlySummaryAge || 'turns {age}';
     let string = `<b>${('0' + this.birthday.getDate()).slice(-2)}. ${monthNamesLong[this.birthday.getMonth()]}</b>: 🎂 ${this.name}`;
     if (this.hasKnownBirthYear()) {
-      string += ` (${ageTemplate.replace('{age}', this.getAgeThisYear())})`;
+      string += ` (${ageTemplate.replace('{age}', this.getAgeInYear(year))})`;
     }
     return string;
   }
@@ -396,14 +398,15 @@ class BirthdayContact {
    */
   daysToNextBirthday() {
     const today = new Date();
+    const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     const nextBirthday = new Date(today.getFullYear(), this.birthday.getMonth(), this.birthday.getDate());
 
-    if (today > nextBirthday) {
+    if (todayMidnight > nextBirthday) {
       nextBirthday.setFullYear(today.getFullYear() + 1);
     }
 
     const oneDay = 24 * 60 * 60 * 1000; // One day in milliseconds
-    return Math.round((nextBirthday - today) / oneDay);
+    return Math.round((nextBirthday - todayMidnight) / oneDay);
   }
 
   /**
