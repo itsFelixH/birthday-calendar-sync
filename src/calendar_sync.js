@@ -1,5 +1,3 @@
-// Internal tag prefix for identifying script-managed events.
-const EVENT_TAG = '[BirthdaySync]';
 
 /**
  * Creates or updates monthly birthday summary events in the calendar.
@@ -22,7 +20,6 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, monthsAhea
 
   const calendarManager = isDryRun ? null : new CalendarManager({ calendarId: calendarId });
   const { start: startDate, end: endDate } = getMonthlyDateRange(monthsAhead);
-  const tagVisible = false;
   const eventDay = typeof summaryEventDay !== 'undefined' ? summaryEventDay : 1;
   const texts = typeof eventTexts !== 'undefined' ? eventTexts : {};
   const summaryHeaderTemplate = texts.summaryHeader || 'Geburtstage im {month}';
@@ -160,7 +157,6 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
   if (isDryRun) Logger.log('🧪 DRY RUN MODE — no changes will be made');
 
   const useRecurrence = typeof eventRecurrence !== 'undefined' && eventRecurrence === 'recurring';
-  const tagVisible = false;
   const batchSize = 20;
   const delayMs = 500;
 
