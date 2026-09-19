@@ -307,15 +307,19 @@ function isContactAllowed(contact, filterConfig) {
  * Filters a list of contacts for a specific feature using contactFilters configuration.
  *
  * @param {BirthdayContact[]} contacts - Array of contacts to filter
- * @param {string} featureKey - Key in contactFilters (e.g. 'individualEvents', 'summaryEvents', 'monthlyEmail', 'weeklyEmail')
+ * @param {string} featureKey - Key in contactFilters ('individualEvents', 'summaryEvents', 'emails')
  * @returns {BirthdayContact[]} Filtered array of contacts
  */
 function filterContactsForFeature(contacts, featureKey) {
   if (!Array.isArray(contacts) || contacts.length === 0) return [];
-  if (typeof contactFilters === 'undefined' || !contactFilters || !contactFilters[featureKey]) {
+  if (typeof contactFilters === 'undefined' || !contactFilters) {
     return contacts;
   }
 
-  const featureFilter = contactFilters[featureKey];
+  const featureFilter = contactFilters[featureKey] || ((featureKey === 'monthlyEmail' || featureKey === 'weeklyEmail') ? contactFilters.emails : undefined);
+  if (!featureFilter) {
+    return contacts;
+  }
+
   return contacts.filter(contact => isContactAllowed(contact, featureFilter));
 }
