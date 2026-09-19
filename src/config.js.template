@@ -46,31 +46,30 @@ const sendWeeklyReminderEmail = false;
 
 // ─── Contact filtering ────────────────────────────────────────────────────────
 
-// Feature-specific contact filters:
-// Control which contacts are included for each feature using whitelist/blacklist rules.
-// You can specify label names (includeLabels, excludeLabels) and contact names (includeNames, excludeNames).
-// Alternatively, provide a simple array of label names (e.g. `individualEvents: ['Friends', 'Family']`).
-// Leave arrays empty `[]` to include all contacts with birthdays for that feature.
+// Feature-specific contact filters (Whitelist & Blacklist):
+// • includeLabels / includeNames: ONLY contacts with matching labels/names will be included.
+// • excludeLabels / excludeNames: Contacts with matching labels/names will be EXCLUDED (takes precedence).
+// • Leave an array empty `[]` to include all contacts with birthdays for that feature.
+// • Shorthand syntax supported: e.g. `individualEvents: ['Family', 'Friends']`
 const contactFilters = {
+  // Contacts that get individual all-day calendar events:
   individualEvents: {
-    includeLabels: [], // e.g. ['Family', 'Friends', 'VIP']
-    excludeLabels: [], // e.g. ['Archive']
+    includeLabels: [], // e.g. ['Family', 'Friends', 'VIP'] (ONLY these contacts get events)
+    excludeLabels: [], // e.g. ['Archive'] (never create events for these)
     includeNames: [],  // e.g. ['John Doe']
     excludeNames: []
   },
+
+  // Contacts listed in monthly summary calendar events:
   summaryEvents: {
     includeLabels: [],
     excludeLabels: [],
     includeNames: [],
     excludeNames: []
   },
-  monthlyEmail: {
-    includeLabels: [],
-    excludeLabels: [],
-    includeNames: [],
-    excludeNames: []
-  },
-  weeklyEmail: {
+
+  // Contacts included in email notifications (monthly summaries & weekly reminders):
+  emails: {
     includeLabels: [],
     excludeLabels: [],
     includeNames: [],
