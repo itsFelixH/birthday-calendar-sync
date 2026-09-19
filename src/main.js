@@ -51,18 +51,24 @@ function syncBirthdays() {
     };
 
     if (createIndividualBirthdayEvents) {
+      const individualContacts = typeof filterContactsForFeature === 'function'
+        ? filterContactsForFeature(contacts, 'individualEvents')
+        : contacts;
       const indMonths = typeof individualMonthsAhead !== 'undefined' ? individualMonthsAhead : 12;
       const indReminderMin = typeof individualReminderMinutes !== 'undefined' ? individualReminderMinutes : 60 * 12;
       const indReminderMethod = typeof individualReminderMethod !== 'undefined' ? individualReminderMethod : 'popup';
-      const individualStats = createOrUpdateIndividualBirthdays(calendarId, contacts, indMonths, indReminderMin, indReminderMethod);
+      const individualStats = createOrUpdateIndividualBirthdays(calendarId, individualContacts, indMonths, indReminderMin, indReminderMethod);
       changes.individual = individualStats;
     }
 
     if (createBirthdaySummaryEvents) {
+      const summaryContacts = typeof filterContactsForFeature === 'function'
+        ? filterContactsForFeature(contacts, 'summaryEvents')
+        : contacts;
       const sumMonths = typeof summaryMonthsAhead !== 'undefined' ? summaryMonthsAhead : 12;
       const sumReminderMin = typeof summaryReminderMinutes !== 'undefined' ? summaryReminderMinutes : 5760;
       const sumReminderMethod = typeof summaryReminderMethod !== 'undefined' ? summaryReminderMethod : 'popup';
-      const summaryStats = createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, sumMonths, sumReminderMin, sumReminderMethod);
+      const summaryStats = createOrUpdateMonthlyBirthdaySummaries(calendarId, summaryContacts, sumMonths, sumReminderMin, sumReminderMethod);
       changes.summary = summaryStats;
     }
 
@@ -96,11 +102,15 @@ function sendMonthlySummary() {
 
     if (!isLabelFilterConfigured()) return;
 
-    const contacts = fetchContactsWithBirthdays(useLabel ? labelFilter : []);
+    let contacts = fetchContactsWithBirthdays(useLabel ? labelFilter : []);
 
     if (!contacts || contacts.length === 0) {
       Logger.log('⚠️ No contacts with birthdays found. Aborting summary mail.');
       return;
+    }
+
+    if (typeof filterContactsForFeature === 'function') {
+      contacts = filterContactsForFeature(contacts, 'monthlyEmail');
     }
 
     const nextMonthDate = getNextMonth();
@@ -139,11 +149,15 @@ function sendWeeklyReminder() {
       return;
     }
 
-    const contacts = fetchContactsWithBirthdays(useLabel ? labelFilter : []);
+    let contacts = fetchContactsWithBirthdays(useLabel ? labelFilter : []);
 
     if (!contacts || contacts.length === 0) {
       Logger.log('⚠️ No contacts with birthdays found. Aborting weekly reminder.');
       return;
+    }
+
+    if (typeof filterContactsForFeature === 'function') {
+      contacts = filterContactsForFeature(contacts, 'weeklyEmail');
     }
 
     const days = typeof reminderDaysBefore !== 'undefined' ? reminderDaysBefore : 7;
@@ -182,5 +196,22 @@ function sendContactQualityReport() {
     emailManager.sendContactQualityReport(contacts);
   } catch (error) {
     Logger.log(`💥 Error in sendContactQualityReport: ${error.message}`);
+  }
+}
+
+/**
+ * Maintenance utility: Removes legacy watermark tags ([BirthdaySync]) from past and future calendar events.
+ * Can be run manually from the Apps Script editor.
+ *
+ * @param {number} [monthsPast=12] Number of months in the past to scan
+ * @param {number} [monthsAhead=12] Number of months in the future to scan
+ * @returns {{scanned: number, cleaned: number, errors: number}|undefined}
+ */
+function cleanCalendarWatermarks(monthsPast = 12, monthsAhead = 12) {
+  try {
+    if (!isCalendarConfigured()) return;
+    return cleanExistingEventWatermarks(calendarId, monthsPast, monthsAhead);
+  } catch (error) {
+    Logger.log(`💥 Error in cleanCalendarWatermarks: ${error.message}`);
   }
 }
