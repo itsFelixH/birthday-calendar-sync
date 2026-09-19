@@ -327,13 +327,21 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
  * @returns {string}
  */
 function replaceTitlePlaceholders(template, contact, extra = {}) {
+  const zodiac = contact.getZodiacSign ? contact.getZodiacSign() : { symbol: '', name: '', full: '' };
+  const targetYear = extra.year !== undefined ? extra.year : (extra.age !== undefined && contact.hasKnownBirthYear() ? contact.birthday.getFullYear() + extra.age : new Date().getFullYear());
+  const weekday = contact.getWeekdayName ? contact.getWeekdayName(targetYear) : '';
+
   return template
     .replace('{name}', contact.name)
     .replace('{birthdate}', contact.hasKnownBirthYear() ? contact.getBirthdayLongFormat() : contact.getBirthdayShortFormat())
     .replace('{city}', contact.city || '')
     .replace('{email}', contact.email || '')
     .replace('{age}', extra.age !== undefined ? extra.age : '')
-    .replace('{lifespan}', extra.lifespan || '');
+    .replace('{lifespan}', extra.lifespan || '')
+    .replace('{weekday}', weekday)
+    .replace('{zodiac}', zodiac.full)
+    .replace('{zodiacSymbol}', zodiac.symbol)
+    .replace('{zodiacName}', zodiac.name);
 }
 
 
