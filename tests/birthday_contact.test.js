@@ -358,4 +358,79 @@ describe('Contact Utility Functions', () => {
       expect(sorted[2].getName()).toBe('Bob Wilson'); // December
     });
   });
+
+  describe('getContactsByBirthdayBetweenDates', () => {
+    const list = [
+      new BirthdayContact('March Contact', new Date(1990, 2, 28)), // March 28
+      new BirthdayContact('April Contact', new Date(1992, 3, 2)),  // April 2
+      new BirthdayContact('May Contact', new Date(1985, 4, 10)),   // May 10
+      new BirthdayContact('Dec Contact', new Date(1990, 11, 28)),  // Dec 28
+      new BirthdayContact('Jan Contact', new Date(1993, 0, 3)),    // Jan 3
+    ];
+
+    it('should correctly filter contacts across month boundaries (March 25 - April 5)', () => {
+      const start = new Date(2024, 2, 25);
+      const end = new Date(2024, 3, 5);
+      const result = getContactsByBirthdayBetweenDates(list, start, end);
+      expect(result.map(c => c.getName())).toEqual(['March Contact', 'April Contact']);
+    });
+
+    it('should correctly filter contacts across year boundaries (Dec 25 - Jan 5)', () => {
+      const start = new Date(2024, 11, 25);
+      const end = new Date(2025, 0, 5);
+      const result = getContactsByBirthdayBetweenDates(list, start, end);
+      expect(result.map(c => c.getName())).toEqual(['Jan Contact', 'Dec Contact']);
+    });
+  });
+
+  describe('getUpcomingBirthdays', () => {
+    beforeEach(() => {
+      jest.useFakeTimers().setSystemTime(new Date(2024, 2, 25)); // March 25, 2024
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('should include birthdays upcoming in the next N days across month boundary', () => {
+      const list = [
+        new BirthdayContact('Late March', new Date(1990, 2, 28)),
+        new BirthdayContact('Early April', new Date(1990, 3, 2)),
+        new BirthdayContact('Late April', new Date(1990, 3, 25)),
+      ];
+      const result = getUpcomingBirthdays(list, 10);
+      expect(result.map(c => c.getName())).toEqual(['Late March', 'Early April']);
+    });
+  });
+
+  describe('getNextBirthdayInRange multi-year', () => {
+    it('should find birthday occurrence 2 years ahead', () => {
+      const bday = new BirthdayContact('Future Person', new Date(1990, 5, 15));
+      const start = new Date(2024, 0, 1);
+      const end = new Date(2026, 11, 31);
+      const next = bday.getNextBirthdayInRange(start, end);
+      expect(next).toEqual(new Date(2024, 5, 15));
+    });
+  });
+
+  describe('daysToNextBirthday with leap years', () => {
+    afterEach(() => {
+      jest.useRealTimers();
+      delete global.leapYearHandling;
+    });
+
+    it('should handle Feb 29 birthday in a non-leap year with default feb28 handling', () => {
+      jest.useFakeTimers().setSystemTime(new Date(2025, 1, 20)); // Feb 20, 2025 (non-leap)
+      global.leapYearHandling = 'feb28';
+      const leapContact = new BirthdayContact('Leap Person', new Date(2000, 1, 29));
+      expect(leapContact.daysToNextBirthday()).toBe(8); // Feb 20 to Feb 28 = 8 days
+    });
+
+    it('should handle Feb 29 birthday in a non-leap year with mar1 handling', () => {
+      jest.useFakeTimers().setSystemTime(new Date(2025, 1, 20)); // Feb 20, 2025 (non-leap)
+      global.leapYearHandling = 'mar1';
+      const leapContact = new BirthdayContact('Leap Person', new Date(2000, 1, 29));
+      expect(leapContact.daysToNextBirthday()).toBe(9); // Feb 20 to Mar 1 = 9 days
+    });
+  });
 });

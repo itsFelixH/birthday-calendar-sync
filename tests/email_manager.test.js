@@ -248,6 +248,24 @@ describe('EmailManager', () => {
       expect(rawData).toContain('#ff6b6b'); // today's border color
     });
 
+    it('should calculate correct target-year age and milestone for cross-year January birthdays in late December', () => {
+      global.highlightMilestones = true;
+      global.milestoneAges = [30];
+      const decContacts = [
+        new BirthdayContact('Milestone Jan', new Date(1995, 0, 2)) // Born Jan 2, 1995 -> turns 30 in 2025
+      ];
+      global.Utilities.base64EncodeWebSafe = jest.fn(str => str);
+      global.Utilities.base64Encode = jest.fn(str => str);
+
+      emailManager.sendWeeklyReminder(decContacts, new Date(2024, 11, 28), 7);
+
+      const rawData = global.Utilities.base64EncodeWebSafe.mock.calls[0][0];
+      expect(rawData).toContain('turns 30');
+      expect(rawData).toContain('1 milestone');
+      delete global.highlightMilestones;
+      delete global.milestoneAges;
+    });
+
     it('should not send email if no contacts provided', () => {
       emailManager.sendWeeklyReminder([]);
       expect(mockGmail.Users.Messages.send).not.toHaveBeenCalled();
@@ -427,6 +445,22 @@ describe('EmailManager', () => {
       const fromDate = new Date(2024, 11, 28);
       const bday = new Date(1990, 0, 2);
       expect(emailManager._daysUntil(fromDate, bday)).toBe(5);
+    });
+
+    it('should calculate correct difference for Feb 29 birthday in non-leap year (feb28)', () => {
+      global.leapYearHandling = 'feb28';
+      const fromDate = new Date(2025, 1, 20); // Feb 20, 2025
+      const bday = new Date(2000, 1, 29);
+      expect(emailManager._daysUntil(fromDate, bday)).toBe(8); // Feb 20 to Feb 28 = 8 days
+      delete global.leapYearHandling;
+    });
+
+    it('should calculate correct difference for Feb 29 birthday in non-leap year (mar1)', () => {
+      global.leapYearHandling = 'mar1';
+      const fromDate = new Date(2025, 1, 20); // Feb 20, 2025
+      const bday = new Date(2000, 1, 29);
+      expect(emailManager._daysUntil(fromDate, bday)).toBe(9); // Feb 20 to Mar 1 = 9 days
+      delete global.leapYearHandling;
     });
   });
 });

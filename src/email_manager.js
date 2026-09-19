@@ -206,9 +206,15 @@ class EmailManager {
     const subtitle = `${('0' + day).slice(-2)}. ${monthNamesLong[month]} – ${('0' + endDay).slice(-2)}. ${monthNamesLong[endMonth]} ${date.getFullYear()}`;
 
     // Count milestones for summary
-    const milestoneCount = showMilestones ? reminderContacts.filter(c =>
-      c.hasKnownBirthYear() && milestones.includes(c.getAgeThisYear())
-    ).length : 0;
+    const milestoneCount = showMilestones ? reminderContacts.filter(c => {
+      if (!c.hasKnownBirthYear()) return false;
+      const fromMidnight = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      const nextBdayDate = new Date(fromMidnight.getFullYear(), c.birthday.getMonth(), c.birthday.getDate());
+      if (nextBdayDate < fromMidnight) {
+        nextBdayDate.setFullYear(fromMidnight.getFullYear() + 1);
+      }
+      return milestones.includes(c.getAgeInYear(nextBdayDate.getFullYear()));
+    }).length : 0;
 
     // Build HTML content
     const contactListHtml = reminderContacts.map(contact => {
@@ -223,7 +229,14 @@ class EmailManager {
         ? ` <span style="color: #888; font-size: 12px;">(${tomorrowLabel})</span>`
         : ` <span style="color: #888; font-size: 12px;">(${daysUntilLabel.replace('{days}', daysUntil)})</span>`;
 
-      const age = contact.hasKnownBirthYear() ? contact.getAgeThisYear() : null;
+      const fromMidnight = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      const nextBdayDate = new Date(fromMidnight.getFullYear(), contact.birthday.getMonth(), contact.birthday.getDate());
+      if (nextBdayDate < fromMidnight) {
+        nextBdayDate.setFullYear(fromMidnight.getFullYear() + 1);
+      }
+      const bdayYear = nextBdayDate.getFullYear();
+
+      const age = contact.hasKnownBirthYear() ? contact.getAgeInYear(bdayYear) : null;
       const isMilestone = showMilestones && age !== null && milestones.includes(age);
 
       const ageText = age !== null
@@ -306,7 +319,14 @@ class EmailManager {
           ? ` (${tomorrowLabel})`
           : ` (${daysUntilLabel.replace('{days}', daysUntil)})`;
 
-        const age = contact.hasKnownBirthYear() ? contact.getAgeThisYear() : null;
+        const fromMidnight = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        const nextBdayDate = new Date(fromMidnight.getFullYear(), contact.birthday.getMonth(), contact.birthday.getDate());
+        if (nextBdayDate < fromMidnight) {
+          nextBdayDate.setFullYear(fromMidnight.getFullYear() + 1);
+        }
+        const bdayYear = nextBdayDate.getFullYear();
+
+        const age = contact.hasKnownBirthYear() ? contact.getAgeInYear(bdayYear) : null;
         const isMilestone = showMilestones && age !== null && milestones.includes(age);
 
         let line = `  ${dateLabel} — ${contact.name}`;
@@ -348,10 +368,35 @@ class EmailManager {
   _daysUntil(fromDate, birthday) {
     // Normalize both to midnight to avoid timezone/hour drift
     const from = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate());
-    const nextBday = new Date(fromDate.getFullYear(), birthday.getMonth(), birthday.getDate());
-    if (nextBday < from) {
-      nextBday.setFullYear(fromDate.getFullYear() + 1);
+    const year = fromDate.getFullYear();
+    const isLeapBday = birthday.getMonth() === 1 && birthday.getDate() === 29;
+
+    let nextBday;
+    if (isLeapBday) {
+      const isLeap = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+      if (isLeap) {
+        nextBday = new Date(year, 1, 29);
+      } else {
+        nextBday = (typeof leapYearHandling !== 'undefined' && leapYearHandling === 'mar1')
+          ? new Date(year, 2, 1)
+          : new Date(year, 1, 28);
+      }
+      if (nextBday < from) {
+        const nextYear = year + 1;
+        const nextIsLeap = (nextYear % 4 === 0 && nextYear % 100 !== 0) || nextYear % 400 === 0;
+        nextBday = nextIsLeap
+          ? new Date(nextYear, 1, 29)
+          : ((typeof leapYearHandling !== 'undefined' && leapYearHandling === 'mar1')
+            ? new Date(nextYear, 2, 1)
+            : new Date(nextYear, 1, 28));
+      }
+    } else {
+      nextBday = new Date(year, birthday.getMonth(), birthday.getDate());
+      if (nextBday < from) {
+        nextBday.setFullYear(year + 1);
+      }
     }
+
     const diffMs = nextBday.getTime() - from.getTime();
     return Math.round(diffMs / (24 * 60 * 60 * 1000));
   }
