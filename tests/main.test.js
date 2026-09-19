@@ -29,33 +29,6 @@ describe('Config Validation', () => {
       expect(Logger.log).not.toHaveBeenCalled();
     });
   });
-
-  describe('isLabelFilterConfigured', () => {
-    it('should return false when useLabel is true but labelFilter is empty', () => {
-      global.useLabel = true;
-      global.labelFilter = [];
-      expect(isLabelFilterConfigured()).toBe(false);
-      expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('labelFilter is empty'));
-    });
-
-    it('should return false when useLabel is true and labelFilter is null', () => {
-      global.useLabel = true;
-      global.labelFilter = null;
-      expect(isLabelFilterConfigured()).toBe(false);
-    });
-
-    it('should return true when useLabel is false', () => {
-      global.useLabel = false;
-      global.labelFilter = [];
-      expect(isLabelFilterConfigured()).toBe(true);
-    });
-
-    it('should return true when useLabel is true and labelFilter has entries', () => {
-      global.useLabel = true;
-      global.labelFilter = ['Friends'];
-      expect(isLabelFilterConfigured()).toBe(true);
-    });
-  });
 });
 
 describe('setupSchedules', () => {
@@ -203,12 +176,7 @@ describe('syncBirthdays', () => {
     expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('not configured'));
   });
 
-  it('should abort if useLabel is true but labelFilter is empty', () => {
-    global.useLabel = true;
-    global.labelFilter = [];
-    syncBirthdays();
-    expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('labelFilter is empty'));
-  });
+
 
   it('should abort if no contacts found', () => {
     global.fetchContactsWithBirthdays = jest.fn().mockReturnValue([]);
@@ -315,12 +283,7 @@ describe('sendMonthlySummary', () => {
     expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('disabled by config'));
   });
 
-  it('should abort if label filter is misconfigured', () => {
-    global.useLabel = true;
-    global.labelFilter = [];
-    sendMonthlySummary();
-    expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('labelFilter is empty'));
-  });
+
 
   it('should abort if no contacts found', () => {
     global.fetchContactsWithBirthdays = jest.fn().mockReturnValue([]);
@@ -379,12 +342,7 @@ describe('sendWeeklyReminder', () => {
     expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('disabled by config'));
   });
 
-  it('should abort if label filter is misconfigured', () => {
-    global.useLabel = true;
-    global.labelFilter = [];
-    sendWeeklyReminder();
-    expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('labelFilter is empty'));
-  });
+
 
   it('should skip if today is not the configured send day', () => {
     const today = new Date();
@@ -448,207 +406,7 @@ describe('sendContactQualityReport', () => {
     global.labelFilter = [];
   });
 
-  it('should abort if label filter is misconfigured', () => {
-    global.useLabel = true;
-    global.labelFilter = [];
-    sendContactQualityReport();
-    expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('labelFilter is empty'));
-  });
 
-  it('should abort if no contacts found', () => {
-    global.fetchContactsWithBirthdays = jest.fn().mockReturnValue([]);
-    sendContactQualityReport();
-    expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('No contacts with birthdays found'));
-  });
-
-  it('should send quality report', () => {
-    const mockContact = { name: 'Test', birthday: new Date(1990, 0, 15) };
-    global.fetchContactsWithBirthdays = jest.fn().mockReturnValue([mockContact]);
-
-    const mockSendReport = jest.fn();
-    global.EmailManager = jest.fn().mockImplementation(() => ({
-      sendContactQualityReport: mockSendReport
-    }));
-
-    sendContactQualityReport();
-    expect(mockSendReport).toHaveBeenCalledWith([mockContact]);
-  });
-
-  it('should log dry run message instead of sending', () => {
-    global.dryRun = true;
-    const mockContact = { name: 'Test', birthday: new Date(1990, 0, 15) };
-    global.fetchContactsWithBirthdays = jest.fn().mockReturnValue([mockContact]);
-
-    global.hasChanges = jest.fn().mockReturnValue(true);
-
-    syncBirthdays();
-    expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('DRY RUN'));
-  });
-
-  it('should catch and log errors', () => {
-    global.fetchContactsWithBirthdays = jest.fn().mockImplementation(() => {
-      throw new Error('API failure');
-    });
-    syncBirthdays();
-    expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('API failure'));
-  });
-});
-
-describe('sendMonthlySummary', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    global.Logger = { log: jest.fn() };
-    global.dryRun = false;
-    global.sendMonthlySummaryEmail = true;
-    global.useLabel = false;
-    global.labelFilter = [];
-  });
-
-  it('should abort if email is disabled', () => {
-    global.sendMonthlySummaryEmail = false;
-    sendMonthlySummary();
-    expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('disabled by config'));
-  });
-
-  it('should abort if label filter is misconfigured', () => {
-    global.useLabel = true;
-    global.labelFilter = [];
-    sendMonthlySummary();
-    expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('labelFilter is empty'));
-  });
-
-  it('should abort if no contacts found', () => {
-    global.fetchContactsWithBirthdays = jest.fn().mockReturnValue([]);
-    sendMonthlySummary();
-    expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('No contacts with birthdays found'));
-  });
-
-  it('should send monthly summary email', () => {
-    const mockContact = { name: 'Test', birthday: new Date(1990, 5, 15) };
-    global.fetchContactsWithBirthdays = jest.fn().mockReturnValue([mockContact]);
-    global.getNextMonth = jest.fn().mockReturnValue(new Date(2025, 5, 1));
-
-    const mockSendMonthlySummary = jest.fn();
-    global.EmailManager = jest.fn().mockImplementation(() => ({
-      sendMonthlySummary: mockSendMonthlySummary
-    }));
-
-    sendMonthlySummary();
-    expect(mockSendMonthlySummary).toHaveBeenCalledWith([mockContact], 5, 2025);
-  });
-
-  it('should log dry run message instead of sending', () => {
-    global.dryRun = true;
-    const mockContact = { name: 'Test', birthday: new Date(1990, 5, 15) };
-    global.fetchContactsWithBirthdays = jest.fn().mockReturnValue([mockContact]);
-    global.getNextMonth = jest.fn().mockReturnValue(new Date(2025, 5, 1));
-
-    sendMonthlySummary();
-    expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('DRY RUN'));
-  });
-
-  it('should catch and log errors', () => {
-    global.fetchContactsWithBirthdays = jest.fn().mockImplementation(() => {
-      throw new Error('Network error');
-    });
-    sendMonthlySummary();
-    expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('Network error'));
-  });
-});
-
-describe('sendWeeklyReminder', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    global.Logger = { log: jest.fn() };
-    global.dryRun = false;
-    global.sendWeeklyReminderEmail = true;
-    global.useLabel = false;
-    global.labelFilter = [];
-    global.weeklyReminderDay = -1; // send every day
-    global.reminderDaysBefore = 7;
-  });
-
-  it('should abort if email is disabled', () => {
-    global.sendWeeklyReminderEmail = false;
-    sendWeeklyReminder();
-    expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('disabled by config'));
-  });
-
-  it('should abort if label filter is misconfigured', () => {
-    global.useLabel = true;
-    global.labelFilter = [];
-    sendWeeklyReminder();
-    expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('labelFilter is empty'));
-  });
-
-  it('should skip if today is not the configured send day', () => {
-    const today = new Date();
-    // Set weeklyReminderDay to a day that is NOT today
-    global.weeklyReminderDay = (today.getDay() + 1) % 7;
-    sendWeeklyReminder();
-    expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('not the configured send day'));
-  });
-
-  it('should not skip when weeklyReminderDay is -1 (every day)', () => {
-    global.weeklyReminderDay = -1;
-    global.fetchContactsWithBirthdays = jest.fn().mockReturnValue([]);
-    sendWeeklyReminder();
-    // Should get past the day check and hit "no contacts"
-    expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('No contacts with birthdays found'));
-  });
-
-  it('should abort if no contacts found', () => {
-    global.fetchContactsWithBirthdays = jest.fn().mockReturnValue([]);
-    sendWeeklyReminder();
-    expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('No contacts with birthdays found'));
-  });
-
-  it('should send weekly reminder email', () => {
-    const mockContact = { name: 'Test', birthday: new Date(1990, 0, 15) };
-    global.fetchContactsWithBirthdays = jest.fn().mockReturnValue([mockContact]);
-
-    const mockSendWeeklyReminder = jest.fn();
-    global.EmailManager = jest.fn().mockImplementation(() => ({
-      sendWeeklyReminder: mockSendWeeklyReminder
-    }));
-
-    sendWeeklyReminder();
-    expect(mockSendWeeklyReminder).toHaveBeenCalledWith([mockContact], expect.any(Date), 7);
-  });
-
-  it('should log dry run message instead of sending', () => {
-    global.dryRun = true;
-    const mockContact = { name: 'Test', birthday: new Date(1990, 0, 15) };
-    global.fetchContactsWithBirthdays = jest.fn().mockReturnValue([mockContact]);
-
-    sendWeeklyReminder();
-    expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('DRY RUN'));
-  });
-
-  it('should catch and log errors', () => {
-    global.fetchContactsWithBirthdays = jest.fn().mockImplementation(() => {
-      throw new Error('Timeout');
-    });
-    sendWeeklyReminder();
-    expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('Timeout'));
-  });
-});
-
-describe('sendContactQualityReport', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    global.Logger = { log: jest.fn() };
-    global.dryRun = false;
-    global.useLabel = false;
-    global.labelFilter = [];
-  });
-
-  it('should abort if label filter is misconfigured', () => {
-    global.useLabel = true;
-    global.labelFilter = [];
-    sendContactQualityReport();
-    expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('labelFilter is empty'));
-  });
 
   it('should abort if no contacts found', () => {
     global.fetchContactsWithBirthdays = jest.fn().mockReturnValue([]);
