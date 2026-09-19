@@ -112,12 +112,9 @@ describe('Calendar Sync', () => {
     it('should update existing event when description changes', () => {
       const contact = new BirthdayContact('Update Person', new Date(1990, 0, 15), [], '', '', '', [], null, 'people/111');
 
-      // The tag that would be generated for this contact
-      const expectedTag = '[BirthdaySync]:1-15:Update Person';
-
       const mockExistingEvent = {
-        getDescription: jest.fn().mockReturnValue(`old content\n\u200B${expectedTag}\u200B`),
-        getTitle: jest.fn().mockReturnValue('old title'),
+        getDescription: jest.fn().mockReturnValue('old content'),
+        getTitle: jest.fn().mockReturnValue('🎂 Update Person hat Geburtstag'),
         setDescription: jest.fn(),
         setTitle: jest.fn()
       };
@@ -276,13 +273,9 @@ describe('Calendar Sync', () => {
       const now = new Date();
       const contact = new BirthdayContact('Update Summary', new Date(1990, now.getMonth(), 15), [], '', '', '', [], null, 'people/104');
 
-      const month = now.getMonth();
-      const year = now.getFullYear();
-      const expectedTag = `[BirthdaySync]:summary:${year}-${('0' + (month + 1)).slice(-2)}`;
-
       const mockExistingEvent = {
-        getDescription: jest.fn().mockReturnValue(`old summary\n\u200B${expectedTag}\u200B`),
-        getTitle: jest.fn().mockReturnValue('old title'),
+        getDescription: jest.fn().mockReturnValue('old summary'),
+        getTitle: jest.fn().mockReturnValue('🎉🎂 BIRTHDAYS 🎂🎉'),
         setDescription: jest.fn(),
         setTitle: jest.fn()
       };
@@ -409,4 +402,90 @@ describe('Calendar Sync', () => {
       Date.now = realDateNow;
     });
   });
+
+  describe('stripWatermarkFromText', () => {
+    it('should return empty string for null, undefined, or empty text', () => {
+      expect(stripWatermarkFromText(null)).toBe('');
+      expect(stripWatermarkFromText(undefined)).toBe('');
+      expect(stripWatermarkFromText('')).toBe('');
+    });
+
+    it('should strip zero-width wrapped [BirthdaySync] tags', () => {
+      const input = '🎂 Alice wird 30\n\u200B[BirthdaySync]:Alice\u200B';
+      const output = stripWatermarkFromText(input);
+      expect(output).toBe('🎂 Alice wird 30');
+      expect(output).not.toContain('[BirthdaySync]');
+      expect(output).not.toContain('\u200B');
+    });
+
+    it('should strip visible [BirthdaySync] lines and trailing zero-width markers', () => {
+      const input = '── Info ──\n[BirthdaySync] Managed by Birthday Calendar Sync\n── Kontakt ──\nTel: +49123';
+      const output = stripWatermarkFromText(input);
+      expect(output).not.toContain('[BirthdaySync]');
+      expect(output).toContain('── Info ──');
+      expect(output).toContain('── Kontakt ──');
+    });
+
+    it('should clean multiple blank lines created by watermark removal', () => {
+      const input = 'Header text\n\n[BirthdaySync]\n\n\nFooter text';
+      const output = stripWatermarkFromText(input);
+      expect(output).toBe('Header text\n\nFooter text');
+    });
+  });
+
+  describe('cleanExistingEventWatermarks', () => {
+    it('should throw error if calendar is not found', () => {
+      CalendarApp.getCalendarById.mockReturnValue(null);
+      expect(() => cleanExistingEventWatermarks('missing-cal-id')).toThrow('Calendar not found: missing-cal-id');
+    });
+
+    it('should scan events, clean watermarked descriptions, and update events', () => {
+      const mockEvent1 = {
+        getTitle: () => 'Alice Birthday',
+        getDescription: () => 'Alice is 30\n\u200B[BirthdaySync]:Alice\u200B',
+        setDescription: jest.fn(),
+        getStartTime: () => new Date(2025, 5, 15)
+      };
+      const mockEvent2 = {
+        getTitle: () => 'Clean Event',
+        getDescription: () => 'No watermark here',
+        setDescription: jest.fn(),
+        getStartTime: () => new Date(2025, 5, 16)
+      };
+      const mockCalendar = {
+        getEvents: jest.fn().mockReturnValue([mockEvent1, mockEvent2])
+      };
+      CalendarApp.getCalendarById.mockReturnValue(mockCalendar);
+
+      const stats = cleanExistingEventWatermarks('valid-cal-id', 6, 6);
+
+      expect(stats.scanned).toBe(2);
+      expect(stats.cleaned).toBe(1);
+      expect(stats.errors).toBe(0);
+      expect(mockEvent1.setDescription).toHaveBeenCalledWith('Alice is 30');
+      expect(mockEvent2.setDescription).not.toHaveBeenCalled();
+    });
+
+    it('should not mutate events in dryRun mode', () => {
+      global.dryRun = true;
+      const mockEvent = {
+        getTitle: () => 'Bob Birthday',
+        getDescription: () => 'Bob is 40\n[BirthdaySync]',
+        setDescription: jest.fn(),
+        getStartTime: () => new Date(2025, 5, 20)
+      };
+      const mockCalendar = {
+        getEvents: jest.fn().mockReturnValue([mockEvent])
+      };
+      CalendarApp.getCalendarById.mockReturnValue(mockCalendar);
+
+      const stats = cleanExistingEventWatermarks('valid-cal-id', 12, 12);
+
+      expect(stats.cleaned).toBe(1);
+      expect(mockEvent.setDescription).not.toHaveBeenCalled();
+      expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('[DRY RUN] Would clean watermark'));
+      global.dryRun = false;
+    });
+  });
 });
+

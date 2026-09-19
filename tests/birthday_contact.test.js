@@ -433,4 +433,59 @@ describe('Contact Utility Functions', () => {
       expect(leapContact.daysToNextBirthday()).toBe(9); // Feb 20 to Mar 1 = 9 days
     });
   });
+
+  describe('getWeekdayName', () => {
+    it('should return correct weekday name for the birthday in a given year', () => {
+      // Jan 15, 2024 was a Monday
+      const contact = new BirthdayContact('John Doe', new Date(1990, 0, 15));
+      expect(contact.getWeekdayName(2024)).toBe('Montag');
+      // Jan 15, 2025 was a Wednesday
+      expect(contact.getWeekdayName(2025)).toBe('Mittwoch');
+    });
+  });
+
+  describe('getSignalLink', () => {
+    it('should return formatted Signal link when phone number is present', () => {
+      const contact = new BirthdayContact('Signal User', new Date(1990, 0, 15), [], '', '', '+49 170 1234567');
+      expect(contact.getSignalLink()).toBe('https://signal.me/#p/+491701234567');
+    });
+
+    it('should return empty string when no phone number', () => {
+      const contact = new BirthdayContact('No Phone', new Date(1990, 0, 15));
+      expect(contact.getSignalLink()).toBe('');
+    });
+  });
+
+  describe('getZodiacSign', () => {
+    const zodiacMap = [
+      { date: new Date(1990, 0, 25), symbol: '♒', name: 'Wassermann' }, // Jan 25
+      { date: new Date(1990, 1, 25), symbol: '♓', name: 'Fische' },     // Feb 25
+      { date: new Date(1990, 2, 25), symbol: '♈', name: 'Widder' },     // Mar 25
+      { date: new Date(1990, 3, 25), symbol: '♉', name: 'Stier' },      // Apr 25
+      { date: new Date(1990, 4, 25), symbol: '♊', name: 'Zwillinge' },  // May 25
+      { date: new Date(1990, 5, 25), symbol: '♋', name: 'Krebs' },     // Jun 25
+      { date: new Date(1990, 6, 25), symbol: '♌', name: 'Löwe' },      // Jul 25
+      { date: new Date(1990, 7, 25), symbol: '♍', name: 'Jungfrau' },  // Aug 25
+      { date: new Date(1990, 8, 25), symbol: '♎', name: 'Waage' },     // Sep 25
+      { date: new Date(1990, 9, 25), symbol: '♏', name: 'Skorpion' },  // Oct 25
+      { date: new Date(1990, 10, 25), symbol: '♐', name: 'Schütze' },  // Nov 25
+      { date: new Date(1990, 11, 25), symbol: '♑', name: 'Steinbock' },// Dec 25
+    ];
+
+    zodiacMap.forEach(({ date, symbol, name }) => {
+      it(`should return ${symbol} ${name} for birthdate ${date.getMonth() + 1}/${date.getDate()}`, () => {
+        const c = new BirthdayContact('Zodiac Test', date);
+        const zodiac = c.getZodiacSign();
+        expect(zodiac.symbol).toBe(symbol);
+        expect(zodiac.name).toBe(name);
+        expect(zodiac.full).toBe(`${symbol} ${name}`);
+      });
+    });
+
+    it('should support zodiac and weekday placeholders in event description template', () => {
+      const c = new BirthdayContact('Zodiac Placeholders', new Date(1990, 2, 25)); // Mar 25 = Widder
+      const template = '{name} is a {zodiacName} ({zodiacSymbol})';
+      expect(c._replacePlaceholders(template)).toBe('Zodiac Placeholders is a Widder (♈)');
+    });
+  });
 });

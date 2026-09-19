@@ -220,10 +220,23 @@ describe('EmailManager', () => {
       expect(rawData).toContain('mailto:rich@example.com');
       expect(rawData).toContain('tel:+491234567890');
       expect(rawData).toContain('instagram.com/richgram');
+      expect(rawData).toContain('https://signal.me/#p/+491234567890');
       // Plain text part
       expect(rawData).toContain('rich@example.com');
       expect(rawData).toContain('+491234567890');
       expect(rawData).toContain('@richgram');
+      expect(rawData).toContain('Signal: https://signal.me/#p/+491234567890');
+    });
+
+    it('should include weekday name in date label for upcoming birthdays', () => {
+      global.Utilities.base64EncodeWebSafe = jest.fn(str => str);
+      global.Utilities.base64Encode = jest.fn(str => str);
+
+      // Jan 18, 2024 was a Thursday (Donnerstag)
+      emailManager.sendWeeklyReminder(mockContacts, new Date(2024, 0, 15), 5);
+
+      const rawData = global.Utilities.base64EncodeWebSafe.mock.calls[0][0];
+      expect(rawData).toContain('Donnerstag, 18. Januar');
     });
 
     it('should include upcoming birthdays within the window', () => {

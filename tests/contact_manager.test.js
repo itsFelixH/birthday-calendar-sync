@@ -308,4 +308,87 @@ describe('Contact Manager', () => {
       expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('API Error'));
     });
   });
+
+  describe('isContactAllowed', () => {
+    const contact = new BirthdayContact('Alice Smith', new Date(1990, 0, 1), ['Familie', 'VIP']);
+
+    it('should return false if contact is null or undefined', () => {
+      expect(isContactAllowed(null, {})).toBe(false);
+      expect(isContactAllowed(undefined, {})).toBe(false);
+    });
+
+    it('should return true if filterConfig is empty or null', () => {
+      expect(isContactAllowed(contact, null)).toBe(true);
+      expect(isContactAllowed(contact, {})).toBe(true);
+      expect(isContactAllowed(contact, [])).toBe(true);
+    });
+
+    it('should support shorthand array of label names (whitelist)', () => {
+      expect(isContactAllowed(contact, ['Familie'])).toBe(true);
+      expect(isContactAllowed(contact, ['Arbeit', 'Sport'])).toBe(false);
+    });
+
+    it('should whitelist by includeLabels (case-insensitive)', () => {
+      expect(isContactAllowed(contact, { includeLabels: ['familie'] })).toBe(true);
+      expect(isContactAllowed(contact, { includeLabels: ['Arbeit'] })).toBe(false);
+    });
+
+    it('should whitelist by includeNames', () => {
+      expect(isContactAllowed(contact, { includeNames: ['Alice'] })).toBe(true);
+      expect(isContactAllowed(contact, { includeNames: ['Bob'] })).toBe(false);
+    });
+
+    it('should blacklist by excludeLabels (takes precedence)', () => {
+      expect(isContactAllowed(contact, { includeLabels: ['VIP'], excludeLabels: ['Familie'] })).toBe(false);
+    });
+
+    it('should blacklist by excludeNames (takes precedence)', () => {
+      expect(isContactAllowed(contact, { includeLabels: ['VIP'], excludeNames: ['Alice'] })).toBe(false);
+    });
+  });
+
+  describe('filterContactsForFeature', () => {
+    const c1 = new BirthdayContact('Alice', new Date(1990, 0, 1), ['Familie']);
+    const c2 = new BirthdayContact('Bob', new Date(1990, 0, 2), ['Arbeit']);
+    const c3 = new BirthdayContact('Charlie', new Date(1990, 0, 3), ['VIP']);
+    const allContacts = [c1, c2, c3];
+
+    beforeEach(() => {
+      global.contactFilters = {
+        individualEvents: ['Familie', 'VIP'],
+        summaryEvents: [],
+        emails: { excludeLabels: ['Arbeit'] }
+      };
+    });
+
+    it('should filter contacts for individualEvents', () => {
+      const filtered = filterContactsForFeature(allContacts, 'individualEvents');
+      expect(filtered.map(c => c.name)).toEqual(['Alice', 'Charlie']);
+    });
+
+    it('should return all contacts when feature filter is empty', () => {
+      const filtered = filterContactsForFeature(allContacts, 'summaryEvents');
+      expect(filtered.map(c => c.name)).toEqual(['Alice', 'Bob', 'Charlie']);
+    });
+
+    it('should filter contacts by emails key for email notifications', () => {
+      const filtered = filterContactsForFeature(allContacts, 'emails');
+      expect(filtered.map(c => c.name)).toEqual(['Alice', 'Charlie']);
+    });
+
+    it('should fallback to emails filter when monthlyEmail or weeklyEmail is queried', () => {
+      const filteredMonthly = filterContactsForFeature(allContacts, 'monthlyEmail');
+      expect(filteredMonthly.map(c => c.name)).toEqual(['Alice', 'Charlie']);
+
+      const filteredWeekly = filterContactsForFeature(allContacts, 'weeklyEmail');
+      expect(filteredWeekly.map(c => c.name)).toEqual(['Alice', 'Charlie']);
+    });
+
+    it('should return all contacts if contactFilters is undefined or feature not present', () => {
+      global.contactFilters = undefined;
+      const filtered = filterContactsForFeature(allContacts, 'unknownFeature');
+      expect(filtered).toEqual(allContacts);
+    });
+  });
 });
+

@@ -16,29 +16,16 @@ function isCalendarConfigured() {
 }
 
 /**
- * Checks whether label filtering is correctly configured.
- * @returns {boolean} true if valid (labels provided or filtering disabled), false if misconfigured
- */
-function isLabelFilterConfigured() {
-  if (useLabel && (!labelFilter || labelFilter.length === 0)) {
-    Logger.log('⚠️ useLabel is enabled but labelFilter is empty — no contacts will match.');
-    Logger.log('   Add label names to labelFilter in config.js, or set useLabel to false.');
-    return false;
-  }
-  return true;
-}
-
-/**
  * Syncs birthdays from Google Contacts to the calendar.
  */
 function syncBirthdays() {
   try {
-    if (!isCalendarConfigured() || !isLabelFilterConfigured()) return;
+    if (!isCalendarConfigured()) return;
 
     const isDryRun = typeof dryRun !== 'undefined' && dryRun;
     if (isDryRun) Logger.log('🧪 DRY RUN MODE — no calendar or email changes will be made');
 
-    const contacts = fetchContactsWithBirthdays(useLabel ? labelFilter : []);
+    const contacts = fetchContactsWithBirthdays();
 
     if (!contacts || contacts.length === 0) {
       Logger.log('⚠️ No contacts with birthdays found. Aborting calendar update.');
@@ -51,18 +38,24 @@ function syncBirthdays() {
     };
 
     if (createIndividualBirthdayEvents) {
+      const individualContacts = typeof filterContactsForFeature === 'function'
+        ? filterContactsForFeature(contacts, 'individualEvents')
+        : contacts;
       const indMonths = typeof individualMonthsAhead !== 'undefined' ? individualMonthsAhead : 12;
       const indReminderMin = typeof individualReminderMinutes !== 'undefined' ? individualReminderMinutes : 60 * 12;
       const indReminderMethod = typeof individualReminderMethod !== 'undefined' ? individualReminderMethod : 'popup';
-      const individualStats = createOrUpdateIndividualBirthdays(calendarId, contacts, indMonths, indReminderMin, indReminderMethod);
+      const individualStats = createOrUpdateIndividualBirthdays(calendarId, individualContacts, indMonths, indReminderMin, indReminderMethod);
       changes.individual = individualStats;
     }
 
     if (createBirthdaySummaryEvents) {
+      const summaryContacts = typeof filterContactsForFeature === 'function'
+        ? filterContactsForFeature(contacts, 'summaryEvents')
+        : contacts;
       const sumMonths = typeof summaryMonthsAhead !== 'undefined' ? summaryMonthsAhead : 12;
       const sumReminderMin = typeof summaryReminderMinutes !== 'undefined' ? summaryReminderMinutes : 5760;
       const sumReminderMethod = typeof summaryReminderMethod !== 'undefined' ? summaryReminderMethod : 'popup';
-      const summaryStats = createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, sumMonths, sumReminderMin, sumReminderMethod);
+      const summaryStats = createOrUpdateMonthlyBirthdaySummaries(calendarId, summaryContacts, sumMonths, sumReminderMin, sumReminderMethod);
       changes.summary = summaryStats;
     }
 
@@ -94,13 +87,15 @@ function sendMonthlySummary() {
       return;
     }
 
-    if (!isLabelFilterConfigured()) return;
-
-    const contacts = fetchContactsWithBirthdays(useLabel ? labelFilter : []);
+    let contacts = fetchContactsWithBirthdays();
 
     if (!contacts || contacts.length === 0) {
       Logger.log('⚠️ No contacts with birthdays found. Aborting summary mail.');
       return;
+    }
+
+    if (typeof filterContactsForFeature === 'function') {
+      contacts = filterContactsForFeature(contacts, 'emails');
     }
 
     const nextMonthDate = getNextMonth();
@@ -128,8 +123,6 @@ function sendWeeklyReminder() {
       return;
     }
 
-    if (!isLabelFilterConfigured()) return;
-
     const today = new Date();
     const sendDay = typeof weeklyReminderDay !== 'undefined' ? weeklyReminderDay : 1;
 
@@ -139,11 +132,15 @@ function sendWeeklyReminder() {
       return;
     }
 
-    const contacts = fetchContactsWithBirthdays(useLabel ? labelFilter : []);
+    let contacts = fetchContactsWithBirthdays();
 
     if (!contacts || contacts.length === 0) {
       Logger.log('⚠️ No contacts with birthdays found. Aborting weekly reminder.');
       return;
+    }
+
+    if (typeof filterContactsForFeature === 'function') {
+      contacts = filterContactsForFeature(contacts, 'emails');
     }
 
     const days = typeof reminderDaysBefore !== 'undefined' ? reminderDaysBefore : 7;
@@ -164,9 +161,7 @@ function sendContactQualityReport() {
   try {
     const isDryRun = typeof dryRun !== 'undefined' && dryRun;
 
-    if (!isLabelFilterConfigured()) return;
-
-    const contacts = fetchContactsWithBirthdays(useLabel ? labelFilter : []);
+    const contacts = fetchContactsWithBirthdays();
 
     if (!contacts || contacts.length === 0) {
       Logger.log('⚠️ No contacts with birthdays found. Aborting quality report.');
@@ -182,5 +177,22 @@ function sendContactQualityReport() {
     emailManager.sendContactQualityReport(contacts);
   } catch (error) {
     Logger.log(`💥 Error in sendContactQualityReport: ${error.message}`);
+  }
+}
+
+/**
+ * Maintenance utility: Removes legacy watermark tags ([BirthdaySync]) from past and future calendar events.
+ * Can be run manually from the Apps Script editor.
+ *
+ * @param {number} [monthsPast=12] Number of months in the past to scan
+ * @param {number} [monthsAhead=12] Number of months in the future to scan
+ * @returns {{scanned: number, cleaned: number, errors: number}|undefined}
+ */
+function cleanCalendarWatermarks(monthsPast = 12, monthsAhead = 12) {
+  try {
+    if (!isCalendarConfigured()) return;
+    return cleanExistingEventWatermarks(calendarId, monthsPast, monthsAhead);
+  } catch (error) {
+    Logger.log(`💥 Error in cleanCalendarWatermarks: ${error.message}`);
   }
 }

@@ -228,8 +228,7 @@ function logConfiguration() {
       Logger.log("Calendar with ID " + calendarId + " not found.");
     }
   }
-  Logger.log("useLabel: " + (typeof useLabel !== 'undefined' ? useLabel : false));
-  Logger.log("labelFilter: " + (typeof labelFilter !== 'undefined' ? labelFilter.join(", ") : "[]"));
+  Logger.log("contactFilters: " + (typeof contactFilters !== 'undefined' ? JSON.stringify(contactFilters) : "none"));
   Logger.log("createIndividualBirthdayEvents: " + (typeof createIndividualBirthdayEvents !== 'undefined' ? createIndividualBirthdayEvents : false));
   Logger.log("createBirthdaySummaryEvents: " + (typeof createBirthdaySummaryEvents !== 'undefined' ? createBirthdaySummaryEvents : false));
   Logger.log("eventRecurrence: " + (typeof eventRecurrence !== 'undefined' ? eventRecurrence : 'single'));

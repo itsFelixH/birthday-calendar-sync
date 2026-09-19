@@ -1,5 +1,3 @@
-// Internal tag prefix for identifying script-managed events.
-const EVENT_TAG = '[BirthdaySync]';
 
 /**
  * Creates or updates monthly birthday summary events in the calendar.
@@ -22,7 +20,6 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, monthsAhea
 
   const calendarManager = isDryRun ? null : new CalendarManager({ calendarId: calendarId });
   const { start: startDate, end: endDate } = getMonthlyDateRange(monthsAhead);
-  const tagVisible = false;
   const eventDay = typeof summaryEventDay !== 'undefined' ? summaryEventDay : 1;
   const texts = typeof eventTexts !== 'undefined' ? eventTexts : {};
   const summaryHeaderTemplate = texts.summaryHeader || 'Geburtstage im {month}';
@@ -66,7 +63,6 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, monthsAhea
         continue;
       }
 
-      const summaryTag = `${EVENT_TAG}:summary:${year}-${('0' + (month + 1)).slice(-2)}`;
       const titles = typeof eventTitles !== 'undefined' ? eventTitles : {};
       const title = (titles.summary || '🎉🎂 GEBURTSTAGE 🎂🎉')
         .replace('{month}', monthNamesLong[month])
@@ -76,7 +72,6 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, monthsAhea
         .replace('{month}', monthNamesLong[month])
         .replace('{year}', year)
         .replace('{count}', monthContacts.length);
-      const tagLine = tagVisible ? summaryTag : wrapInvisible(summaryTag);
       const description = `${headerLine}\n\n` +
         monthContacts.map(contact => {
           if (contact.isDeceased() && handling === 'memorial') {
@@ -87,8 +82,7 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, monthsAhea
             return lifespan ? `${base} (${lifespan})` : base;
           }
           return contact.getBirthdaySummaryEventString(year);
-        }).join('\n') +
-        `\n\n${tagLine}`;
+        }).join('\n');
 
       if (isDryRun) {
         stats.created.push(`${monthName} ${year}`);
@@ -98,10 +92,9 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, monthsAhea
       }
 
       const events = calendarManager.getEventsInRange(monthEventStart, monthEventEnd);
-      // Match by tag in description (prevents duplicates if title format changes)
       const existingEvent = events.find(e =>
-        e.getDescription() && e.getDescription().includes(summaryTag)
-      ) || events.find(e => e.getTitle() === title);
+        e.getTitle() === title || (e.getDescription() && e.getDescription().includes(headerLine))
+      );
 
       if (!existingEvent) {
         calendarManager.createAllDayEvent({
@@ -115,7 +108,9 @@ function createOrUpdateMonthlyBirthdaySummaries(calendarId, contacts, monthsAhea
         const summaryColor = colors.summary || '';
         if (summaryColor) {
           const createdEvents = calendarManager.getEventsInRange(monthEventStart, monthEventEnd);
-          const newEvent = createdEvents.find(e => e.getDescription() && e.getDescription().includes(summaryTag));
+          const newEvent = createdEvents.find(e =>
+            e.getTitle() === title || (e.getDescription() && e.getDescription().includes(headerLine))
+          );
           if (newEvent && newEvent.setColor) newEvent.setColor(summaryColor);
         }
         stats.created.push(`${monthName} ${year}`);
@@ -162,7 +157,6 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
   if (isDryRun) Logger.log('🧪 DRY RUN MODE — no changes will be made');
 
   const useRecurrence = typeof eventRecurrence !== 'undefined' && eventRecurrence === 'recurring';
-  const tagVisible = false;
   const batchSize = 20;
   const delayMs = 500;
 
@@ -208,10 +202,6 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
       const eventEnd = new Date(eventDate);
       eventEnd.setDate(eventEnd.getDate() + 1);
 
-      // Unique tag per contact based on birthday (stable even if name changes)
-      const contactTag = `${EVENT_TAG}:${contact.birthday.getMonth() + 1}-${contact.birthday.getDate()}:${contact.name.replace(/[^a-zA-ZäöüÄÖÜß ]/g, '').trim()}`;
-      const tagLine = tagVisible ? contactTag : wrapInvisible(contactTag);
-
       // Determine title and description based on deceased/milestone status
       const isMemorial = contact.isDeceased() && handling === 'memorial';
       const eventYear = eventDate.getFullYear();
@@ -232,20 +222,20 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
         const lifespan = deathYear ? `*${birthYear} †${deathYear}` : `*${birthYear}`;
         const template = titles.memorial || '🕯️ {name} ({lifespan})';
         title = replaceTitlePlaceholders(template, contact, { lifespan });
-        description = contact.getMemorialEventString() + `\n${tagLine}`;
+        description = contact.getMemorialEventString();
       } else if (useRecurrence) {
         // Recurring events: static title/description without year-specific age
         const template = titles.recurring || '🎂 {name} hat Geburtstag';
         title = replaceTitlePlaceholders(template, contact, {});
-        description = contact.getBirthdayEventString(null) + `\n${tagLine}`;
+        description = contact.getBirthdayEventString(null);
       } else if (isMilestone) {
         const template = titles.milestone || '🎂🎉 {name} wird {age}! 🎉';
         title = replaceTitlePlaceholders(template, contact, { age: ageInYear });
-        description = contact.getBirthdayEventString(ageInYear) + `\n${tagLine}`;
+        description = contact.getBirthdayEventString(ageInYear);
       } else {
         const template = titles.birthday || '🎂 {name} hat Geburtstag';
         title = replaceTitlePlaceholders(template, contact, { age: ageInYear });
-        description = contact.getBirthdayEventString(ageInYear) + `\n${tagLine}`;
+        description = contact.getBirthdayEventString(ageInYear);
       }
 
       if (isDryRun) {
@@ -261,10 +251,9 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
       const shouldRecur = useRecurrence && !isMemorial && !contact.isLeapYearBirthday();
 
       const existingEvents = calendarManager.getEventsInRange(eventDate, eventEnd);
-      // Match by tag first (handles name changes), fall back to title match
       const existingEvent = existingEvents.find(e =>
-        e.getDescription() && e.getDescription().includes(contactTag)
-      ) || existingEvents.find(e => e.getTitle() === title);
+        e.getTitle() === title || (contact.name && e.getTitle().includes(contact.name))
+      );
 
       if (!existingEvent) {
         calendarManager.createAllDayEvent({
@@ -282,7 +271,9 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
         else eventColor = colors.birthday || '';
         if (eventColor) {
           const createdEvents = calendarManager.getEventsInRange(eventDate, eventEnd);
-          const newEvent = createdEvents.find(e => e.getDescription() && e.getDescription().includes(contactTag));
+          const newEvent = createdEvents.find(e =>
+            e.getTitle() === title || (contact.name && e.getTitle().includes(contact.name))
+          );
           if (newEvent && newEvent.setColor) newEvent.setColor(eventColor);
         }
         stats.created.push(`${contact.name} (${calendarManager.formatDate(eventDate)})`);
@@ -327,13 +318,21 @@ function createOrUpdateIndividualBirthdays(calendarId, contacts, monthsAhead = 1
  * @returns {string}
  */
 function replaceTitlePlaceholders(template, contact, extra = {}) {
+  const zodiac = contact.getZodiacSign ? contact.getZodiacSign() : { symbol: '', name: '', full: '' };
+  const targetYear = extra.year !== undefined ? extra.year : (extra.age !== undefined && contact.hasKnownBirthYear() ? contact.birthday.getFullYear() + extra.age : new Date().getFullYear());
+  const weekday = contact.getWeekdayName ? contact.getWeekdayName(targetYear) : '';
+
   return template
     .replace('{name}', contact.name)
     .replace('{birthdate}', contact.hasKnownBirthYear() ? contact.getBirthdayLongFormat() : contact.getBirthdayShortFormat())
     .replace('{city}', contact.city || '')
     .replace('{email}', contact.email || '')
     .replace('{age}', extra.age !== undefined ? extra.age : '')
-    .replace('{lifespan}', extra.lifespan || '');
+    .replace('{lifespan}', extra.lifespan || '')
+    .replace('{weekday}', weekday)
+    .replace('{zodiac}', zodiac.full)
+    .replace('{zodiacSymbol}', zodiac.symbol)
+    .replace('{zodiacName}', zodiac.name);
 }
 
 
@@ -376,4 +375,84 @@ function logSyncStats(type, stats) {
     `   Skipped: ${stats.skipped}`,
     `   Errors: ${stats.errors}`
   ].join('\n'));
+}
+
+
+/**
+ * Strips legacy watermark tags and zero-width strings from event descriptions.
+ *
+ * @param {string} text - The description text to clean
+ * @returns {string} Cleaned description text
+ */
+function stripWatermarkFromText(text) {
+  if (!text || typeof text !== 'string') return '';
+
+  let cleaned = text;
+
+  // 1. Remove zero-width wrapped tag strings (e.g. \u200B[BirthdaySync]:...\u200B)
+  cleaned = cleaned.replace(/\u200B\[BirthdaySync\][^\u200B\n]*\u200B?/gi, '');
+
+  // 2. Remove any line containing [BirthdaySync]
+  cleaned = cleaned.replace(/^[^\n]*\[BirthdaySync\][^\n]*\n?/gim, '');
+
+  // 3. Remove standalone zero-width space characters left behind
+  cleaned = cleaned.replace(/\u200B/g, '');
+
+  // 4. Clean trailing whitespace and multiple blank lines
+  cleaned = cleaned.replace(/\n{3,}/g, '\n\n').trim();
+
+  return cleaned;
+}
+
+
+/**
+ * Scans past and future calendar events and strips legacy watermark tags from descriptions.
+ *
+ * @param {string} calendarId - Google Calendar ID
+ * @param {number} [monthsPast=12] - Number of months in the past to scan
+ * @param {number} [monthsAhead=12] - Number of months in the future to scan
+ * @returns {{scanned: number, cleaned: number, errors: number}} Cleanup statistics
+ */
+function cleanExistingEventWatermarks(calendarId, monthsPast = 12, monthsAhead = 12) {
+  const isDryRun = typeof dryRun !== 'undefined' && dryRun;
+  if (isDryRun) Logger.log('🧪 DRY RUN MODE — no calendar modifications will be saved');
+
+  const calendar = CalendarApp.getCalendarById(calendarId);
+  if (!calendar) {
+    throw new Error(`Calendar not found: ${calendarId}`);
+  }
+
+  const now = new Date();
+  const startDate = new Date(now.getFullYear(), now.getMonth() - monthsPast, 1);
+  const endDate = new Date(now.getFullYear(), now.getMonth() + monthsAhead + 1, 0, 23, 59, 59);
+
+  Logger.log(`🧹 Scanning calendar events for watermarks from ${startDate.toDateString()} to ${endDate.toDateString()}...`);
+
+  const events = calendar.getEvents(startDate, endDate);
+  const stats = { scanned: events.length, cleaned: 0, errors: 0 };
+
+  for (let i = 0; i < events.length; i++) {
+    const event = events[i];
+    try {
+      const description = event.getDescription() || '';
+      if (description.includes('[BirthdaySync]') || description.includes('\u200B')) {
+        const cleanedDescription = stripWatermarkFromText(description);
+        if (cleanedDescription !== description) {
+          stats.cleaned++;
+          if (isDryRun) {
+            Logger.log(`🧪 [DRY RUN] Would clean watermark from event: "${event.getTitle()}" on ${event.getStartTime().toDateString()}`);
+          } else {
+            event.setDescription(cleanedDescription);
+            Logger.log(`✨ Cleaned watermark from event: "${event.getTitle()}" on ${event.getStartTime().toDateString()}`);
+          }
+        }
+      }
+    } catch (err) {
+      stats.errors++;
+      Logger.log(`⚠️ Error cleaning event "${event.getTitle()}": ${err.message}`);
+    }
+  }
+
+  Logger.log(`🎉 Watermark cleanup complete: scanned ${stats.scanned} events, cleaned ${stats.cleaned} events (${stats.errors} errors).`);
+  return stats;
 }

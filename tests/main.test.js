@@ -29,33 +29,6 @@ describe('Config Validation', () => {
       expect(Logger.log).not.toHaveBeenCalled();
     });
   });
-
-  describe('isLabelFilterConfigured', () => {
-    it('should return false when useLabel is true but labelFilter is empty', () => {
-      global.useLabel = true;
-      global.labelFilter = [];
-      expect(isLabelFilterConfigured()).toBe(false);
-      expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('labelFilter is empty'));
-    });
-
-    it('should return false when useLabel is true and labelFilter is null', () => {
-      global.useLabel = true;
-      global.labelFilter = null;
-      expect(isLabelFilterConfigured()).toBe(false);
-    });
-
-    it('should return true when useLabel is false', () => {
-      global.useLabel = false;
-      global.labelFilter = [];
-      expect(isLabelFilterConfigured()).toBe(true);
-    });
-
-    it('should return true when useLabel is true and labelFilter has entries', () => {
-      global.useLabel = true;
-      global.labelFilter = ['Friends'];
-      expect(isLabelFilterConfigured()).toBe(true);
-    });
-  });
 });
 
 describe('setupSchedules', () => {
@@ -203,12 +176,7 @@ describe('syncBirthdays', () => {
     expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('not configured'));
   });
 
-  it('should abort if useLabel is true but labelFilter is empty', () => {
-    global.useLabel = true;
-    global.labelFilter = [];
-    syncBirthdays();
-    expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('labelFilter is empty'));
-  });
+
 
   it('should abort if no contacts found', () => {
     global.fetchContactsWithBirthdays = jest.fn().mockReturnValue([]);
@@ -315,12 +283,7 @@ describe('sendMonthlySummary', () => {
     expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('disabled by config'));
   });
 
-  it('should abort if label filter is misconfigured', () => {
-    global.useLabel = true;
-    global.labelFilter = [];
-    sendMonthlySummary();
-    expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('labelFilter is empty'));
-  });
+
 
   it('should abort if no contacts found', () => {
     global.fetchContactsWithBirthdays = jest.fn().mockReturnValue([]);
@@ -379,12 +342,7 @@ describe('sendWeeklyReminder', () => {
     expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('disabled by config'));
   });
 
-  it('should abort if label filter is misconfigured', () => {
-    global.useLabel = true;
-    global.labelFilter = [];
-    sendWeeklyReminder();
-    expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('labelFilter is empty'));
-  });
+
 
   it('should skip if today is not the configured send day', () => {
     const today = new Date();
@@ -448,12 +406,7 @@ describe('sendContactQualityReport', () => {
     global.labelFilter = [];
   });
 
-  it('should abort if label filter is misconfigured', () => {
-    global.useLabel = true;
-    global.labelFilter = [];
-    sendContactQualityReport();
-    expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('labelFilter is empty'));
-  });
+
 
   it('should abort if no contacts found', () => {
     global.fetchContactsWithBirthdays = jest.fn().mockReturnValue([]);
@@ -489,5 +442,82 @@ describe('sendContactQualityReport', () => {
     });
     sendContactQualityReport();
     expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('Service unavailable'));
+  });
+});
+
+describe('cleanCalendarWatermarks', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    global.Logger = { log: jest.fn() };
+    global.calendarId = 'test@group.calendar.google.com';
+    global.dryRun = false;
+  });
+
+  it('should abort if calendar is not configured', () => {
+    global.calendarId = '';
+    cleanCalendarWatermarks();
+    expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('not configured'));
+  });
+
+  it('should call cleanExistingEventWatermarks with configured calendarId and default/custom ranges', () => {
+    global.cleanExistingEventWatermarks = jest.fn().mockReturnValue({ scanned: 10, cleaned: 2, errors: 0 });
+    const stats = cleanCalendarWatermarks(6, 12);
+    expect(cleanExistingEventWatermarks).toHaveBeenCalledWith('test@group.calendar.google.com', 6, 12);
+    expect(stats).toEqual({ scanned: 10, cleaned: 2, errors: 0 });
+  });
+
+  it('should catch and log errors during watermark cleanup', () => {
+    global.cleanExistingEventWatermarks = jest.fn().mockImplementation(() => {
+      throw new Error('API failure');
+    });
+    cleanCalendarWatermarks();
+    expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('API failure'));
+  });
+});
+
+describe('feature-specific contact filtering in main functions', () => {
+  const contact1 = { name: 'Alice', labels: ['Familie'], birthday: new Date(1990, 0, 15) };
+  const contact2 = { name: 'Bob', labels: ['Arbeit'], birthday: new Date(1990, 0, 20) };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    global.Logger = { log: jest.fn() };
+    global.calendarId = 'test@group.calendar.google.com';
+    global.useLabel = false;
+    global.labelFilter = [];
+    global.dryRun = false;
+    global.createIndividualBirthdayEvents = true;
+    global.createBirthdaySummaryEvents = true;
+    global.sendSyncReport = false;
+    global.contactFilters = {
+      individualEvents: ['Familie'],
+      summaryEvents: ['Arbeit'],
+      monthlyEmail: ['Familie'],
+      weeklyEmail: ['Arbeit']
+    };
+    global.fetchContactsWithBirthdays = jest.fn().mockReturnValue([contact1, contact2]);
+  });
+
+  it('should filter contacts separately for individual and summary events in syncBirthdays', () => {
+    global.createOrUpdateIndividualBirthdays = jest.fn().mockReturnValue({ created: [], updated: [] });
+    global.createOrUpdateMonthlyBirthdaySummaries = jest.fn().mockReturnValue({ created: [], updated: [] });
+    global.hasChanges = jest.fn().mockReturnValue(false);
+
+    syncBirthdays();
+
+    expect(createOrUpdateIndividualBirthdays).toHaveBeenCalledWith(
+      expect.any(String),
+      [contact1],
+      expect.any(Number),
+      expect.any(Number),
+      expect.any(String)
+    );
+    expect(createOrUpdateMonthlyBirthdaySummaries).toHaveBeenCalledWith(
+      expect.any(String),
+      [contact2],
+      expect.any(Number),
+      expect.any(Number),
+      expect.any(String)
+    );
   });
 });

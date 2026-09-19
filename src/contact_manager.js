@@ -1,10 +1,14 @@
 /**
- * Fetches all contacts with birthdays from Google Contacts, optionally filtering by labels.
- * @param {string[]} [labelFilter=[]] Array of label names to filter
+ * Fetches all contacts with birthdays from Google Contacts.
+ * @param {string[]|number} [labelFilter=[]] Optional array of label names to filter, or maxRetries if number
  * @param {number} [maxRetries=3] Max API retry attempts
  * @returns {BirthdayContact[]} Array of BirthdayContact objects
  */
 function fetchContactsWithBirthdays(labelFilter = [], maxRetries = 3) {
+  if (typeof labelFilter === 'number') {
+    maxRetries = labelFilter;
+    labelFilter = [];
+  }
   try {
     validateLabelFilter(labelFilter);
     const peopleService = People.People;
@@ -222,4 +226,100 @@ function validateLabelFilter(labelFilter) {
   if (labelFilter.some(label => typeof label !== 'string')) {
     throw new Error('🔴 All labels must be strings');
   }
+}
+
+
+/**
+ * Evaluates whether a contact is allowed based on whitelist and blacklist filter criteria.
+ * Supports includeLabels, excludeLabels, includeNames, and excludeNames.
+ *
+ * @param {BirthdayContact} contact - The contact to evaluate
+ * @param {Object|string[]} [filterConfig] - Filter configuration object or shorthand array of label names
+ * @returns {boolean} true if contact is allowed/matches criteria, false otherwise
+ */
+function isContactAllowed(contact, filterConfig) {
+  if (!contact) return false;
+  if (!filterConfig) return true;
+
+  let includeLabels = [];
+  let excludeLabels = [];
+  let includeNames = [];
+  let excludeNames = [];
+
+  if (Array.isArray(filterConfig)) {
+    includeLabels = filterConfig;
+  } else if (typeof filterConfig === 'object') {
+    includeLabels = Array.isArray(filterConfig.includeLabels) ? filterConfig.includeLabels : [];
+    excludeLabels = Array.isArray(filterConfig.excludeLabels) ? filterConfig.excludeLabels : [];
+    includeNames = Array.isArray(filterConfig.includeNames) ? filterConfig.includeNames : [];
+    excludeNames = Array.isArray(filterConfig.excludeNames) ? filterConfig.excludeNames : [];
+  } else {
+    return true;
+  }
+
+  const contactLabels = (contact.labels || []).map(l => (typeof l === 'string' ? l.trim().toLowerCase() : ''));
+  const contactName = (contact.name || '').trim().toLowerCase();
+
+  // 1. Blacklist check: exclude if any excludeLabels match
+  if (excludeLabels.length > 0) {
+    const normExcludeLabels = excludeLabels.map(l => (typeof l === 'string' ? l.trim().toLowerCase() : ''));
+    const matchesExcludeLabel = contactLabels.some(label => normExcludeLabels.includes(label));
+    if (matchesExcludeLabel) return false;
+  }
+
+  // 2. Blacklist check: exclude if any excludeNames match
+  if (excludeNames.length > 0) {
+    const normExcludeNames = excludeNames.map(n => (typeof n === 'string' ? n.trim().toLowerCase() : ''));
+    const matchesExcludeName = normExcludeNames.some(n => n && (contactName === n || contactName.includes(n)));
+    if (matchesExcludeName) return false;
+  }
+
+  // 3. Whitelist check: if neither includeLabels nor includeNames are specified, allowed
+  const hasIncludeLabels = includeLabels.length > 0;
+  const hasIncludeNames = includeNames.length > 0;
+
+  if (!hasIncludeLabels && !hasIncludeNames) {
+    return true;
+  }
+
+  // 4. Whitelist matching: allowed if matches includeLabels OR matches includeNames
+  let matchesInclude = false;
+
+  if (hasIncludeLabels) {
+    const normIncludeLabels = includeLabels.map(l => (typeof l === 'string' ? l.trim().toLowerCase() : ''));
+    if (contactLabels.some(label => normIncludeLabels.includes(label))) {
+      matchesInclude = true;
+    }
+  }
+
+  if (hasIncludeNames && !matchesInclude) {
+    const normIncludeNames = includeNames.map(n => (typeof n === 'string' ? n.trim().toLowerCase() : ''));
+    if (normIncludeNames.some(n => n && (contactName === n || contactName.includes(n)))) {
+      matchesInclude = true;
+    }
+  }
+
+  return matchesInclude;
+}
+
+
+/**
+ * Filters a list of contacts for a specific feature using contactFilters configuration.
+ *
+ * @param {BirthdayContact[]} contacts - Array of contacts to filter
+ * @param {string} featureKey - Key in contactFilters ('individualEvents', 'summaryEvents', 'emails')
+ * @returns {BirthdayContact[]} Filtered array of contacts
+ */
+function filterContactsForFeature(contacts, featureKey) {
+  if (!Array.isArray(contacts) || contacts.length === 0) return [];
+  if (typeof contactFilters === 'undefined' || !contactFilters) {
+    return contacts;
+  }
+
+  const featureFilter = contactFilters[featureKey] || ((featureKey === 'monthlyEmail' || featureKey === 'weeklyEmail') ? contactFilters.emails : undefined);
+  if (!featureFilter) {
+    return contacts;
+  }
+
+  return contacts.filter(contact => isContactAllowed(contact, featureFilter));
 }
