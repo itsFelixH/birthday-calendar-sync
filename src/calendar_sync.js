@@ -376,3 +376,83 @@ function logSyncStats(type, stats) {
     `   Errors: ${stats.errors}`
   ].join('\n'));
 }
+
+
+/**
+ * Strips legacy watermark tags and zero-width strings from event descriptions.
+ *
+ * @param {string} text - The description text to clean
+ * @returns {string} Cleaned description text
+ */
+function stripWatermarkFromText(text) {
+  if (!text || typeof text !== 'string') return '';
+
+  let cleaned = text;
+
+  // 1. Remove zero-width wrapped tag strings (e.g. \u200B[BirthdaySync]:...\u200B)
+  cleaned = cleaned.replace(/\u200B\[BirthdaySync\][^\u200B\n]*\u200B?/gi, '');
+
+  // 2. Remove any line containing [BirthdaySync]
+  cleaned = cleaned.replace(/^[^\n]*\[BirthdaySync\][^\n]*\n?/gim, '');
+
+  // 3. Remove standalone zero-width space characters left behind
+  cleaned = cleaned.replace(/\u200B/g, '');
+
+  // 4. Clean trailing whitespace and multiple blank lines
+  cleaned = cleaned.replace(/\n{3,}/g, '\n\n').trim();
+
+  return cleaned;
+}
+
+
+/**
+ * Scans past and future calendar events and strips legacy watermark tags from descriptions.
+ *
+ * @param {string} calendarId - Google Calendar ID
+ * @param {number} [monthsPast=12] - Number of months in the past to scan
+ * @param {number} [monthsAhead=12] - Number of months in the future to scan
+ * @returns {{scanned: number, cleaned: number, errors: number}} Cleanup statistics
+ */
+function cleanExistingEventWatermarks(calendarId, monthsPast = 12, monthsAhead = 12) {
+  const isDryRun = typeof dryRun !== 'undefined' && dryRun;
+  if (isDryRun) Logger.log('🧪 DRY RUN MODE — no calendar modifications will be saved');
+
+  const calendar = CalendarApp.getCalendarById(calendarId);
+  if (!calendar) {
+    throw new Error(`Calendar not found: ${calendarId}`);
+  }
+
+  const now = new Date();
+  const startDate = new Date(now.getFullYear(), now.getMonth() - monthsPast, 1);
+  const endDate = new Date(now.getFullYear(), now.getMonth() + monthsAhead + 1, 0, 23, 59, 59);
+
+  Logger.log(`🧹 Scanning calendar events for watermarks from ${startDate.toDateString()} to ${endDate.toDateString()}...`);
+
+  const events = calendar.getEvents(startDate, endDate);
+  const stats = { scanned: events.length, cleaned: 0, errors: 0 };
+
+  for (let i = 0; i < events.length; i++) {
+    const event = events[i];
+    try {
+      const description = event.getDescription() || '';
+      if (description.includes('[BirthdaySync]') || description.includes('\u200B')) {
+        const cleanedDescription = stripWatermarkFromText(description);
+        if (cleanedDescription !== description) {
+          stats.cleaned++;
+          if (isDryRun) {
+            Logger.log(`🧪 [DRY RUN] Would clean watermark from event: "${event.getTitle()}" on ${event.getStartTime().toDateString()}`);
+          } else {
+            event.setDescription(cleanedDescription);
+            Logger.log(`✨ Cleaned watermark from event: "${event.getTitle()}" on ${event.getStartTime().toDateString()}`);
+          }
+        }
+      }
+    } catch (err) {
+      stats.errors++;
+      Logger.log(`⚠️ Error cleaning event "${event.getTitle()}": ${err.message}`);
+    }
+  }
+
+  Logger.log(`🎉 Watermark cleanup complete: scanned ${stats.scanned} events, cleaned ${stats.cleaned} events (${stats.errors} errors).`);
+  return stats;
+}
