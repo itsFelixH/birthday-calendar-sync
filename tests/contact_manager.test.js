@@ -357,8 +357,7 @@ describe('Contact Manager', () => {
       global.contactFilters = {
         individualEvents: ['Familie', 'VIP'],
         summaryEvents: [],
-        monthlyEmail: { excludeLabels: ['Arbeit'] },
-        weeklyEmail: { includeNames: ['Charlie'] }
+        emails: { excludeLabels: ['Arbeit'] }
       };
     });
 
@@ -372,14 +371,17 @@ describe('Contact Manager', () => {
       expect(filtered.map(c => c.name)).toEqual(['Alice', 'Bob', 'Charlie']);
     });
 
-    it('should filter contacts by exclusion for monthlyEmail', () => {
-      const filtered = filterContactsForFeature(allContacts, 'monthlyEmail');
+    it('should filter contacts by emails key for email notifications', () => {
+      const filtered = filterContactsForFeature(allContacts, 'emails');
       expect(filtered.map(c => c.name)).toEqual(['Alice', 'Charlie']);
     });
 
-    it('should filter contacts by includeNames for weeklyEmail', () => {
-      const filtered = filterContactsForFeature(allContacts, 'weeklyEmail');
-      expect(filtered.map(c => c.name)).toEqual(['Charlie']);
+    it('should fallback to emails filter when monthlyEmail or weeklyEmail is queried', () => {
+      const filteredMonthly = filterContactsForFeature(allContacts, 'monthlyEmail');
+      expect(filteredMonthly.map(c => c.name)).toEqual(['Alice', 'Charlie']);
+
+      const filteredWeekly = filterContactsForFeature(allContacts, 'weeklyEmail');
+      expect(filteredWeekly.map(c => c.name)).toEqual(['Alice', 'Charlie']);
     });
 
     it('should return all contacts if contactFilters is undefined or feature not present', () => {
