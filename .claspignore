@@ -1,16 +1,10 @@
-node_modules/**
-tests/**
-coverage/**
-examples/**
-.git/**
-.vscode/**
-package.json
-package-lock.json
-renovate.json
-README.md
-ROADMAP.md
-.clasp.json
-.claspignore
-.gitignore
-src/test.js
+# Ignore everything by default
+**/**
+
+# Whitelist files to push
+!appsscript.json
+!src/**
+
+# Exclude templates and local test runners within src
 src/config.js.template
+src/test.js
