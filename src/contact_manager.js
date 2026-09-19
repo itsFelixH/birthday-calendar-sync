@@ -1,10 +1,14 @@
 /**
- * Fetches all contacts with birthdays from Google Contacts, optionally filtering by labels.
- * @param {string[]} [labelFilter=[]] Array of label names to filter
+ * Fetches all contacts with birthdays from Google Contacts.
+ * @param {string[]|number} [labelFilter=[]] Optional array of label names to filter, or maxRetries if number
  * @param {number} [maxRetries=3] Max API retry attempts
  * @returns {BirthdayContact[]} Array of BirthdayContact objects
  */
 function fetchContactsWithBirthdays(labelFilter = [], maxRetries = 3) {
+  if (typeof labelFilter === 'number') {
+    maxRetries = labelFilter;
+    labelFilter = [];
+  }
   try {
     validateLabelFilter(labelFilter);
     const peopleService = People.People;
