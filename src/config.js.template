@@ -78,12 +78,6 @@ const contactFilters = {
   }
 };
 
-// Legacy global label filter (optional, kept for backwards compatibility)
-// Set useLabel to true and add label names to only sync specific contacts.
-// When false, all contacts with birthdays are synced.
-const useLabel = false;
-const labelFilter = []; // e.g. ['Friends', 'Family']
-
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // 3. LOCALE — Adjust for your language
