@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@google/clasp": "^3.3.0",
-    "@types/google-apps-script": "^2.0.8"
+    "@types/google-apps-script": "^2.0.15"
   },
   "devDependencies": {
     "jest": "^30.4.2"
